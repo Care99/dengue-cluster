@@ -4,7 +4,6 @@ import numpy as np
 from scipy.cluster.hierarchy import linkage, dendrogram
 from scipy.spatial.distance import squareform
 import matplotlib.pyplot as plt
-import gc
 import mantel
 def read_excel_files_in_folders(root_folder):
     # List to store dataframes from each Excel file
@@ -29,26 +28,26 @@ def read_excel_files_in_folders(root_folder):
                     if(len(distance_matrix)==66):
                         dfs.append(distance_matrix)
                         # Perform hierarchical clustering
-                        #linkage_matrix = linkage(distance_matrix, method='average')
+                        linkage_matrix = linkage(distance_matrix, method='average')
 
                         # Get the headers for labeling
-                        #headers = df.columns
+                        headers = df.columns
 
                         # Extract only the first word until a space from each header
-                        #labels = [str(header).split()[0][5:] for header in headers]
+                        labels = [str(header).split()[0][5:] for header in headers]
 
                         # Plot the dendrogram with modified labels
-                        #plt.figure(figsize=(10, 6))
-                        #dendrogram(linkage_matrix, labels=labels, orientation='top', color_threshold=float('inf'))
-                        #folder_name = os.path.basename(os.path.normpath(folder_path))
-                        #plt.title(f'{folder_name} - {os.path.basename(file_path)[:4]}')
-                        #plt.xlabel('Clusters')
-                        #plt.ylabel('Distance')
+                        plt.figure(figsize=(10, 6))
+                        dendrogram(linkage_matrix, labels=labels, orientation='top', color_threshold=float('inf'))
+                        folder_name = os.path.basename(os.path.normpath(folder_path))
+                        plt.title(f'{folder_name} - {os.path.basename(file_path)[:4]}')
+                        plt.xlabel('Clusters')
+                        plt.ylabel('Distance')
 
                         # Show the plot
-                        #plt.savefig(str(file_path).strip('.xlsx')+'.png')
-                        #plt.close()
-                        #print(f"Read {file_path}")
+                        plt.savefig(str(file_path).strip('.xlsx')+'.png')
+                        plt.clf()
+                        print(f"Read {file_path}")
                 except Exception as e:
                     print(f"Error reading {file_path}: {e}")
 
@@ -65,31 +64,37 @@ def calculate_mantel_distance(dataframes):
 
     return pd.DataFrame(distance_matrix, index=range(num_matrices), columns=range(num_matrices))
 
-# Specify the root folder path
-#root_folder_path = r'D:\Documents\tesis\UPGMA2'
+def data():
+    # Specify the root folder path
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+    root_folder_name= 'raw_clusters'
+    root_folder_directory= os.path.join(script_directory,root_folder_name)
+    data_name= 'cluster_matrix.xlsx'
+    data_directory= os.path.join(script_directory,data_name)
 
-# Call the function
-#result_dataframe = read_excel_files_in_folders(root_folder_path)
-# Calculate Mantel distance matrix
-#distance_matrix = calculate_mantel_distance(result_dataframe)
+    # Call the function
+    result_dataframe = read_excel_files_in_folders(root_folder_directory)
+    # Calculate Mantel distance matrix
+    distance_matrix = calculate_mantel_distance(result_dataframe)
 
-#print(distance_matrix)
-#distance_matrix.to_excel(r'D:\Documents\tesis\prueba.xlsx')
-# Perform hierarchical clustering
-distance_matrix = pd.read_excel(r'D:\Documents\tesis\prueba.xlsx', index_col=0)
-linkage_matrix = linkage(distance_matrix, method='average')
+    #print(distance_matrix)
+    distance_matrix.to_excel(data_directory)
+    # Perform hierarchical clustering
+    linkage = pd.read_excel(data_directory, index_col=0)
+    linkage_matrix = linkage(linkage, method='average')
 
-# Plot the dendrogram with modified labels
-plt.figure(figsize=(10, 6))
-label = [str(i) for i in range(1, len(linkage_matrix) + 2)]
-dendrogram(linkage_matrix, labels=label, orientation='top', color_threshold=float('inf'))
-plt.title(f'UPGMA')
-plt.xlabel('Clusters')
-plt.ylabel('Distance')
+    # Plot the dendrogram with modified labels
+    plt.figure(figsize=(10, 6))
+    label = [str(i) for i in range(1, len(linkage_matrix) + 2)]
+    dendrogram(linkage_matrix, labels=label, orientation='top', color_threshold=float('inf'))
+    plt.title(f'UPGMA')
+    plt.xlabel('Clusters')
+    plt.ylabel('Distance')
 
-# Show the plot
-plt.show()
-plt.savefig(r'D:\Documents\tesis\prueba.svg')
-#plt.savefig(str(file_path).strip('.xlsx')+'.png')
-#gc.collect()
+    # Show the plot
+    plt.show()
+    fig_name='cluster_cluster.svg'
+    fig_directory=os.path.join(script_directory,fig_name)
+    plt.savefig(fig_directory)
+    plt.clf()
 
