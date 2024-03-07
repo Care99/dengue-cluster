@@ -1,7 +1,7 @@
-os
 pandas
 numpy
 scipy
 matplotlib
-gc
 mantel
+xlsxwriter
+openpyxl
