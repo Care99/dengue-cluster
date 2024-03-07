@@ -30,6 +30,14 @@ RUN adduser \
     --uid "${UID}" \
     appuser
 
+RUN chown appuser /app
+
+ADD casos.csv .
+ADD folder.py .
+ADD graph.py .
+ADD data.py .
+ADD main.py .
+
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
 # Leverage a bind mount to requirements.txt to avoid having to copy them into
@@ -48,4 +56,4 @@ COPY . .
 EXPOSE 8000
 
 # Run the application.
-CMD python main.py
+CMD ["python", "./main.py"]
