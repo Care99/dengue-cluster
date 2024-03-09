@@ -10,6 +10,11 @@ check_folder=os.path.join(script_directory,check_folder_name)
 if(os.path.isdir(check_folder)):
     shutil.rmtree(check_folder)
 
+check_folder_name='clusters'
+check_folder=os.path.join(script_directory,check_folder_name)
+if(os.path.isdir(check_folder)):
+    shutil.rmtree(check_folder)
+
 check_matrix_name='cluster_matrix.xlsx'
 check_matrix=os.path.join(script_directory,check_matrix_name)
 if(os.path.isfile(check_matrix)):
