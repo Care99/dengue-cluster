@@ -1,2 +1,5 @@
 .venv/
 .vscode/
+.RData
+.Rhistory
+processed_data/
