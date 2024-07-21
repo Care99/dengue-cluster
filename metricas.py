@@ -36,7 +36,7 @@ import logging
 script_directory = os.getcwd()
 processed_data_path = os.path.join(script_directory,'processed_data')
 resultado_funciones_path = os.path.join(processed_data_path,'resultado_funciones')
-def folder(years_in_time_series):
+def folder(start_month,end_month,filename):
 
     # Read the Excel file
     excel_name = 'casos.csv'
@@ -51,14 +51,8 @@ def folder(years_in_time_series):
     # Create a folder with the specified format
     os.makedirs(processed_data_path,exist_ok=True)
     # Manage the time ranges
-    month_range = (9, 8)
-    start_month, end_month = month_range
     # Iterate through filtered data and create subfolders
-    if(years_in_time_series==0):
-      step = 1
-    else:
-      step = years_in_time_series
-    for year in range(2019, 2023, step):
+    for year in range(2019, 2023):
       rows = []
     # Initialize an empty DataFrame to store incidence data for the year
       incidence_data = pd.DataFrame()
@@ -75,13 +69,10 @@ def folder(years_in_time_series):
 
         # Define the start and end dates
         start_date = pd.to_datetime(f"{year}-{start_month}-1", format='%Y-%m-%d')
-        end_date = pd.to_datetime(f"{year+years_in_time_series}-{end_month}-31", format='%Y-%m-%d') + pd.offsets.MonthEnd(0)
+        end_date = pd.to_datetime(f"{year}-{end_month}-31", format='%Y-%m-%d')
 
         # Filter the data for the specified period
-        if( years_in_time_series == 0 ):
-          range_data = filtered_data
-        else:
-          range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='left')]
+        range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='left')]
 
         # Extract the incidence columns
         incidence_columns = [col for col in range_data.columns if 'incidence' in col]
@@ -101,16 +92,17 @@ def folder(years_in_time_series):
 folder(1)
 #step 5 (wait 9 min)
 
-utils = importr('utils',suppress_messages=False)
-if(not isinstalled('TSclust')):   
-  print('TSclust not installed!')
-  utils.chooseCRANmirror(ind=7)
-  utils.install_packages('TSclust')
-  utils.install_packages('pdc')
-  utils.install_packages('cluster')
-print('APRETA CTRL C!!!!')
-TSclust = importr(name='TSclust',lib_loc='/home/cesar/R/x86_64-pc-linux-gnu-library/4.4/',suppress_messages=False)
-print('TSclust is installed')
+#utils = importr('utils',suppress_messages=False)
+#if(not isinstalled('TSclust')):   
+#  print('TSclust not installed!')
+#  utils.chooseCRANmirror(ind=7)
+#  utils.install_packages('TSclust')
+#  utils.install_packages('pdc')
+#  utils.install_packages('cluster')
+#print('APRETA CTRL C!!!!')
+#TSclust = importr(name='TSclust',lib_loc='/home/cesar/R/x86_64-pc-linux-gnu-library/4.4/',suppress_messages=False)
+#TSclust = importr(name='TSclust',suppress_messages=False)
+#print('TSclust is installed')
 #2
 def euclidean_L2(tseries1,tseries2):
     return distance.euclidean(tseries1, tseries2)
@@ -1437,80 +1429,8 @@ def vector_dynamic_time_warping(tseries1,tseries2):
 #Bhattacharyya distance given in the eqn 
 #(33), which is a value between 0 and 1, provides bounds on 
 #the Bayes misclassification probability [23].
-conjunto_funciones=[euclidean_L2,
-                    cityblock,
-                    minkowski_Lp,
-                    chebyshev_Linf,
-                    sorensen,
-                    gower,
-                    soergel,
-                    kulczynski1,
-                    canberra,
-                    lorentzian,
-                    intersection,
-                    wave_hedges,
-                    czekanowski,
-                    motyka,
-                    kulczynski_s,
-                    ruzicka,
-                    tanimoto,
-                    inner_product,
-                    harmonic_mean,
-                    cosine,
-                    kumar_hassebrook,
-                    jaccard,
-                    dice,
-                    fidelity,
-                    bhattacharyya,
-                    hellinger,
-                    matusita,
-                    squared_chord,
-                    squared_euclidean,
-                    pearson_x2,
-                    neyman_x2,
-                    squared_x2,
-                    probabilistic_symmetric_x2,
-                    divergence,
-                    clark,
-                    additive_symmetric_x2,
-                    kullback_leibler,
-                    jeffreys,
-                    k_divergence,
-                    topsoe,
-                    jensen_shannon,
-                    jensen_difference,
-                    taneja,
-                    kumar_johnson,
-                    avg_l1_linf,
-                    d_emanom1,
-                    d_emanom2,
-                    d_emanom3,
-                    d_emanom4,
-                    d_emanom5,
-                    d_emanom6,
-                    braycurtis,
-                    correlation,
-                    dissim_DTW_LCSS1,
-                    dissim_DTW_LCSS2,
-                    dissim_DTW_LCSS3,
-                    time_warp_edit_distance,
-                    value_derivative_dynamic_time_warping,
-                    DTW,
-                    acf,
-                    acf_lpc_ceps,
-                    ar_pic,
-                    cdm,
-                    cid,
-                    cor,
-                    cort,
-                    int_per,
-                    mindist_sax,
-                    ncd,
-                    pdc,
-                    per,
-                    uncertain_weighted_dtw,
-                    move_split_merge,
-                    fastdtw]
+conjunto_funciones=[canberra,
+                    bhattacharyya]
 
 def crear_matriz():
   resultado_funciones = []
