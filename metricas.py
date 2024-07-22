@@ -1487,7 +1487,7 @@ for funcion in conjunto_funciones:
     for i in range(int(len(combined_ts_matrix)/4)):
       for j in range(i+1,int(len(combined_ts_matrix)/4)):
         resultado_funciones[i,j] = funcion(combined_ts_matrix[(k*24)+i],combined_ts_matrix[(k*24)+j])
-        resultado_funciones_total
+        resultado_funciones_total[(k*24)+i,(k*24)+j] = resultado_funciones[i,j]
     # Perform hierarchical clustering
     linkage_matrix = linkage(resultado_funciones, method='average')
     # Get the headers for labeling
