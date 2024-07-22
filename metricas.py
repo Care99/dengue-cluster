@@ -1443,12 +1443,6 @@ def vector_dynamic_time_warping(tseries1,tseries2):
 conjunto_funciones=[canberra,
                     bhattacharyya]
 
-def crear_matriz(size):
-  resultado_funciones = []
-  for i in range(len(conjunto_funciones)):
-    temp_array = np.zeros((size,size))
-    resultado_funciones.append(temp_array)
-  return resultado_funciones
 
 # Function to load and process a single CSV file
 def load_and_process_csv(file_path):
@@ -1481,19 +1475,21 @@ print(len(combined_ts_matrix[0]))
 print(len(combined_ts_matrix))
 
 os.makedirs(resultado_funciones_path,exist_ok=True)
-indice_funcion = 0
-distance_matrix_size = 24
+
 for funcion in conjunto_funciones:
+  distance_matrix_size = 72
+  resultado_funciones_total = np.zeros(distance_matrix_size,distance_matrix_size)
   for k in range(4):
     function_folder = os.path.join(resultado_funciones_path,str(funcion.__name__))
     os.makedirs(function_folder,exist_ok=True)
-    resultado_funciones = crear_matriz(distance_matrix_size)
+    distance_matrix_size = 24
+    resultado_funciones = np.zeros(distance_matrix_size,distance_matrix_size)
     for i in range(int(len(combined_ts_matrix)/4)):
       for j in range(i+1,int(len(combined_ts_matrix)/4)):
-        resultado_funciones[indice_funcion][i,j] = funcion(combined_ts_matrix[(k*24)+i],combined_ts_matrix[(k*24)+j])
-
+        resultado_funciones[i,j] = funcion(combined_ts_matrix[(k*24)+i],combined_ts_matrix[(k*24)+j])
+        resultado_funciones_total
     # Perform hierarchical clustering
-    linkage_matrix = linkage(resultado_funciones[indice_funcion], method='average')
+    linkage_matrix = linkage(resultado_funciones, method='average')
     # Get the headers for labeling
     headers = df.columns
 
@@ -1523,14 +1519,14 @@ for funcion in conjunto_funciones:
     svg_file = f'{funcion.__name__}_{year}.svg'
     svg_folder = os.path.join(svg_folder,svg_file)
     plt.savefig(svg_folder)
-    matriz_distancia = DataFrame(resultado_funciones[indice_funcion])
+    matriz_distancia = DataFrame(resultado_funciones)
     csv_file = f'{funcion.__name__}_{year}.csv'
     csv_folder = os.path.join(csv_folder,csv_file)
     matriz_distancia.to_csv(csv_folder)
     #Close plot and finish
     plt.clf()
     plt.close()
-  indice_funcion = indice_funcion + 1
+  
 
 
 for folder in os.listdir(resultado_funciones_path):
