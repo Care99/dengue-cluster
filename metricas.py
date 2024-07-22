@@ -1477,7 +1477,7 @@ print(len(combined_ts_matrix))
 os.makedirs(resultado_funciones_path,exist_ok=True)
 
 for funcion in conjunto_funciones:
-  distance_matrix_size = 72
+  distance_matrix_size = 96
   resultado_funciones_total = np.zeros(distance_matrix_size,distance_matrix_size)
   for k in range(4):
     function_folder = os.path.join(resultado_funciones_path,str(funcion.__name__))
@@ -1487,7 +1487,9 @@ for funcion in conjunto_funciones:
     for i in range(int(len(combined_ts_matrix)/4)):
       for j in range(i+1,int(len(combined_ts_matrix)/4)):
         resultado_funciones[i,j] = funcion(combined_ts_matrix[(k*24)+i],combined_ts_matrix[(k*24)+j])
-        resultado_funciones_total[(k*24)+i,(k*24)+j] = resultado_funciones[i,j]
+    for i in range(len(combined_ts_matrix)):
+      for j in range(i+1,len(combined_ts_matrix)):
+        resultado_funciones_total[i,j] = funcion(combined_ts_matrix[i],combined_ts_matrix[j])
     # Perform hierarchical clustering
     linkage_matrix = linkage(resultado_funciones, method='average')
     # Get the headers for labeling
@@ -1519,10 +1521,16 @@ for funcion in conjunto_funciones:
     svg_file = f'{funcion.__name__}_{year}.svg'
     svg_folder = os.path.join(svg_folder,svg_file)
     plt.savefig(svg_folder)
+
     matriz_distancia = DataFrame(resultado_funciones)
     csv_file = f'{funcion.__name__}_{year}.csv'
-    csv_folder = os.path.join(csv_folder,csv_file)
-    matriz_distancia.to_csv(csv_folder)
+    #csv_folder = os.path.join(csv_folder,csv_file)
+    matriz_distancia.to_csv(os.path.join(csv_folder,csv_file))
+    
+    matriz_distancia = DataFrame(resultado_funciones_total)
+    csv_file = f'{funcion.__name__}_all.csv'
+    matriz_distancia.to_csv(os.path.join(csv_folder,csv_file))
+    
     #Close plot and finish
     plt.clf()
     plt.close()
