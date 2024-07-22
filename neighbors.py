@@ -19,7 +19,15 @@ from statsmodels.tsa.seasonal import MSTL
 script_directory = os.getcwd()
 processed_data_path = os.path.join(script_directory,'processed_data')
 resultado_funciones_path = os.path.join(processed_data_path,'resultado_funciones')
-
+departments = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
+              'Centro est','Centro norte','Centro sur','Chaco','CORDILLERA',
+              'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
+              'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
+              'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
+conjunto_funciones = [ 
+   "bhattacharyya",
+   "canberra",
+]
 def remove_zeros(x):
   for i in range(len(x)):
     if(x[i]<=0):
@@ -54,8 +62,6 @@ def rank_order_centroid(k):
     for i in range(j,k):
       inverted_sum = inverted_sum + (1/(i+1))
     weights[j] =  inverted_sum/k
-    if(weights[j]<1):
-      weights[j]=0
   return weights
 
 # Main function to perform CPTO-WNN time series forecasting
@@ -126,13 +132,16 @@ def cross_validate_knn(x,k_values,w_values,training_sets,n):
         if((w+k<=len(x)) and (len(x)-w>0)):
           generated_x = forecast(training_set,k,w,n)
           error_value = mean_squared_error(x,generated_x)
+          #print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
           if(error_value<best_mape):
             best_k = k
             best_w = w
             best_forecast = generated_x
             best_mape = error_value
-            #print(f'input_year:{input_year},input_department:{input_department},metric:{metric_name},error:{best_mape}')
+            print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
             sorted_forecast.append(best_forecast)
+          if(error_value>best_mape and error_value<(best_mape+best_mape/10)):
+            print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
   if(len(sorted_forecast)>=5):
     for i in range(n):
       best_forecast[i] = (sorted_forecast[-1][i]+sorted_forecast[-2][i]+sorted_forecast[-3][i]+sorted_forecast[-4][i]+sorted_forecast[-5][i])/5
@@ -140,7 +149,7 @@ def cross_validate_knn(x,k_values,w_values,training_sets,n):
       best_mape = mean_squared_error(x,best_forecast)
     else:
       best_forecast = np.array(sorted_forecast.pop(),dtype=float)
-  #print(f'best_k={best_k},best_w={best_w}')
+  print(f'best_k={best_k},best_w={best_w}')
   return best_forecast,best_mape
 def plot_two_time_series(ts_original, ts_generado,department,year):
     # Create a figure and axis
@@ -198,51 +207,35 @@ def generate_forecast(input_year,input_department,metric_name,original_time_seri
   #variables
   neighbors_ts = []
   neighbors = []
-  
+  neighbor_size=5
 
   # Find nearest neighbor for the given year
-  csv_path = os.path.join(resultado_funciones_path,f'{metric_name}',f'{metric_name}.csv')
-  nearest_years = find_nearest_neighbor(csv_path, year_index,year_neighbors)
-
-  #print(nearest_years)
-
-  # Encontrar los años/departamentos mas cercanos al input
-  for year in nearest_years:
-    year_path = year + 2019
-    if(year_path!=2022):
-      nearest_year_csv_path = os.path.join(resultado_funciones_path,f'{metric_name}','csv',f'{metric_name}_{year_path}.csv')
-      department_index = departments.index(input_department)
-      # Find nearest neighbor for the given department
-      nearest_departments_indexes = find_nearest_neighbor(nearest_year_csv_path, department_index, place_neighbors)
-      if year_path == input_year:
-        nearest_departments_indexes = nearest_departments_indexes[1:]
-      for index in nearest_departments_indexes:
-        neighbors.append(f'{year_path}_{departments[index]}')
-  #print(neighbors)
+  csv_path = os.path.join(resultado_funciones_path,f'{metric_name}','csv',f'{metric_name}_all.csv')
+  index = (24*(input_year-2019))+departments.index(input_department)
+  neighbors = find_nearest_neighbor(csv_path,index,neighbor_size)
 
   #Dado los años/departamentos mas cercanos, obtener sus ts
   for neighbor in neighbors:
-    year = int(neighbor.split('_')[0])
-    department = neighbor.split('_')[1]
-    if not (year == input_year and department == input_department):
+    year = 2019 + int(neighbor/24)
+    department = departments[(neighbor)%24]
+    if(year<2022):
       df_path = os.path.join(processed_data_path,f'time_series_{year}.csv')
       df = pd.read_csv(df_path)
       i = departments.index(department)
       timeseries = df.to_numpy()[i:i+1,1:].flatten()
       neighbors_ts.append(timeseries)
   knn_time_series = np.array(neighbors_ts,dtype=float)
-  #From testing it was found that the maximum value 
-  # of k picked by cross_validate_knn is at most 2.
-  #The most picked value of k is 1, appearing 90% of the time
-  #The maximum value of w picked get as high as len(time_series)-1
-  #The most picked value of w is len(time_series)-1, appearing 50% of the time
-  #If w is lower than len(time_series), cross_validate_knn tend to choose
-  #w with the value 1
-  maximum_k = 3
-  maximum_w = 52
+
+  #From testing it was found that the best value of
+  #k tends to be 1 or 2, but values of k onwards gets 
+  #identical or close error values to the best error value
+  #Best value of w tends to be (len(x)-k)
+  maximum_k = 50
+  maximum_w = len(original_time_series)
   forecast_values = 52
   #print(f'input_year:{input_year},input_department:{input_department},metric:{metric_name}')
   final_time_series,error_dist = cross_validate_knn(original_time_series,maximum_k,maximum_w,knn_time_series,forecast_values)
+  #final_time_series = forecast(knn_time_series[0],maximum_k,maximum_w,forecast_values)
   #print(f'input_year:{input_year},input_department:{input_department},metric:{metric_name},error_dist:{error_dist}')
   #obtener la distancia MSE
   #error_dist = mean_squared_error(original_time_series, final_time_series)
@@ -251,23 +244,11 @@ def generate_forecast(input_year,input_department,metric_name,original_time_seri
   #plot_two_time_series(original_time_series, final_time_series)
   return nueva_distancia
 #variables
-conjunto_funciones = [ 
-   "bhattacharyya",
-   "canberra",
-]
-puntaje_funciones = np.zeros(len(conjunto_funciones))
-departments = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
-              'Centro est','Centro norte','Centro sur','Chaco','CORDILLERA',
-              'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
-              'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-              'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
+
+
 years = [2022]
-input_department = 'PTE HAYES'
-input_year = 2022
-year_index = input_year - 2019
-year_neighbors = 3
-place_neighbors = 5
 error_in_department = np.zeros(24)
+puntaje_funciones = np.zeros(len(conjunto_funciones))
 
 for input_year in years:
    for input_department in departments:

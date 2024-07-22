@@ -1478,12 +1478,12 @@ os.makedirs(resultado_funciones_path,exist_ok=True)
 
 for funcion in conjunto_funciones:
   distance_matrix_size = 96
-  resultado_funciones_total = np.zeros(distance_matrix_size,distance_matrix_size)
+  resultado_funciones_total = np.zeros((distance_matrix_size,distance_matrix_size))
   for k in range(4):
     function_folder = os.path.join(resultado_funciones_path,str(funcion.__name__))
     os.makedirs(function_folder,exist_ok=True)
     distance_matrix_size = 24
-    resultado_funciones = np.zeros(distance_matrix_size,distance_matrix_size)
+    resultado_funciones = np.zeros((distance_matrix_size,distance_matrix_size))
     for i in range(int(len(combined_ts_matrix)/4)):
       for j in range(i+1,int(len(combined_ts_matrix)/4)):
         resultado_funciones[i,j] = funcion(combined_ts_matrix[(k*24)+i],combined_ts_matrix[(k*24)+j])
@@ -1527,7 +1527,7 @@ for funcion in conjunto_funciones:
     #csv_folder = os.path.join(csv_folder,csv_file)
     matriz_distancia.to_csv(os.path.join(csv_folder,csv_file))
     
-    matriz_distancia = DataFrame(resultado_funciones_total)
+    matriz_distancia = DataFrame(resultado_funciones_total + resultado_funciones_total.T - np.diag(np.diag(resultado_funciones_total)))
     csv_file = f'{funcion.__name__}_all.csv'
     matriz_distancia.to_csv(os.path.join(csv_folder,csv_file))
     
@@ -1542,7 +1542,7 @@ for folder in os.listdir(resultado_funciones_path):
   vector = []
   files = os.listdir(current_folder)
   for file in sorted(files):
-    if file.endswith('.csv'):
+    if not (file[-7:].startswith('all')):
       df = pd.read_csv(os.path.join(current_folder, file))
       vector.append(df.to_numpy().flatten())
 
