@@ -25,7 +25,6 @@ departments = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
               'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
               'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
 conjunto_funciones = [ 
-   "bhattacharyya",
    "canberra",
 ]
 def remove_zeros(x):
@@ -127,29 +126,27 @@ def cross_validate_knn(x,k_values,w_values,training_sets,n):
   best_k = 0
   best_w = 0
   for k in range(1,k_values):
-    for w in range(1,w_values):
+    for w in range(25,25+w_values):
       for training_set in training_sets:
         if((w+k<=len(x)) and (len(x)-w>0)):
           generated_x = forecast(training_set,k,w,n)
-          error_value = mean_squared_error(x,generated_x)
+          #best_forecast = best_forecast + generated_x
+          #error_value = mape(x,generated_x)
           #print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
-          if(error_value<best_mape):
-            best_k = k
-            best_w = w
-            best_forecast = generated_x
-            best_mape = error_value
-            print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
-            sorted_forecast.append(best_forecast)
-          if(error_value>best_mape and error_value<(best_mape+best_mape/10)):
-            print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
-  if(len(sorted_forecast)>=5):
-    for i in range(n):
-      best_forecast[i] = (sorted_forecast[-1][i]+sorted_forecast[-2][i]+sorted_forecast[-3][i]+sorted_forecast[-4][i]+sorted_forecast[-5][i])/5
-    if(mean_squared_error(x,best_forecast) < best_mape):
-      best_mape = mean_squared_error(x,best_forecast)
-    else:
-      best_forecast = np.array(sorted_forecast.pop(),dtype=float)
-  print(f'best_k={best_k},best_w={best_w}')
+          #if(error_value<best_mape):
+            #best_k = k
+            #best_w = w
+            
+            #best_mape = error_value
+            #best_forecast = generated_x
+            #print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
+            #sorted_forecast.append(best_forecast)
+          #if(error_value>best_mape and error_value<(best_mape+best_mape/10)):
+            #print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
+  for i in range(n):
+    best_forecast[i] = (best_forecast[i])/(k_values*w_values*len(training_sets))
+  best_mape = mape(x,generated_x)
+  #print(f'best_k={best_k},best_w={best_w}')
   return best_forecast,best_mape
 def plot_two_time_series(ts_original, ts_generado,department,year):
     # Create a figure and axis
@@ -199,15 +196,24 @@ def find_nearest_neighbor(csv_path, index, num_neighbors):
     # Extract the distances for the given department index
     distances = matriz_distancia[index]
     # Get the indices of the nearest neighbors (excluding the department itself)
-    nearest_indices = np.argsort(distances)[0:num_neighbors + 1]
-    return nearest_indices
+    nearest_indices = np.argsort(distances)
+    return_indices = np.zeros(num_neighbors,dtype=int)
+    i = 0
+    for indice in nearest_indices:
+      year = 2019 + int(indice/24)
+      if(year<2022):
+        return_indices[i] = indice
+        i = i + 1
+        if( i == num_neighbors ):
+          break
+    return return_indices
 #10700
 
 def generate_forecast(input_year,input_department,metric_name,original_time_series):
   #variables
   neighbors_ts = []
   neighbors = []
-  neighbor_size=5
+  neighbor_size=2
 
   # Find nearest neighbor for the given year
   csv_path = os.path.join(resultado_funciones_path,f'{metric_name}','csv',f'{metric_name}_all.csv')
@@ -217,25 +223,24 @@ def generate_forecast(input_year,input_department,metric_name,original_time_seri
   #Dado los años/departamentos mas cercanos, obtener sus ts
   for neighbor in neighbors:
     year = 2019 + int(neighbor/24)
-    department = departments[(neighbor)%24]
-    if(year<2022):
-      df_path = os.path.join(processed_data_path,f'time_series_{year}.csv')
-      df = pd.read_csv(df_path)
-      i = departments.index(department)
-      timeseries = df.to_numpy()[i:i+1,1:].flatten()
-      neighbors_ts.append(timeseries)
+    department = departments[int(neighbor)%24]
+    df_path = os.path.join(processed_data_path,f'time_series_{year}.csv')
+    df = pd.read_csv(df_path)
+    i = departments.index(department)
+    timeseries = df.to_numpy()[i:i+1,1:].flatten()
+    neighbors_ts.append(timeseries)
   knn_time_series = np.array(neighbors_ts,dtype=float)
 
   #From testing it was found that the best value of
   #k tends to be 1 or 2, but values of k onwards gets 
   #identical or close error values to the best error value
   #Best value of w tends to be (len(x)-k)
-  maximum_k = 50
-  maximum_w = len(original_time_series)
+  maximum_k = 5
+  maximum_w = 10
   forecast_values = 52
   #print(f'input_year:{input_year},input_department:{input_department},metric:{metric_name}')
   final_time_series,error_dist = cross_validate_knn(original_time_series,maximum_k,maximum_w,knn_time_series,forecast_values)
-  #final_time_series = forecast(knn_time_series[0],maximum_k,maximum_w,forecast_values)
+  #final_time_series = forecast(knn_time_series,3,22,forecast_values)
   #print(f'input_year:{input_year},input_department:{input_department},metric:{metric_name},error_dist:{error_dist}')
   #obtener la distancia MSE
   #error_dist = mean_squared_error(original_time_series, final_time_series)
