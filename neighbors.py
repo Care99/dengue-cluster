@@ -15,7 +15,7 @@ import matplotlib as mplt; mplt.use('SVG',force=True)
 from matplotlib import pyplot as plt
 import numpy as np
 from statsmodels.tsa.seasonal import MSTL
-from pmdarima.arima import auto_arima
+#from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
 processed_data_path = os.path.join(script_directory,'processed_data')
 resultado_funciones_path = os.path.join(processed_data_path,'resultado_funciones')
@@ -209,14 +209,15 @@ def generate_forecast(input_year,input_department,metric_name,original_time_seri
   # Encontrar los años/departamentos mas cercanos al input
   for year in nearest_years:
     year_path = year + 2019
-    nearest_year_csv_path = os.path.join(resultado_funciones_path,f'{metric_name}','csv',f'{metric_name}_{year_path}.csv')
-    department_index = departments.index(input_department)
-    # Find nearest neighbor for the given department
-    nearest_departments_indexes = find_nearest_neighbor(nearest_year_csv_path, department_index, place_neighbors)
-    if year_path == input_year:
-      nearest_departments_indexes = nearest_departments_indexes[1:]
-    for index in nearest_departments_indexes:
-      neighbors.append(f'{year_path}_{departments[index]}')
+    if(year_path!=2022):
+      nearest_year_csv_path = os.path.join(resultado_funciones_path,f'{metric_name}','csv',f'{metric_name}_{year_path}.csv')
+      department_index = departments.index(input_department)
+      # Find nearest neighbor for the given department
+      nearest_departments_indexes = find_nearest_neighbor(nearest_year_csv_path, department_index, place_neighbors)
+      if year_path == input_year:
+        nearest_departments_indexes = nearest_departments_indexes[1:]
+      for index in nearest_departments_indexes:
+        neighbors.append(f'{year_path}_{departments[index]}')
   #print(neighbors)
 
   #Dado los años/departamentos mas cercanos, obtener sus ts
@@ -224,7 +225,7 @@ def generate_forecast(input_year,input_department,metric_name,original_time_seri
     year = int(neighbor.split('_')[0])
     department = neighbor.split('_')[1]
     if not (year == input_year and department == input_department):
-      df_path = os.path.join(processed_data_path,f'incidence{year}.csv')
+      df_path = os.path.join(processed_data_path,f'time_series_{year}.csv')
       df = pd.read_csv(df_path)
       i = departments.index(department)
       timeseries = df.to_numpy()[i:i+1,1:].flatten()
@@ -253,19 +254,6 @@ def generate_forecast(input_year,input_department,metric_name,original_time_seri
 conjunto_funciones = [ 
    "bhattacharyya",
    "canberra",
-   "cdm",
-   "chebyshev_Linf",
-   "dissim_DTW_LCSS2",
-   "int_per",
-   "k_divergence",
-   "kullback_leibler",
-   "lorentzian",
-   "mindist_sax",
-   "pdc",
-   "soergel",
-   "sorensen",
-   "time_warp_edit_distance",
-   "value_derivative_dynamic_time_warping"
 ]
 puntaje_funciones = np.zeros(len(conjunto_funciones))
 departments = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
@@ -273,7 +261,7 @@ departments = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
               'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
               'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
               'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
-years = [2019,2020,2021,2022]
+years = [2022]
 input_department = 'PTE HAYES'
 input_year = 2022
 year_index = input_year - 2019
@@ -286,7 +274,7 @@ for input_year in years:
         distancias = []
         threads = []
         #Obtener el ts_original
-        df_path = os.path.join(processed_data_path,f'incidence{input_year}.csv')
+        df_path = os.path.join(processed_data_path,f'time_series_{input_year}.csv')
         df = pd.read_csv(df_path)
         department_index = departments.index(input_department)
         original_time_series = np.array(df.to_numpy()[department_index:department_index+1,1:].flatten(),dtype=float)
