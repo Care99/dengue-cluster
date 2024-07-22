@@ -1443,10 +1443,10 @@ def vector_dynamic_time_warping(tseries1,tseries2):
 conjunto_funciones=[canberra,
                     bhattacharyya]
 
-def crear_matriz():
+def crear_matriz(size):
   resultado_funciones = []
   for i in range(len(conjunto_funciones)):
-    temp_array = np.zeros((24,24))
+    temp_array = np.zeros((size,size))
     resultado_funciones.append(temp_array)
   return resultado_funciones
 
@@ -1482,11 +1482,12 @@ print(len(combined_ts_matrix))
 
 os.makedirs(resultado_funciones_path,exist_ok=True)
 indice_funcion = 0
+distance_matrix_size = 24
 for funcion in conjunto_funciones:
   for k in range(4):
     function_folder = os.path.join(resultado_funciones_path,str(funcion.__name__))
     os.makedirs(function_folder,exist_ok=True)
-    resultado_funciones = crear_matriz()
+    resultado_funciones = crear_matriz(distance_matrix_size)
     for i in range(int(len(combined_ts_matrix)/4)):
       for j in range(i+1,int(len(combined_ts_matrix)/4)):
         resultado_funciones[indice_funcion][i,j] = funcion(combined_ts_matrix[(k*24)+i],combined_ts_matrix[(k*24)+j])
