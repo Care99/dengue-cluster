@@ -68,8 +68,11 @@ def folder(start_month,end_month,filename):
         filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%Y-%m-%d')
 
         # Define the start and end dates
+        fixed_year = year
         start_date = pd.to_datetime(f"{year}-{start_month}-1", format='%Y-%m-%d')
-        end_date = pd.to_datetime(f"{year}-{end_month}-31", format='%Y-%m-%d')
+        if( end_month < start_month ): 
+          fixed_year = fixed_year + 1
+        end_date = pd.to_datetime(f"{fixed_year}-{end_month}-31", format='%Y-%m-%d')
 
         # Filter the data for the specified period
         range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='left')]
@@ -85,11 +88,19 @@ def folder(start_month,end_month,filename):
       incidence_data = pd.DataFrame(rows, columns=columns)
 
       # Save the DataFrame as a CSV file
-      output_file_name = f'incidence{year}.csv'
+      output_file_name = f'{filename}_{year}.csv'
       output_file_path = os.path.join(processed_data_path, output_file_name)
       incidence_data.to_csv(output_file_path, index=False)
       print(f"Saved: {output_file_path}")
-folder(1)
+start_month = 9
+end_month = 8
+filename = 'time_series'
+folder(start_month,end_month,filename)
+
+start_month = 9
+end_month = 12
+filename = 'first_trimester'
+folder(start_month,end_month,filename)
 #step 5 (wait 9 min)
 
 #utils = importr('utils',suppress_messages=False)
@@ -1452,7 +1463,7 @@ dfs = []
 sorted_files=sorted(os.listdir(processed_data_path))
 # Process each uploaded file
 for filename in sorted_files:
-    if filename.endswith('.csv'):
+    if filename.startswith('first_trimester'):
         # Load and process the CSV file
         print(filename)
         df = load_and_process_csv(os.path.join(processed_data_path, filename))
