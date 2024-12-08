@@ -1,4 +1,5 @@
 #step 4
+import dictances
 import pandas as pd
 import os
 import datetime
@@ -14,7 +15,7 @@ import math
 import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr,isinstalled
 from sktime import distances
-from tslearn import metrics
+#from tslearn import metrics
 from pandas import DataFrame
 #from sdtw import SoftDTW
 #from sdtw.distance import SquaredEuclidean
@@ -50,6 +51,8 @@ def folder(start_month,end_month,filename):
 
     # Create a folder with the specified format
     os.makedirs(processed_data_path,exist_ok=True)
+
+    last_day=[30,28,31,30,31,30,31,31,30,31,30,31]
     # Manage the time ranges
     # Iterate through filtered data and create subfolders
     for year in range(2019, 2023):
@@ -72,7 +75,8 @@ def folder(start_month,end_month,filename):
         start_date = pd.to_datetime(f"{year}-{start_month}-1", format='%Y-%m-%d')
         if( end_month < start_month ): 
           fixed_year = fixed_year + 1
-        end_date = pd.to_datetime(f"{fixed_year}-{end_month}-31", format='%Y-%m-%d')
+        end_day = last_day[end_month-1]
+        end_date = pd.to_datetime(f"{fixed_year}-{end_month}-{end_day}", format='%Y-%m-%d')
 
         # Filter the data for the specified period
         range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='left')]
@@ -92,14 +96,15 @@ def folder(start_month,end_month,filename):
       output_file_path = os.path.join(processed_data_path, output_file_name)
       incidence_data.to_csv(output_file_path, index=False)
       print(f"Saved: {output_file_path}")
+initial_year = 2019
 start_month = 9
 end_month = 8
 filename = 'time_series'
 folder(start_month,end_month,filename)
 
 start_month = 9
-end_month = 12
-filename = 'first_trimester'
+end_month = 11
+filename = 'training_data'
 folder(start_month,end_month,filename)
 #step 5 (wait 9 min)
 
@@ -833,34 +838,34 @@ def diff(tseries):
 #67
 #we can choose points (a,b)on any continuous line between the points (0,1)and(1,0).
 #For example, it can be a straight line or a quarter of a circle:
-def dissim_DTW_LCSS1(tseries1, tseries2):
-    alpha = 0.5
-    a = math.cos(alpha)
-    b = math.sin(alpha)
-    value = a*metrics.dtw(tseries1,tseries2)
-    value += b*metrics.lcss(tseries1,tseries2)
-    return value
+#def dissim_DTW_LCSS1(tseries1, tseries2):
+#    alpha = 0.5
+#    a = math.cos(alpha)
+#    b = math.sin(alpha)
+#    value = a*metrics.dtw(tseries1,tseries2)
+#    value += b*metrics.lcss(tseries1,tseries2)
+#    return value
 
 #68
 #Parametric Derivative Dynamic Time Warping has the same formula as the one provided in (Górecki, 2018)
-def dissim_DTW_LCSS2(tseries1,tseries2):
-    alpha = 0.5
-    a = math.cos(alpha)
-    b = math.sin(alpha)
-    value = a*metrics.dtw(tseries1,tseries2)
-    value += b*metrics.dtw(diff(tseries1),diff(tseries2))
-    return value
+#def dissim_DTW_LCSS2(tseries1,tseries2):
+#    alpha = 0.5
+#    a = math.cos(alpha)
+#    b = math.sin(alpha)
+#    value = a*metrics.dtw(tseries1,tseries2)
+#    value += b*metrics.dtw(diff(tseries1),diff(tseries2))
+#    return value
 
 #69??
-def dissim_DTW_LCSS3(tseries1,tseries2):
-    alpha = 0.5
-    a = math.cos(alpha)
-    b = math.sin(alpha)
-    c = math.tan(alpha)
-    value = a*metrics.dtw(tseries1,tseries2)
-    value += b*metrics.dtw(diff(tseries1),diff(tseries2))
-    value += c*metrics.lcss(tseries1,tseries2)
-    return value
+#def dissim_DTW_LCSS3(tseries1,tseries2):
+#    alpha = 0.5
+#    a = math.cos(alpha)
+#    b = math.sin(alpha)
+#    c = math.tan(alpha)
+#    value = a*metrics.dtw(tseries1,tseries2)
+#    value += b*metrics.dtw(diff(tseries1),diff(tseries2))
+#    value += c*metrics.lcss(tseries1,tseries2)
+#    return value
 
 #LB_Keogh computes a lower bound for the DTW distance
 
@@ -939,8 +944,8 @@ def value_derivative_dynamic_time_warping(tseries1,tseries2):
 #     return value
 
 #77
-def DTW(tseries1,tseries2):
-    return metrics.dtw(tseries1,tseries2)
+#def DTW(tseries1,tseries2):
+#    return metrics.dtw(tseries1,tseries2)
 
 #LPDistance: A value in "euclidean", "manhattan", "infnorm", "minkowski".
 
@@ -1440,8 +1445,7 @@ def vector_dynamic_time_warping(tseries1,tseries2):
 #Bhattacharyya distance given in the eqn 
 #(33), which is a value between 0 and 1, provides bounds on 
 #the Bayes misclassification probability [23].
-conjunto_funciones=[canberra,
-                    bhattacharyya]
+conjunto_funciones=[bhattacharyya]
 
 
 # Function to load and process a single CSV file
@@ -1457,7 +1461,7 @@ dfs = []
 sorted_files=sorted(os.listdir(processed_data_path))
 # Process each uploaded file
 for filename in sorted_files:
-    if filename.startswith('first_trimester'):
+    if filename.startswith('training_data'):
         # Load and process the CSV file
         print(filename)
         df = load_and_process_csv(os.path.join(processed_data_path, filename))
@@ -1469,6 +1473,10 @@ combined_time_series = pd.concat(dfs, axis=0)
 
 # If you need the result as a NumPy array
 combined_ts_matrix = combined_time_series.values
+for i in range(len(combined_ts_matrix)):
+   for j in range(len(combined_ts_matrix[0])):
+      if(np.isnan(combined_ts_matrix[i][j])):
+         combined_ts_matrix[i][j]=0
 
 # Print the resulting matrix
 print(len(combined_ts_matrix[0]))
@@ -1487,9 +1495,14 @@ for funcion in conjunto_funciones:
     for i in range(int(len(combined_ts_matrix)/4)):
       for j in range(i+1,int(len(combined_ts_matrix)/4)):
         resultado_funciones[i,j] = funcion(combined_ts_matrix[(k*24)+i],combined_ts_matrix[(k*24)+j])
+        if(np.isinf(resultado_funciones[i,j])):
+           resultado_funciones[i,j] = 0
     for i in range(len(combined_ts_matrix)):
       for j in range(i+1,len(combined_ts_matrix)):
         resultado_funciones_total[i,j] = funcion(combined_ts_matrix[i],combined_ts_matrix[j])
+        if(np.isinf(resultado_funciones_total[i,j])):
+           resultado_funciones_total[i,j] = 0
+    
     # Perform hierarchical clustering
     linkage_matrix = linkage(resultado_funciones, method='average')
     # Get the headers for labeling
@@ -1502,7 +1515,7 @@ for funcion in conjunto_funciones:
                'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
                'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
                'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
-    year = str(2019 + k)
+    year = str(initial_year + k)
     print(f'{funcion.__name__}_{year}')
     dendrogram(linkage_matrix,labels=labelsX,orientation='top', color_threshold=0.7,leaf_rotation=90,leaf_font_size=7,)
 
@@ -1561,8 +1574,8 @@ for folder in os.listdir(resultado_funciones_path):
   headers = df.columns
   # Plot the dendrogram with modified labels
   plt.figure(figsize=(10, 10))
-  labelsX = ["2019","2020","2021","2022"]
-  year = str(2019 + k)
+  labelsX = ["2020","2021","2022","2023"]
+  year = str(initial_year + k)
   print(folder)
   dendrogram(linkage_matrix,labels=labelsX,orientation='top', color_threshold=0.7,leaf_rotation=90,leaf_font_size=7,)
 
