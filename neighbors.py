@@ -352,10 +352,10 @@ def generate_forecast(input_year,input_department,metric_name,original_time_seri
   neighbor_size=4
   
   #historical_time_series = get_historical_data(original_time_series,size_training_data,input_year,input_department)
-  knn_time_series = get_knn(original_time_series,input_year,input_department,metric_name,neighbor_size)
-  #number_years=2
-  #number_neighbors=2
-  #knn_time_series = get_cluster_clusters_knn(original_time_series,input_year,input_department,metric_name,number_years,number_neighbors)
+  #knn_time_series = get_knn(original_time_series,input_year,input_department,metric_name,neighbor_size)
+  number_years=2
+  number_neighbors=2
+  knn_time_series = get_cluster_clusters_knn(original_time_series,input_year,input_department,metric_name,number_years,number_neighbors)
   final_time_series = np.zeros(size_ts,dtype=float)
   final_time_series[:size_training_data] = original_time_series[:size_training_data]
   final_time_series[size_training_data:] = forecast(knn_time_series,k,w,forecast_values)
@@ -372,60 +372,61 @@ years = [current_year]
 best_error = np.inf
 best_k= np.inf
 best_w = np.inf
-
-for k in range(1,30):
-  for w in range(1,53):
-    error_in_department = np.zeros(24)
-    puntaje_funciones = np.zeros(len(conjunto_funciones))
-    current_error = 0
-    for input_year in years:
-      for input_department in departments:
-        distancias = []
-        threads = []
-        original_time_series = []
-        #Obtener el ts_original
-        filename = f'time_series_{input_year}.csv'
-        original_time_series = load_time_series(processed_data_path,filename,input_department)
-        metric_index = 0
-        for metric_name in conjunto_funciones:
-          nueva_distancia = generate_forecast(input_year,input_department,metric_name,original_time_series,k,w)
-          distancias.append(nueva_distancia)
-          #print(input_department)
-          #print(nueva_distancia[2])
-        #Resultados
-        for i in range(len(conjunto_funciones)):
-          puntaje_funciones[conjunto_funciones.index(distancias[i][1])] = puntaje_funciones[conjunto_funciones.index(distancias[i][1])] + distancias[i][0]
-        sorted_distancias = sorted(distancias, key=lambda x: x[0])
-        #for element in sorted_distancias:
-        #    print(element[:2])
-        generated_time_series = sorted_distancias[0][2]
-        error_in_department[departments.index(input_department)] = error_in_department[departments.index(input_department)] + sorted_distancias[0][0]
-        current_error = current_error + sorted_distancias[0][0]
-        error = np.zeros(52)
-        n = len(error)
-        #plot_variance(error,sorted_distancias[0][0],input_department,input_year)
-        plot_two_time_series(original_time_series, sorted_distancias[0][2],input_department,input_year)
-      print(f'k:{k}\tw:{w}\terror:{current_error}')
-      if(current_error < best_error):
-        best_error = current_error
-        best_k = k
-        best_w = w
-        print(f'best_k={best_k},best_w={best_w},error={best_error}')
+k=18
+w=9
+#for k in range(1,30):
+#  for w in range(1,53):
+error_in_department = np.zeros(24)
+puntaje_funciones = np.zeros(len(conjunto_funciones))
+current_error = 0
+for input_year in years:
+  for input_department in departments:
+    distancias = []
+    threads = []
+    original_time_series = []
+    #Obtener el ts_original
+    filename = f'time_series_{input_year}.csv'
+    original_time_series = load_time_series(processed_data_path,filename,input_department)
+    metric_index = 0
+    for metric_name in conjunto_funciones:
+      nueva_distancia = generate_forecast(input_year,input_department,metric_name,original_time_series,k,w)
+      distancias.append(nueva_distancia)
+      print(input_department)
+      print(nueva_distancia[2])
+    #Resultados
+    for i in range(len(conjunto_funciones)):
+      puntaje_funciones[conjunto_funciones.index(distancias[i][1])] = puntaje_funciones[conjunto_funciones.index(distancias[i][1])] + distancias[i][0]
+    sorted_distancias = sorted(distancias, key=lambda x: x[0])
+    #for element in sorted_distancias:
+    #    print(element[:2])
+    generated_time_series = sorted_distancias[0][2]
+    error_in_department[departments.index(input_department)] = error_in_department[departments.index(input_department)] + sorted_distancias[0][0]
+    current_error = current_error + sorted_distancias[0][0]
+    error = np.zeros(52)
+    n = len(error)
+    #plot_variance(error,sorted_distancias[0][0],input_department,input_year)
+    plot_two_time_series(original_time_series, sorted_distancias[0][2],input_department,input_year)
+  print(f'k:{k}\tw:{w}\terror:{current_error}')
+  if(current_error < best_error):
+    best_error = current_error
+    best_k = k
+    best_w = w
+    #print(f'best_k={best_k},best_w={best_w},error={best_error}')
         
 
 
 print('==========================================')
 print('Puntaje final')
 print(f'best_k={best_k},best_w={best_w},error={best_error}')
-#i = 0
-#for metric in conjunto_funciones:
-#   print(f'{metric}={puntaje_funciones[i]}')
-#   i = i + 1
+i = 0
+for metric in conjunto_funciones:
+   print(f'{metric}={puntaje_funciones[i]}')
+   i = i + 1
 
-#print('==========================================')
-#print('Ganador')
-#print(min(puntaje_funciones))
 print('==========================================')
-#print('Error por ciudad:')
-#for i in range(24): 
-#  print(f'{departments[i]}:{error_in_department[i]}')  
+print('Ganador')
+print(min(puntaje_funciones))
+print('==========================================')
+print('Error por ciudad:')
+for i in range(24): 
+  print(f'{departments[i]}:{error_in_department[i]}')  
