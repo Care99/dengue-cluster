@@ -1,8 +1,20 @@
-- Prediccion de 1 mes, 2 meses, 3 meses, 6 meses.
-- Grafico de error y=x
-- Analisis ANOVA.
-- Histograma de frecuencia.
-- Agregar LSTM
-- Agregar KNN
-- Distribucion RMSE
-- Comparacion tiempo de ejecucion
+RUBEN:
+- generar 488 CdC  con logica que ya dijimos
+- crear funcion que recibe mes y zona -> retorna CDC para ese mes zona
+
+CESAR: 
+- Prediccion de 1 mes ventana movediza usando CPTO
+- para predecir noviembre consultar octubre CDC (llamar 12 veces a la funcion que voy a crear pero mientras tanto retorna siempre el mismo CdC)
+
+LATER:
+  VENTANAS: 
+    - 2 meses, 3 meses, 6 meses.
+  GRAFICOS:
+    - Grafico de error y=x
+    - Histograma de frecuencia.
+    - Distribucion RMSE
+    - Comparacion tiempo de ejecucion
+  PREDICCIONES:
+    - Analisis ANOVA.
+    - Agregar LSTM
+    - Agregar KNN
