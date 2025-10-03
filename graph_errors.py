@@ -40,15 +40,15 @@ knn_cpto_error             =['KNN_CPTO']
 knn_sarima_error           =['KNN_SARIMA']
 for i in range(1,25):
     file_index = str(i)
-    if(file_index<10):
+    if(i<10):
         file_index='0'+str(i)
-    data                            =pd.read_csv(f'2022_{i}.csv',header=None)
-    cluster_clusters_cpto_data      =pd.read_csv(f'cluster_clusters_time_series_cpto{i}.csv',header=None)
-    cluster_clusters_sarima_data    =pd.read_csv(f'cluster_clusters_time_series_sarima{i}.csv',header=None)
-    historical_cpto_data            =pd.read_csv(f'historical_time_series_cpto{i}.csv',header=None)
-    historical_sarima_data          =pd.read_csv(f'historical_time_series_sarima{i}.csv',header=None)
-    knn_cpto_data                   =pd.read_csv(f'knn_time_series_cpto{i}.csv',header=None)
-    knn_sarima_data                 =pd.read_csv(f'knn_time_series_sarima{i}.csv',header=None)
+    data                            =pd.read_csv(f'2022_{file_index}.csv',header=None)
+    cluster_clusters_cpto_data      =pd.read_csv(f'cluster_clusters_time_series_cpto{file_index}.csv',header=None)
+    cluster_clusters_sarima_data    =pd.read_csv(f'cluster_clusters_time_series_sarima{file_index}.csv',header=None)
+    historical_cpto_data            =pd.read_csv(f'historical_time_series_cpto{file_index}.csv',header=None)
+    historical_sarima_data          =pd.read_csv(f'historical_time_series_sarima{file_index}.csv',header=None)
+    knn_cpto_data                   =pd.read_csv(f'knn_time_series_cpto{file_index}.csv',header=None)
+    knn_sarima_data                 =pd.read_csv(f'knn_time_series_sarima{file_index}.csv',header=None)
     
     cluster_clusters_cpto_error.append(root_mean_squared_error(data,cluster_clusters_cpto_data))
     cluster_clusters_sarima_error.append(root_mean_squared_error(data,cluster_clusters_sarima_data))
@@ -90,7 +90,7 @@ plt.legend()
     
 
 plt.xlabel('Region')
-plt.ylabel('Error calculated with ln(q)')
+plt.ylabel('Error calculated with RMSE')
 plt.xticks(rotation=90, fontsize=5)
 plt.title(f'Error in each region')
 plt.grid(True)
