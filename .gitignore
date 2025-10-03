@@ -3,4 +3,5 @@
 .RData
 .Rhistory
 processed_data/
-#random/
+random/
+Graficas/
