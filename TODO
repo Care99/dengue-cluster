@@ -1,0 +1,8 @@
+- Prediccion de 1 mes, 2 meses, 3 meses, 6 meses.
+- Grafico de error y=x
+- Analisis ANOVA.
+- Histograma de frecuencia.
+- Agregar LSTM
+- Agregar KNN
+- Distribucion RMSE
+- Comparacion tiempo de ejecucion
