@@ -99,3 +99,12 @@ plt.grid(True)
 plt.savefig('errores_rmse.svg', format="svg")
 plt.close()
 print(f'Plot saved as errores.svg')
+def generate_y_x_graph(
+        forecast_time_series,
+        real_time_series,
+        nearest_neighbors,
+        years_in_neighbors
+    ):
+    plot = plt.figure(figsize=(8,6))
+    plt.scatter(real_time_series,forecast_time_series)
+    plt.savefig(f'y_x_graph_k_{nearest_neighbors}_y_{years_in_neighbors}')
