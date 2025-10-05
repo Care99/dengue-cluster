@@ -1,94 +1,57 @@
 import pandas as pd
 import numpy as np
 import os
+from glob import glob
 
-# Ventana de meses de octubre a septiembre
-ventana = ["Octubre","Noviembre","Diciembre","Enero","Febrero","Marzo",
-           "Abril","Mayo","Junio","Julio","Agosto","Septiembre"]
+base_folder = 'csv/matrix_diff'           # Base folder with month subfolders
+output_folder = 'csv/cdc_matrix_diff'     # Output folder for combined monthly matrices
+os.makedirs(output_folder, exist_ok=True)
 
-def generar_cdc_departamento_md(csv_path='csv/dengue_ts.csv', output_base='csv/matrix_diff'):
-    os.makedirs(output_base, exist_ok=True)
+# List month folders
+month_folders = [f for f in os.listdir(base_folder) if os.path.isdir(os.path.join(base_folder, f))]
 
-    # Leer CSV con series temporales por departamento y año
-    data = pd.read_csv(csv_path)
-    ts_columns = data.columns[2:]
+for month in month_folders:
+    month_path = os.path.join(base_folder, month)
     
-    # Convertir columnas de series a numérico
-    data[ts_columns] = data[ts_columns].apply(pd.to_numeric, errors='coerce')
+    # Get all department CSVs in the month folder
+    dept_files = glob(os.path.join(month_path, '*.csv'))
     
-    # Lista de departamentos
-    departments = data['Department'].unique()
+    df_list = []
+    departments = []
     
-    for dept in departments:
-        dept_data = data[data['Department'] == dept].copy()
-        dept_data = dept_data.iloc[:3]  # solo primeros 3 años
-        years = dept_data['Pandemic_year'].tolist()
-        series_matrix = dept_data[ts_columns].to_numpy()
-        n_years = series_matrix.shape[0]
-        
-        # Crear carpetas por mes
-        for month in ventana:
-            month_folder = os.path.join(output_base, month)
-            os.makedirs(month_folder, exist_ok=True)
-        
-        # Ciclo por cada mes de la ventana
-        for month_idx, month in enumerate(ventana):
-            diff_matrix = np.zeros((n_years, n_years))
-            
-            for i in range(n_years):
-                ts_actual = series_matrix[i]
-                ts_prev = series_matrix[i-1] if i > 0 else None
-                
-                # Construir ventana móvil de 3 meses para el año actual
-                if month_idx == 0:  # Octubre
-                    # Tomar últimos 2 meses del año anterior + Octubre del año actual
-                    if ts_prev is not None:
-                        window_i = [ts_prev[-2], ts_prev[-1], ts_actual[month_idx]]
-                    else:  # si no hay año anterior, rellenar con 0
-                        window_i = [0, 0, ts_actual[month_idx]]
-                elif month_idx == 1:  # Noviembre
-                    # Tomar último mes del año anterior + Octubre y Noviembre del año actual
-                    if ts_prev is not None:
-                        window_i = [ts_prev[-1], ts_actual[month_idx-1], ts_actual[month_idx]]
-                    else:
-                        window_i = [0, ts_actual[month_idx-1], ts_actual[month_idx]]
-                else:
-                    # Para los demás meses, tomar los 3 meses consecutivos del mismo año
-                    window_i = ts_actual[month_idx-2:month_idx+1]
-                
-                # Comparar la ventana del año actual con los otros años
-                for j in range(n_years):
-                    ts_j = series_matrix[j]
-                    ts_j_prev = series_matrix[j-1] if j > 0 else None
-                    
-                    # Construir la ventana móvil de 3 meses para el año j
-                    if month_idx == 0:
-                        if ts_j_prev is not None:
-                            window_j = [ts_j_prev[-2], ts_j_prev[-1], ts_j[month_idx]]
-                        else:
-                            window_j = [0, 0, ts_j[month_idx]]
-                    elif month_idx == 1:
-                        if ts_j_prev is not None:
-                            window_j = [ts_j_prev[-1], ts_j[month_idx-1], ts_j[month_idx]]
-                        else:
-                            window_j = [0, ts_j[month_idx-1], ts_j[month_idx]]
-                    else:
-                        window_j = ts_j[month_idx-2:month_idx+1]
-                    
-                    # Normalizar las ventanas (Bhattacharyya requiere distribución de probabilidad)
-                    w_i_norm = np.array(window_i) / np.sum(window_i) if np.sum(window_i) > 0 else np.zeros(3)
-                    w_j_norm = np.array(window_j) / np.sum(window_j) if np.sum(window_j) > 0 else np.zeros(3)
-                    
-                    # Calcular distancia Bhattacharyya
-                    bc = np.sum(np.sqrt(w_i_norm * w_j_norm))
-                    bc = max(bc, 1e-10)  # evitar log(0)
-                    diff_matrix[i, j] = -np.log(bc)
-            
-            # Convertir a DataFrame y guardar
-            diff_df = pd.DataFrame(diff_matrix, index=years, columns=years)
-            output_file = os.path.join(output_base, month, f"{dept.replace(' ','_')}_md_{month}.csv")
-            diff_df.to_csv(output_file)
-            print(f"Guardado matriz: {output_file}")
-
-# Ejecutar
-generar_cdc_departamento_md()
+    # Read all department CSVs into a dict
+    for dept_file in dept_files:
+        dept_name = os.path.basename(dept_file).split('_md_')[0]
+        departments.append(dept_name)
+        df = pd.read_csv(dept_file, index_col=0, dtype=str)
+        df.index = df.index.astype(str)
+        df.columns = df.columns.astype(str)
+        df_list.append(df)
+    
+    n_depts = len(departments)
+    combined_matrix = np.zeros((n_depts, n_depts))
+    
+    # Compute Bhattacharyya-like distances between departments
+    for i in range(n_depts):
+        for j in range(n_depts):
+            if i == j:
+                combined_matrix[i, j] = 0
+            else:
+                df_i = df_list[i]
+                df_j = df_list[j]
+                # Find overlapping columns (years)
+                common_years = df_i.columns.intersection(df_j.columns)
+                values = []
+                for y in common_years:
+                    try:
+                        val = float(df_i.iloc[0][y]) + float(df_j.iloc[0][y])
+                        values.append(val)
+                    except KeyError:
+                        continue
+                combined_matrix[i, j] = np.mean(values) if values else 0
+    
+    # Save combined matrix for the month
+    combined_df = pd.DataFrame(combined_matrix, index=departments, columns=departments)
+    out_file = os.path.join(output_folder, f"cdc_{month}.csv")
+    combined_df.to_csv(out_file)
+    print(f"Saved cluster matrix for month {month}: {out_file}")

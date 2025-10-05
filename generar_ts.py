@@ -74,6 +74,9 @@ def folder():
 
 
 def generar_ts_calendario():
+    import pandas as pd
+    import os
+
     csv_path = 'csv/casos.csv'
     output_file = 'csv/dengue_ts_historico.csv'
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
@@ -94,11 +97,28 @@ def generar_ts_calendario():
     # Solo años desde 2018 hasta 2023
     data = data[(data['year'] >= 2018) & (data['year'] <= 2023)]
 
-    # Crear columna año_semana
-    data['year_week'] = data['year'].astype(str) + '_week_' + data['week'].astype(str)
+    # Crear columna año_semana con semana con ceros (01, 02, …)
+    data['year_week'] = data['year'].astype(str) + '_week_' + data['week'].astype(str).str.zfill(2)
 
     # Pivot: filas = departamento, columnas = year_week
     pivot = data.pivot_table(index='name', columns='year_week', values='incidence', aggfunc='sum').reset_index()
+
+    # Ordenar columnas por año y número de semana
+    ordered_cols = ['name'] + sorted([c for c in pivot.columns if c != 'name'],
+                                     key=lambda x: (int(x.split('_')[0]), int(x.split('_week_')[1])))
+    
+    # Ordenar columnas por año y semana
+    ordered_cols = ['name'] + sorted(
+        [c for c in pivot.columns if c != 'name'],
+        key=lambda x: (int(x.split('_')[0]), int(x.split('_week_')[1]))
+    )
+    pivot = pivot[ordered_cols]
+
+    # Forzar conversión numérica en todas las columnas menos 'name'
+    pivot.iloc[:, 1:] = pivot.iloc[:, 1:].apply(lambda x: pd.to_numeric(x, errors='coerce'))
+
+    # Ahora hacer la interpolación
+    pivot.iloc[:, 1:] = pivot.iloc[:, 1:].interpolate(axis=1, method='linear', limit_direction='both')
 
     # Guardar CSV
     pivot.rename(columns={'name': 'Department'}, inplace=True)
@@ -107,5 +127,3 @@ def generar_ts_calendario():
 
 # Ejecutar
 generar_ts_calendario()
-#folder()
-
