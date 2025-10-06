@@ -708,7 +708,7 @@ def d_emanom6(tseries1,tseries2):
 
 #53
 #Extract from: https://github.com/maxinehehe/MPDist
-#MPdist distance is a measure, not a metric. In particular, it does not obey the
+#MPdist distance is a meaSURe, not a metric. In particular, it does not obey the
 #   triangular inequality. The lack of the triangular inequality property is potentially
 #   worrisome for two reasons:
 #       • Many speedup techniques for query-by-content, clustering, anomaly detection etc.,
@@ -1511,10 +1511,10 @@ for funcion in conjunto_funciones:
     # Plot the dendrogram with modified labels
     plt.figure(figsize=(10, 10))
     labelsX = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
-               'Centro est','Centro norte','Centro sur','Chaco','CORDILLERA',
-               'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
+               'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
+               'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
                'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-               'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
+               'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
     year = str(initial_year + k)
     print(f'{funcion.__name__}_{year}')
     dendrogram(linkage_matrix,labels=labelsX,orientation='top', color_threshold=0.7,leaf_rotation=90,leaf_font_size=7,)

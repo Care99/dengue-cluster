@@ -7,21 +7,21 @@ from sklearn.metrics import root_mean_squared_error
 plt.figure(figsize=(8,6))
 headers=[
     'NOMBRE',
-    'ALTO PARARANA',
+    'ALTO_PARANA',
     'AMAMBAY',
     'ASUNCION',
     'CAAGUAZU',
     'CENTRAL',
-    'Centro est',
-    'Centro norte',
-    'Centro sur',
-    'Chaco',
+    'CENTRO_EST',
+    'CENTRO_NORTE',
+    'CENTRO_SUR',
+    'CHACO',
     'CORDILLERA',
-    'Metropolitano',
+    'METROPOLITANO',
     'PARAGUARI',
-    'Paraguay',
-    'PTE HAYES',
-    'SAN PEDRO',
+    'PARAGUAY',
+    'PTE_HAYES',
+    'SAN_PEDRO',
     'CANINDEYU',
     'CONCEPCION',
     'ITAPUA',
@@ -30,7 +30,7 @@ headers=[
     'GUAIRA',
     'CAAZAPA',
     'NEEMBUCU',
-    'ALTO PARAGUAY'
+    'ALTO_PARAGUAY'
     ]
 cluster_clusters_cpto_error     =['CC_CPTO']
 cluster_clusters_sarima_error   =['CC_SARIMA']

@@ -14,12 +14,12 @@ from statsmodels.tsa.seasonal import MSTL
 script_directory = os.getcwd()
 processed_data_path = os.path.join(script_directory,'processed_data')
 resultado_funciones_path = os.path.join(processed_data_path,'resultado_funciones')
-departments = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
-              'Centro est','Centro norte','Centro sur','Chaco','CORDILLERA',
-              'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
+departments = ['ALTO_PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
+              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
+              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
               'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-              'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
-#departments = ['ALTO PARARANA']
+              'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
+#departments = ['ALTO_PARARANA']
 conjunto_funciones = [ 
    "bhattacharyya",
 ]
@@ -212,7 +212,7 @@ def plot_two_time_series(ts_original, ts_generado,department,year):
     # Show plot
     plt.tight_layout()
     #plt.show()
-    plot_path = os.path.join(processed_data_path,f'{department}_{year}.svg')
+    plot_path = os.path.join(csv_data_path,f'{department}_{year}.svg')
     plt.savefig(plot_path)
     plt.clf()
     plt.close()
@@ -230,7 +230,7 @@ def plot_variance(ts,error_dist,department,year):
   # Show plot
   plt.tight_layout()
   #plt.show()
-  plot_path = os.path.join(processed_data_path,f'{department}_{year}_diss.svg')
+  plot_path = os.path.join(csv_data_path,f'{department}_{year}_diss.svg')
   plt.savefig(plot_path)
   plt.clf()
   plt.close()
@@ -296,7 +296,7 @@ def get_historical_data(original_time_series,training_size,input_year,input_depa
   sliced_time_series = original_time_series[:training_size]
   for year in range(initial_year,input_year):
     filename = f'time_series_{year}.csv'
-    temp_ts = load_time_series(processed_data_path,filename,input_department)
+    temp_ts = load_time_series(csv_data_path,filename,input_department)
     historical_time_series[size_ts*(year-initial_year):size_ts*(year-initial_year+1)] = temp_ts
   historical_time_series[len(historical_time_series)-training_size:] = sliced_time_series
   return historical_time_series
@@ -306,7 +306,7 @@ def get_knn(original_time_series,input_year,input_department,metric_name,neighbo
   neighbors = []
   temp_ts = np.zeros(len(original_time_series))
   # Find nearest neighbor for the given year
-  csv_path = os.path.join(resultado_funciones_path,f'{metric_name}','csv',f'{metric_name}_all.csv')
+  csv_path = os.path.join(cdc_matrix_diff_path,f'{metric_name}','csv',f'{metric_name}_all.csv')
   index = (24*(input_year-initial_year))+departments.index(input_department)
   neighbors = find_nearest_neighbor(csv_path,index,neighbor_size)
 
@@ -315,7 +315,7 @@ def get_knn(original_time_series,input_year,input_department,metric_name,neighbo
     year = initial_year + int(neighbor/24)
     department = departments[int(neighbor)%24]
     filename = f'time_series_{year}.csv'
-    temp_ts = load_time_series(processed_data_path,filename,department)
+    temp_ts = load_time_series(csv_data_path,filename,department)
     neighbors_ts.append(temp_ts)
   neighbors_ts.reverse()
   knn_time_series = np.array(neighbors_ts,dtype=float).flatten()
@@ -326,19 +326,19 @@ def get_cluster_clusters_knn(original_time_series,input_year,input_department,me
   neighbors = []
   temp_ts = np.zeros(len(original_time_series))
   # Find nearest neighbor for the given year
-  csv_path = os.path.join(resultado_funciones_path,f'{metric_name}',f'{metric_name}.csv')
+  csv_path = os.path.join(cdc_matrix_diff_path,f'{metric_name}',f'{metric_name}.csv')
   index = input_year - initial_year
   years = find_nearest_year(csv_path,index,number_years)
 
   #Dado los años/departamentos mas cercanos, obtener sus ts
   for year in years:
-    department_path = os.path.join(resultado_funciones_path,f'{metric_name}','csv',f'{metric_name}_{year}.csv')
+    department_path = os.path.join(cdc_matrix_diff_path,f'{metric_name}','csv',f'{metric_name}_{year}.csv')
     index = departments.index(input_department)
     neighbors = find_nearest_neighbor(department_path,index,number_neighbors)
     for neighbor in neighbors:
       department = departments[neighbor]
       filename = f'time_series_{year}.csv'
-      temp_ts = load_time_series(processed_data_path,filename,department)
+      temp_ts = load_time_series(csv_data_path,filename,department)
       neighbors_ts.append(temp_ts)
   neighbors_ts.reverse()
   knn_time_series = np.array(neighbors_ts,dtype=float).flatten()
@@ -386,7 +386,7 @@ for input_year in years:
     original_time_series = []
     #Obtener el ts_original
     filename = f'time_series_{input_year}.csv'
-    original_time_series = load_time_series(processed_data_path,filename,input_department)
+    original_time_series = load_time_series(csv_data_path,filename,input_department)
     metric_index = 0
     for metric_name in conjunto_funciones:
       nueva_distancia = generate_forecast(input_year,input_department,metric_name,original_time_series,k,w)

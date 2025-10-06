@@ -13,11 +13,11 @@ def calculate_projections():
     script_directory = os.getcwd()
     processed_data_path = os.path.join(script_directory,'processed_data')
     resultado_funciones_path = os.path.join(processed_data_path,'resultado_funciones')
-    departments = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
-              'Centro est','Centro norte','Centro sur','Chaco','CORDILLERA',
-              'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
+    departments = ['ALTO_PARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
+              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
+              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
               'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-              'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
+              'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
     months = [9,10,11,12,1,2,3,4,5,6,7,8]
     name_of_month = [
         'OCTUBRE',

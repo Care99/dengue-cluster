@@ -3,10 +3,10 @@ import pandas as pd
 import matplotlib as mplt; mplt.use('SVG',force=True)
 import matplotlib.pyplot as plt
 departments = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
-              'Centro est','Centro norte','Centro sur','Chaco','CORDILLERA',
-              'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
+              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
+              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
               'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-              'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
+              'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
 time_series_2022 = '2022'
 cluster_clusters = '_cpto'
 historical = 'historical_time_series'
