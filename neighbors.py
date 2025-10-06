@@ -12,8 +12,9 @@ import numpy as np
 from statsmodels.tsa.seasonal import MSTL
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
-processed_data_path = os.path.join(script_directory,'processed_data')
-resultado_funciones_path = os.path.join(processed_data_path,'resultado_funciones')
+csv_path = os.path.join(script_directory,'processed_data')
+cdc_path = os.path.join(csv_path,'cdc_matrix_diff')
+cluster_path = os.path.join(csv_path,'matrix_diff')
 departments = ['ALTO_PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
               'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
               'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
@@ -286,6 +287,7 @@ def load_time_series(path,filename,index):
   df_path = os.path.join(path,filename)
   df = pd.read_csv(df_path)
   department_index = departments.index(index)
+  department_index += 4
   time_series = np.array(df.to_numpy()[department_index:department_index+1,1:].flatten(),dtype=float)
   return time_series
 
@@ -385,8 +387,8 @@ for input_year in years:
     threads = []
     original_time_series = []
     #Obtener el ts_original
-    filename = f'time_series_{input_year}.csv'
-    original_time_series = load_time_series(csv_data_path,filename,input_department)
+    filename = 'dengue_ts.csv'
+    original_time_series = load_time_series(csv_path,filename,input_department)
     metric_index = 0
     for metric_name in conjunto_funciones:
       nueva_distancia = generate_forecast(input_year,input_department,metric_name,original_time_series,k,w)
