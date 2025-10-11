@@ -1,39 +1,13 @@
 #step 1
-import dictances
 import pandas as pd
 import os
-import datetime
 import matplotlib as mplt; mplt.use('SVG',force=True)
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
 from scipy.cluster.hierarchy import dendrogram,linkage
-import scipy.sparse as sp
-from fastdtw import fastdtw as fastdtw_lib
-import httpimport
 import numpy as np
 import math
-import rpy2.robjects as robjects
-from rpy2.robjects.packages import importr,isinstalled
-from sktime import distances
-#from tslearn import metrics
 from pandas import DataFrame
-#from sdtw import SoftDTW
-#from sdtw.distance import SquaredEuclidean
-from rpy2.rinterface_lib.callbacks import logger as rpy2_logger
-import logging
-#rpy2_logger.setLevel(logging.ERROR)   # will display errors, but not warnings
-#with httpimport.github_repo(username='maxinehehe',repo='MPDist',ref='main'):
-#    import MPDist as git_MPDist
-
-#with httpimport.github_repo(username='djallelDILMI',repo='IMs-DTW',ref='master'):
-#    import imsdtw as git_imsdtw
-
-#with httpimport.github_repo(username='google-research',repo='soft-dtw-divergences',ref='master'):
-#    import sdtw_div.numba_ops as git_softdtw_divergences
-
-#with httpimport.github_repo(username='MikolajSzafraniecUPDS',repo='shapedtw-python',ref='master'):
-#    import shapedtw.shapedtw as git_shapedtw
-#    from shapedtw.shapeDescriptors import SlopeDescriptor, PAADescriptor, CompoundDescriptor
 script_directory = os.getcwd()
 processed_data_path = os.path.join(script_directory,'processed_data')
 resultado_funciones_path = os.path.join(processed_data_path,'resultado_funciones')
