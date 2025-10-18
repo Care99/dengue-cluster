@@ -10,119 +10,64 @@ import math
 from pandas import DataFrame
 script_directory = os.getcwd()
 csv_path = os.path.join(script_directory,'csv')
-csv_raw_data_path = os.path.join(csv_path,'ts_historico')
-csv_incidence_ts_path = os.path.join(csv_raw_data_path,'incidence_ts')
-csv_historical_ts_path = os.path.join(csv_raw_data_path,'incidence_ts')
-csv_windowed_ts_path = os.path.join(csv_raw_data_path,'windowed_ts')
+ts_historico_path = os.path.join(csv_path,'ts_historico')
 
 svg_path = os.path.join(script_directory,'svg')
-svg_raw_data_path = os.path.join(csv_path,'raw_data')
-svg_incidence_ts_path = os.path.join(csv_raw_data_path,'incidence_ts')
-svg_historical_ts_path = os.path.join(csv_raw_data_path,'incidence_ts')
-svg_windowed_ts_path = os.path.join(csv_raw_data_path,'windowed_ts')
 
-def folder(start_month,end_month,filename,path):
+def folder(year,month,department):
+  # Read the Excel file
+  excel_name = 'casos.csv'
+  excel_file = os.path.join(csv_path,excel_name)
+  data = pd.read_csv(excel_file)
 
-    # Read the Excel file
-    excel_name = 'casos.csv'
-    excel_file = os.path.join(csv_path,excel_name)
-    data = pd.read_csv(excel_file)
+  # Apply the filter
+  # Create a folder with the specified format
+  os.makedirs(ts_historico_path,exist_ok=True)
+  year_path = os.path.join(ts_historico_path,year)
+  os.makedirs(year_path,exist_ok=True)
+  month_path = os.path.join(year_path,month)
+  os.makedirs(month_path,exist_ok=True)
 
-    # Apply the filter
+  last_day=[30,28,31,30,31,30,31,31,30,31,30,31]
+  # Manage the time ranges
+  # Iterate through filtered data and create subfolders
+  # Initialize an empty DataFrame to store incidence data for the year
+  incidence_data = pd.DataFrame()
+  # Filter the data
+  filtered_data = data[
+     (data['disease'] == "DENGUE") 
+     & (data['classification'] == "TOTAL") 
+     & (data['name'] == department)]
 
-    # Remove repeated values
-    name_data = data.drop_duplicates(subset='name')
+  # Convert date column to pd.date
+  filtered_data = filtered_data.copy()
+  filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%Y-%m-%d')
 
-    # Create a folder with the specified format
-    os.makedirs(path,exist_ok=True)
+  # Define the start and end dates
+  start_date = pd.to_datetime(f"{year}-{month}-1", format='%Y-%m-%d')
+  if( month == 2 and year == 2020 ):
+    end_day = last_day[month-1] + 1
+  else:
+    end_day = last_day[month-1]
+  end_date = pd.to_datetime(f"{year}-{month}-{end_day}", format='%Y-%m-%d')
 
-    last_day=[30,28,31,30,31,30,31,31,30,31,30,31]
-    # Manage the time ranges
-    # Iterate through filtered data and create subfolders
-    for year in range(2019, 2023):
-      rows = []
-    # Initialize an empty DataFrame to store incidence data for the year
-      incidence_data = pd.DataFrame()
-      for index, row in name_data.iterrows():
-        # Filter the data
-        department_name = row['name']
-        filtered_data = data[(data['disease'] == "DENGUE") &
-                              (data['classification'] == "TOTAL") &
-                              (data['name'] == department_name)]
+  # Filter the data for the specified period
+  range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='left')]
 
-        # Convert date column to pd.date
-        filtered_data = filtered_data.copy()
-        filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%Y-%m-%d')
+  # Extract the incidence columns
+  incidence_columns = [col for col in range_data.columns if 'incidence' in col]
+  incidence_values = range_data[incidence_columns].values.flatten()  # Get incidence values as a flat array
 
-        # Define the start and end dates
-        fixed_year = year
-        start_date = pd.to_datetime(f"{year}-{start_month}-1", format='%Y-%m-%d')
-        if( end_month < start_month ): 
-          fixed_year = fixed_year + 1
-        if( end_month == 2 and year == 2020 ):
-          end_day = last_day[end_month-1] + 1
-        else:
-          end_day = last_day[end_month-1]
-        end_date = pd.to_datetime(f"{fixed_year}-{end_month}-{end_day}", format='%Y-%m-%d')
+  # Create a row with the department name and incidence values
+  row_data = incidence_values.tolist()
+  incidence_data = pd.DataFrame(row_data, columns=None)
 
-        # Filter the data for the specified period
-        range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='left')]
+  # Save the DataFrame as a CSV file
+  output_file_name = f'{department}.csv'
 
-        # Extract the incidence columns
-        incidence_columns = [col for col in range_data.columns if 'incidence' in col]
-        incidence_values = range_data[incidence_columns].values.flatten()  # Get incidence values as a flat array
-
-        # Create a row with the department name and incidence values
-        row_data = incidence_values.tolist()
-        columns = [f'week_{i+1}' for i in range(len(incidence_values))]
-        incidence_data = pd.DataFrame(row_data, columns=columns)
-
-        # Save the DataFrame as a CSV file
-        output_file_name = f'{filename}_{department_name}_{year}.csv'
-        output_file_path = os.path.join(path, output_file_name)
-        incidence_data.to_csv(output_file_path, index=False)
-        print(f"Saved: {output_file_path}")
-
-months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-initial_year = 2019
-start_month = 9
-end_month = 8
-filename = 'time_series'
-path = os.path.join(csv_path,'raw_data_incidence')
-folder(start_month,end_month,filename,path)
-
-start_month = 1
-end_month = 12
-filename = 'time_series'
-path = os.path.join(csv_path,'raw_data_historical')
-folder(start_month,end_month,filename)
-
-for i in range(1,13):
-  month1 = i
-  month2 = i+1
-  month3 = i+2
-  #formated month
-  fmonth1 = month1
-  fmonth2 = month2
-  fmonth3 = month3
-  index_month1 = month1
-  index_month2 = month2
-  index_month3 = month3
-  if(fmonth1<10): fmonth1 = f'0{fmonth1}'
-  if(fmonth2<10): fmonth2 = f'0{fmonth2}'
-  if(fmonth3<10): fmonth3 = f'0{fmonth3}'
-  if(fmonth1>12): fmonth1 = f'0{fmonth1%12}'
-  if(fmonth2>12): fmonth2 = f'0{fmonth2%12}'
-  if(fmonth3>12): fmonth3 = f'0{fmonth3%12}'
-  if(index_month1>12): index_month1 = index_month1%12
-  if(index_month2>12): index_month2 = index_month2%12
-  if(index_month3>12): index_month3 = index_month3%12
-  index_month1 = index_month1 - 1
-  index_month2 = index_month2 - 1
-  index_month3 = index_month3 - 1
-  filename = 'time_series'
-  path = os.path.join(csv_path,f'raw_data_{fmonth1}_{fmonth2}_{fmonth3}_{months[index_month1]}_{months[index_month2]}_{months[index_month3]}')
-  folder(start_month,end_month,filename,path)
+  output_file = os.path.join(month_path, output_file_name)
+  incidence_data.to_csv(output_file, index=False)
+  print(f"Saved: csv/{year}/{month}/{output_file}")
 
 #10
 def canberra(tseries1, tseries2):
@@ -149,9 +94,21 @@ def bhattacharyya(tseries1,tseries2):
 # Function to load and process a single CSV file
 def load_and_process_csv(file_path):
     # Load the CSV file
-    df = pd.read_csv(file_path, header=0, index_col=0)
+    df = pd.read_csv(file_path, header=None, index_col=0)
     # Extract the data starting from the second row and second column
     return df.iloc[:, 0:]
+
+months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
+years = [2019,2020,2021,2022,2023]
+departments = ['ALTO_PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
+              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
+              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
+              'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
+              'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
+for year in years:
+   for month in months:
+      for department in departments:
+         folder(year,month,department)
 
 # Initialize an empty list to store the DataFrames
 dfs = []
