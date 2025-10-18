@@ -23,7 +23,7 @@ def folder(year,month,department):
   # Apply the filter
   # Create a folder with the specified format
   os.makedirs(ts_historico_path,exist_ok=True)
-  year_path = os.path.join(ts_historico_path,year)
+  year_path = os.path.join(ts_historico_path,str(year))
   os.makedirs(year_path,exist_ok=True)
   month_path = os.path.join(year_path,month)
   os.makedirs(month_path,exist_ok=True)
