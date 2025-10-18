@@ -13,7 +13,13 @@ csv_path = os.path.join(script_directory,'csv')
 ts_historico_path = os.path.join(csv_path,'ts_historico')
 
 svg_path = os.path.join(script_directory,'svg')
-
+months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
+years = [2019,2020,2021,2022,2023]
+departments = ['ALTO_PARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
+              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
+              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
+              'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
+              'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
 def folder(year,month,department):
   # Read the Excel file
   excel_name = 'casos.csv'
@@ -234,13 +240,6 @@ def create_cluster_clusters():
     plt.clf()
     plt.close()
 
-months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-years = [2019,2020,2021,2022,2023]
-departments = ['ALTO_PARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
-              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
-              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
-              'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-              'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
 for year in years:
    for month in months:
       for department in departments:
