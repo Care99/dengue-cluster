@@ -10,7 +10,7 @@ import math
 from pandas import DataFrame
 script_directory = os.getcwd()
 csv_path = os.path.join(script_directory,'csv')
-csv_raw_data_path = os.path.join(csv_path,'raw_data')
+csv_raw_data_path = os.path.join(csv_path,'ts_historico')
 csv_incidence_ts_path = os.path.join(csv_raw_data_path,'incidence_ts')
 csv_historical_ts_path = os.path.join(csv_raw_data_path,'incidence_ts')
 csv_windowed_ts_path = os.path.join(csv_raw_data_path,'windowed_ts')
