@@ -57,7 +57,7 @@ def folder(year,month,department):
   end_date = pd.to_datetime(f"{year}-{months.index(month)+1}-{end_day}", format='%Y-%m-%d')
 
   # Filter the data for the specified period
-  range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='left')]
+  range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='both')]
 
   # Extract the incidence columns
   incidence_columns = [col for col in range_data.columns if 'incidence' in col]
