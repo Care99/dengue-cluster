@@ -20,6 +20,7 @@ svg_raw_data_path = os.path.join(csv_path,'raw_data')
 svg_incidence_ts_path = os.path.join(csv_raw_data_path,'incidence_ts')
 svg_historical_ts_path = os.path.join(csv_raw_data_path,'incidence_ts')
 svg_windowed_ts_path = os.path.join(csv_raw_data_path,'windowed_ts')
+
 def folder(start_month,end_month,filename,path):
 
     # Read the Excel file
@@ -60,7 +61,8 @@ def folder(start_month,end_month,filename,path):
           fixed_year = fixed_year + 1
         if( end_month == 2 and year == 2020 ):
           end_day = last_day[end_month-1] + 1
-        end_day = last_day[end_month-1]
+        else:
+          end_day = last_day[end_month-1]
         end_date = pd.to_datetime(f"{fixed_year}-{end_month}-{end_day}", format='%Y-%m-%d')
 
         # Filter the data for the specified period
@@ -80,6 +82,7 @@ def folder(start_month,end_month,filename,path):
         output_file_path = os.path.join(path, output_file_name)
         incidence_data.to_csv(output_file_path, index=False)
         print(f"Saved: {output_file_path}")
+
 months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
 initial_year = 2019
 start_month = 9
@@ -97,7 +100,8 @@ folder(start_month,end_month,filename)
 for i in range(1,13):
   month1 = i
   month2 = i+1
-  month3 = i=2
+  month3 = i+2
+  #formated month
   fmonth1 = month1
   fmonth2 = month2
   fmonth3 = month3
@@ -107,9 +111,9 @@ for i in range(1,13):
   if(fmonth1<10): fmonth1 = f'0{fmonth1}'
   if(fmonth2<10): fmonth2 = f'0{fmonth2}'
   if(fmonth3<10): fmonth3 = f'0{fmonth3}'
-  if(fmonth1>12): fmonth1 = fmonth1%12
-  if(fmonth2>12): fmonth2 = fmonth2%12
-  if(fmonth3>12): fmonth3 = fmonth3%12
+  if(fmonth1>12): fmonth1 = f'0{fmonth1%12}'
+  if(fmonth2>12): fmonth2 = f'0{fmonth2%12}'
+  if(fmonth3>12): fmonth3 = f'0{fmonth3%12}'
   if(index_month1>12): index_month1 = index_month1%12
   if(index_month2>12): index_month2 = index_month2%12
   if(index_month3>12): index_month3 = index_month3%12
