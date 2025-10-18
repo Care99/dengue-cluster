@@ -54,7 +54,7 @@ def folder(year,month,department):
   if( months.index(month)+1 == 2 and year == 2020 ):
     end_day = last_day[months.index(month)] + 1
   else:
-    end_day = last_day[months.index(month)+1]
+    end_day = last_day[months.index(month)]
   end_date = pd.to_datetime(f"{year}-{months.index(month)+1}-{end_day}", format='%Y-%m-%d')
 
   # Filter the data for the specified period
