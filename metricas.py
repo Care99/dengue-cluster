@@ -66,7 +66,7 @@ def folder(year,month,department):
 
   # Create a row with the department name and incidence values
   row_data = incidence_values.tolist()
-  incidence_data = pd.DataFrame(row_data, columns=None)
+  incidence_data = pd.DataFrame([row_data])
 
   # Save the DataFrame as a CSV file
   output_file_name = f'{department}.csv'
