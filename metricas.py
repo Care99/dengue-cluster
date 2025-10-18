@@ -94,9 +94,9 @@ def bhattacharyya(tseries1,tseries2):
 # Function to load and process a single CSV file
 def load_and_process_csv(file_path):
     # Load the CSV file
-    df = pd.read_csv(file_path, header=None, index_col=0)
+    df = pd.read_csv(file_path, header=None)
     # Extract the data starting from the second row and second column
-    return df.iloc[:, 0:]
+    return df.iloc[0]
 
 months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
 years = [2019,2020,2021,2022,2023]
