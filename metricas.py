@@ -163,11 +163,7 @@ for k in range(4):
 
   # Plot the dendrogram with modified labels
   plt.figure(figsize=(10, 10))
-  labelsX = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
-              'Centro est','Centro norte','Centro sur','Chaco','CORDILLERA',
-              'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
-              'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-              'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
+  labelsX = departments
   year = str(initial_year + k)
   print(f'bhattacharyya_{year}')
   dendrogram(linkage_matrix,labels=labelsX,orientation='top', color_threshold=0.7,leaf_rotation=90,leaf_font_size=7,)
