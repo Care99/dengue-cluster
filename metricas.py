@@ -98,18 +98,6 @@ def load_and_process_csv(file_path):
     # Extract the data starting from the second row and second column
     return df.iloc[0]
 
-months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
-years = [2019,2020,2021,2022,2023]
-departments = ['ALTO_PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
-              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
-              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
-              'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-              'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
-for year in years:
-   for month in months:
-      for department in departments:
-         folder(year,month,department)
-
 def create_cluster_clusters():
   # Initialize an empty list to store the DataFrames
   dfs = []
@@ -245,3 +233,15 @@ def create_cluster_clusters():
     #Close plot and finish
     plt.clf()
     plt.close()
+
+months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
+years = [2019,2020,2021,2022,2023]
+departments = ['ALTO_PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
+              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
+              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
+              'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
+              'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
+for year in years:
+   for month in months:
+      for department in departments:
+         folder(year,month,department)
