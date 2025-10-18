@@ -72,7 +72,7 @@ def folder(year,month,department):
   output_file_name = f'{department}.csv'
 
   output_file = os.path.join(month_path, output_file_name)
-  incidence_data.to_csv(output_file, index=False)
+  incidence_data.to_csv(output_file, header=False, index=False)
   print(f"Saved: csv/{year}/{month}/{output_file_name}")
 
 #10
