@@ -50,12 +50,12 @@ def folder(year,month,department):
   filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%Y-%m-%d')
 
   # Define the start and end dates
-  start_date = pd.to_datetime(f"{year}-{month}-1", format='%Y-%m-%d')
+  start_date = pd.to_datetime(f"{year}-{months.index(month)+1}-1", format='%Y-%m-%d')
   if( month == 2 and year == 2020 ):
     end_day = last_day[month-1] + 1
   else:
     end_day = last_day[month-1]
-  end_date = pd.to_datetime(f"{year}-{month}-{end_day}", format='%Y-%m-%d')
+  end_date = pd.to_datetime(f"{year}-{months.index(month)+1}-{end_day}", format='%Y-%m-%d')
 
   # Filter the data for the specified period
   range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='left')]
