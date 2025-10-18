@@ -236,11 +236,11 @@ def create_cluster_clusters():
 
 months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
 years = [2019,2020,2021,2022,2023]
-departments = ['ALTO_PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
+departments = ['ALTO_PARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
               'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
               'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
               'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-              'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
+              'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
 for year in years:
    for month in months:
       for department in departments:
