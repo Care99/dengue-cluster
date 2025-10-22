@@ -185,17 +185,17 @@ def cross_validate_knn(x,k_values,w_values,training_sets,n):
           
           best_mape = error_value
           best_forecast = generated_x
-          print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
+          #print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
         #if(error_value>=best_mape and error_value<(best_mape+best_mape/20)):
         #  print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
   #print(f'best_k={best_k},best_w={best_w}')
   return best_forecast,best_mape
 
-def sarima_forecast(time_series,size_training_data):
+def sarima_forecast(time_series,size_training_data,forecasted_values):
   data = time_series
   #train, test = model_selection.train_test_split(data)
   arima = auto_arima(data, error_action='ignore', trace=True, suppress_warnings=True,maxiter=10,seasonal=True,m=52,max_D=1,max_d=1,max_P=2,max_p=2,max_Q=2,max_q=2)
-  generated_time_series = arima.predict(n_periods=52)
+  generated_time_series = arima.predict(n_periods=forecasted_values)
   return generated_time_series[size_training_data:]
 def plot_two_time_series(ts_original, ts_generado,department,year):
     # Create a figure and axis
@@ -344,22 +344,22 @@ def get_cluster_clusters_knn(original_time_series,input_year,input_department,me
   knn_time_series = np.array(neighbors_ts,dtype=float).flatten()
   return knn_time_series
 
-def generate_forecast(input_year,input_department,metric_name,original_time_series,k,w):
+def generate_forecast(input_year,input_department,metric_name,original_time_series,k,n,month,forecasted_value):
   #variables
   size_ts = len(original_time_series)
-  forecast_values = 40
+  forecast_values = forecasted_value
   size_training_data = size_ts - forecast_values
   neighbor_size=4
   
   #historical_time_series = get_historical_data(original_time_series,size_training_data,input_year,input_department)
   #knn_time_series = get_knn(original_time_series,input_year,input_department,metric_name,neighbor_size)
-  number_years=2
-  number_neighbors=2
+  number_years=n
+  number_neighbors=k
   knn_time_series = get_cluster_clusters_knn(original_time_series,input_year,input_department,metric_name,number_years,number_neighbors)
   final_time_series = np.zeros(size_ts,dtype=float)
   final_time_series[:size_training_data] = original_time_series[:size_training_data]
-  final_time_series[size_training_data:] = forecast(knn_time_series,k,w,forecast_values)
-  #final_time_series[size_training_data:] = sarima_forecast(knn_time_series,size_training_data)
+  #final_time_series[size_training_data:] = forecast(knn_time_series,k,w,forecast_values)
+  final_time_series[size_training_data:] = sarima_forecast(knn_time_series,size_training_data)
   final_time_series = add_zeros(final_time_series)
   
   #obtener error
@@ -368,65 +368,67 @@ def generate_forecast(input_year,input_department,metric_name,original_time_seri
   return nueva_distancia
 
 #variables
-years = [current_year]
-best_error = np.inf
-best_k= np.inf
-best_w = np.inf
-k=18
-w=9
-#for k in range(1,30):
-#  for w in range(1,53):
-error_in_department = np.zeros(24)
-puntaje_funciones = np.zeros(len(conjunto_funciones))
-current_error = 0
-for input_year in years:
-  for input_department in departments:
-    distancias = []
-    threads = []
-    original_time_series = []
-    #Obtener el ts_original
-    filename = f'time_series_{input_year}.csv'
-    original_time_series = load_time_series(processed_data_path,filename,input_department)
-    metric_index = 0
-    for metric_name in conjunto_funciones:
-      nueva_distancia = generate_forecast(input_year,input_department,metric_name,original_time_series,k,w)
-      distancias.append(nueva_distancia)
-      print(input_department)
-      print(nueva_distancia[2])
-    #Resultados
-    for i in range(len(conjunto_funciones)):
-      puntaje_funciones[conjunto_funciones.index(distancias[i][1])] = puntaje_funciones[conjunto_funciones.index(distancias[i][1])] + distancias[i][0]
-    sorted_distancias = sorted(distancias, key=lambda x: x[0])
-    #for element in sorted_distancias:
-    #    print(element[:2])
-    generated_time_series = sorted_distancias[0][2]
-    error_in_department[departments.index(input_department)] = error_in_department[departments.index(input_department)] + sorted_distancias[0][0]
-    current_error = current_error + sorted_distancias[0][0]
-    error = np.zeros(52)
-    n = len(error)
-    #plot_variance(error,sorted_distancias[0][0],input_department,input_year)
-    plot_two_time_series(original_time_series, sorted_distancias[0][2],input_department,input_year)
-  print(f'k:{k}\tw:{w}\terror:{current_error}')
-  if(current_error < best_error):
-    best_error = current_error
-    best_k = k
-    best_w = w
-    #print(f'best_k={best_k},best_w={best_w},error={best_error}')
-        
+def project_time_series(k,n,month,forecasted_value):
+  years = [current_year]
+  best_error = np.inf
+  best_k= np.inf
+  best_w = np.inf
+  #k=18
+  #w=9
+  #for k in range(1,30):
+  #  for w in range(1,53):
+  error_in_department = np.zeros(24)
+  puntaje_funciones = np.zeros(len(conjunto_funciones))
+  current_error = 0
+  for input_year in years:
+    for input_department in departments:
+      distancias = []
+      threads = []
+      original_time_series = []
+      #Obtener el ts_original
+      filename = f'time_series_{input_year}.csv'
+      original_time_series = load_time_series(processed_data_path,filename,input_department)
+      metric_index = 0
+      for metric_name in conjunto_funciones:
+        nueva_distancia = generate_forecast(input_year,input_department,metric_name,original_time_series,k,n,forecasted_value)
+        distancias.append(nueva_distancia)
+        print(input_department)
+        print(nueva_distancia[2])
+      #Resultados
+      for i in range(len(conjunto_funciones)):
+        puntaje_funciones[conjunto_funciones.index(distancias[i][1])] = puntaje_funciones[conjunto_funciones.index(distancias[i][1])] + distancias[i][0]
+      sorted_distancias = sorted(distancias, key=lambda x: x[0])
+      #for element in sorted_distancias:
+      #    print(element[:2])
+      generated_time_series = sorted_distancias[0][2]
+      error_in_department[departments.index(input_department)] = error_in_department[departments.index(input_department)] + sorted_distancias[0][0]
+      current_error = current_error + sorted_distancias[0][0]
+      error = np.zeros(52)
+      n = len(error)
+      #plot_variance(error,sorted_distancias[0][0],input_department,input_year)
+      plot_two_time_series(original_time_series, sorted_distancias[0][2],input_department,input_year)
+    #print(f'k:{k}\tw:{w}\terror:{current_error}')
+    if(current_error < best_error):
+      best_error = current_error
+      best_k = k
+      #best_w = w
+      #print(f'best_k={best_k},best_w={best_w},error={best_error}')
+          
 
 
-print('==========================================')
-print('Puntaje final')
-print(f'best_k={best_k},best_w={best_w},error={best_error}')
-i = 0
-for metric in conjunto_funciones:
-   print(f'{metric}={puntaje_funciones[i]}')
-   i = i + 1
+  print('==========================================')
+  print('Puntaje final')
+  print(f'best_k={best_k},best_w={best_w},error={best_error}')
+  i = 0
+  for metric in conjunto_funciones:
+    print(f'{metric}={puntaje_funciones[i]}')
+    i = i + 1
 
-print('==========================================')
-print('Ganador')
-print(min(puntaje_funciones))
-print('==========================================')
-print('Error por ciudad:')
-for i in range(24): 
-  print(f'{departments[i]}:{error_in_department[i]}')  
+  print('==========================================')
+  print('Ganador')
+  print(min(puntaje_funciones))
+  print('==========================================')
+  print('Error por ciudad:')
+  for i in range(24): 
+    print(f'{departments[i]}:{error_in_department[i]}')  
+  return [departments,error_in_department]
