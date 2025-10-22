@@ -108,3 +108,23 @@ def generate_y_x_graph(
     plot = plt.figure(figsize=(8,6))
     plt.scatter(real_time_series,forecast_time_series)
     plt.savefig(f'y_x_graph_k_{nearest_neighbors}_y_{years_in_neighbors}')
+def generate_plot_graph(forecast_time_series,real_time_series,nearest_neighbors,years_in_neighbor,department):
+    plt.figure()
+    x = list(range(1,53))
+    y = real_time_series
+    plt.plot(x,y,'b',label='Datos reales')
+    plt.legend()
+    y = forecast_time_series
+    plt.plot(x,y,'g',label=f'Prediccion de datos con k={nearest_neighbors},n={years_in_neighbor}.')
+    plt.legend()
+    plt.xlabel("Semanas")
+    plt.ylabel("Incidencia")
+    plt.title(f'{department}')
+    plt.grid(True)
+
+    # Save plot to SVG
+    plt.savefig(f'{department}.svg', format="svg")
+    plt.close()
+    print(f'Plot saved as {department}.svg')
+def calculate_rmse_error(forecast_time_series,real_time_series):
+    
