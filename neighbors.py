@@ -12,8 +12,10 @@ import numpy as np
 from statsmodels.tsa.seasonal import MSTL
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
-processed_data_path = os.path.join(script_directory,'processed_data')
-resultado_funciones_path = os.path.join(processed_data_path,'resultado_funciones')
+csv_path = os.path.join(script_directory,'csv')
+cluster_matriz_path = os.path.join(csv_path,'cluster_matriz')
+matriz_ventana_path = os.path.join(csv_path,'matriz_ventana')
+ts_historico_path = os.path.join(csv_path,'ts_historico')
 departments = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
               'Centro est','Centro norte','Centro sur','Chaco','CORDILLERA',
               'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
