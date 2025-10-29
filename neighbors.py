@@ -313,11 +313,9 @@ def find_nearest_year(csv_path, index, num_neighbors):
 
 #10700
 
-def load_time_series(path,filename,index):
-  df_path = os.path.join(path,filename)
-  df = pd.read_csv(df_path)
-  department_index = departments.index(index)
-  time_series = np.array(df.to_numpy()[department_index:department_index+1,1:].flatten(),dtype=float)
+def load_time_series(path):
+  df = pd.read_csv(path,header=None)
+  time_series = df.to_numpy(dtype=float)
   return time_series
 
 def get_historical_data(original_time_series,training_size,input_year,input_department):
