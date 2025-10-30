@@ -318,17 +318,14 @@ def load_time_series(path):
   time_series = df.to_numpy(dtype=float)
   return time_series
 
-def get_historical_data(original_time_series,training_size,input_year,input_department):
-  size_ts = len(original_time_series)
+def get_historical_data(input_year,input_department):
   historical_time_series = []
-  sliced_time_series = original_time_series[:training_size]
   for year in range(initial_year,input_year):
     for month in months:
         filename = f'{input_department}.csv'
         path = os.path.join(ts_historico_path,{year},{month},filename)
         temp_ts = load_time_series(path)
     historical_time_series.append(temp_ts)
-  historical_time_series.append(sliced_time_series)
   return historical_time_series
 
 def get_knn(original_time_series,input_year,input_department,metric_name,neighbor_size):
