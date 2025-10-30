@@ -328,21 +328,22 @@ def get_historical_data(input_year,input_department):
     historical_time_series.append(temp_ts)
   return historical_time_series
 
-def get_knn(original_time_series,input_year,input_department,metric_name,neighbor_size):
+def get_knn(input_year,input_month,input_department,neighbor_size):
   neighbors_ts = []
   neighbors = []
-  temp_ts = np.zeros(len(original_time_series))
   # Find nearest neighbor for the given year
-  csv_path = os.path.join(resultado_funciones_path,f'{metric_name}','csv',f'{metric_name}_all.csv')
-  index = (24*(input_year-initial_year))+departments.index(input_department)
+  filename = 'cluster_jerarquico.csv'
+  path = os.path.join(cluster_matriz_path,month_window[input_month],filename)
+  index = f'{input_department}-{input_year}-{input_year+1}'
   neighbors = find_nearest_neighbor(csv_path,index,neighbor_size)
 
   #Dado los años/departamentos mas cercanos, obtener sus ts
   for neighbor in neighbors:
     year = initial_year + int(neighbor/24)
     department = departments[int(neighbor)%24]
-    filename = f'time_series_{year}.csv'
-    temp_ts = load_time_series(processed_data_path,filename,department)
+    filename = f'{departments[department]}.csv'
+    path = os.path.join(ts_historico_path,f'{year}',f'{months[input_month]}',filename)
+    temp_ts = load_time_series(path)
     neighbors_ts.append(temp_ts)
   neighbors_ts.reverse()
   knn_time_series = np.array(neighbors_ts,dtype=float).flatten()
