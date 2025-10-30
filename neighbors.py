@@ -349,24 +349,27 @@ def get_knn(input_year,input_month,input_department,neighbor_size):
   knn_time_series = np.array(neighbors_ts,dtype=float).flatten()
   return knn_time_series
 
-def get_cluster_clusters_knn(original_time_series,input_year,input_department,metric_name,number_years,number_neighbors):
+def get_cluster_clusters_knn(input_year,input_month,input_department,number_years,number_neighbors):
   neighbors_ts = []
   neighbors = []
-  temp_ts = np.zeros(len(original_time_series))
+  temp_ts = []
   # Find nearest neighbor for the given year
-  csv_path = os.path.join(resultado_funciones_path,f'{metric_name}',f'{metric_name}.csv')
+  filename = 'cluster_de_cluster.csv'
+  path = os.path.join(cluster_matriz_path,month_window[input_month],filename)
   index = input_year - initial_year
   years = find_nearest_year(csv_path,index,number_years)
 
   #Dado los años/departamentos mas cercanos, obtener sus ts
   for year in years:
-    department_path = os.path.join(resultado_funciones_path,f'{metric_name}','csv',f'{metric_name}_{year}.csv')
+    filename = f'{year}-{year+1}.csv'
+    path = os.path.join(cluster_matriz_path,month_window[input_month],filename)
     index = departments.index(input_department)
-    neighbors = find_nearest_neighbor(department_path,index,number_neighbors)
+    neighbors = find_nearest_neighbor(path,index,number_neighbors)
     for neighbor in neighbors:
       department = departments[neighbor]
-      filename = f'time_series_{year}.csv'
-      temp_ts = load_time_series(processed_data_path,filename,department)
+      filename = f'{departments[department]}.csv'
+      path = os.path.join(ts_historico_path,f'{year}',f'{months[input_month]}',filename)
+      temp_ts = load_time_series(path)
       neighbors_ts.append(temp_ts)
   neighbors_ts.reverse()
   knn_time_series = np.array(neighbors_ts,dtype=float).flatten()
