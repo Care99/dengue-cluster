@@ -1,6 +1,5 @@
 import math
 import pandas as pd
-from pmdarima import auto_arima
 from scipy.stats import boxcox
 from scipy.special import inv_boxcox
 from scipy.spatial.distance import euclidean
@@ -10,6 +9,19 @@ import matplotlib as mplt; mplt.use('SVG',force=True)
 from matplotlib import pyplot as plt
 import numpy as np
 from statsmodels.tsa.seasonal import MSTL
+#Forecasting models
+#Baseline Models 
+from darts.models import NaiveMean,NaiveSeasonal,NaiveDrift,NaiveMovingAverage
+#Statistical Models 
+from darts.models import AutoARIMA,ExponentialSmoothing,AutoTheta,Prophet
+#SKLearn-Like Models 
+from darts.models import LinearRegressionModel,RandomForestModel
+#PyTorch (Lightning)-based Models
+from darts.models import RNNModel,NLinearModel,TCNModel
+#Ensemble Models
+from darts.models import NaiveEnsembleModel,RegressionEnsembleModel
+
+from darts.metrics import accuracy,coefficient_of_variation,dtw_metric,mae,mape,precision,r2_score,rmse,smape
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
 csv_path = os.path.join(script_directory,'csv')
@@ -50,6 +62,24 @@ month_window = [
   "NOVIEMBRE-DICIEMBRE-ENERO",
   "DICIEMBRE-ENERO-FEBRERO"
 ]
+models = [
+  'naive_mean',
+  'naive_seasonal',
+  'naive_drift',
+  'naive_movingAverage',
+  'auto_arima',
+  'exponential_smoothing',
+  'auto_theta',
+  'prophet',
+  'linear_regression_model',
+  'random_forest_model',
+  'rnn_model',
+  'lstm_model',
+  'nLinear_model',
+  'tcn_model',
+  'naive_ensemble_model',
+  'regression_ensemble_model'
+  ]
 #departments = ['ALTO PARARANA']
 conjunto_funciones = [ 
    "bhattacharyya",
@@ -69,165 +99,162 @@ def logq(time_series,forecast):
     value = numerator/denominator
     error = error + np.power(np.log(value),2)
   return error
-def smape(time_series,forecast):
-  numerator = 0.0
-  denominator = 0.0
-  error = 0.0
-  n = len(time_series)
-  for i in range(n):
-    numerator = abs(time_series[i]-forecast[i])
-    denominator = abs(time_series[i]) + abs(forecast[i])
-    if(denominator==0):
-      denominator = 0.0001
-    error = error + (numerator/denominator)
-  error = (error*100)/n
-  return error
-
-def remove_zeros(x):
-  for i in range(int(len(x))):
-    if(x[i]<=0):
-      x[i]=0.01
-  return x
-
-def add_zeros(x):
-  for i in range(int(len(x))):
-    if(x[i]<=0.01):
-      x[i]=0
-  return x
-# Function to detect and adjust outliers
-def DAO(x):
-    T = len(x)
-    for i in range(3, T-3):
-        mb = np.median([x[i-3], x[i-2], x[i-1]])
-        ma = np.median([x[i+1], x[i+2], x[i+3]])
-        if abs(x[i]) >= 4 * max(abs(mb), abs(ma)):
-            x[i] = 0.5 * (x[i-1] + x[i+1])
-    return x
-
-# Function to stabilize variance using Box-Cox transformation
-def stabilize_variance(x):
-    x = remove_zeros(x)
-    x, lam = boxcox(x)
-    return x, lam
-
-
-# Function to detrend a time series
-def detrend(x):
-  return np.diff(x)
-
-def rank_order_centroid(k):
-  weights = np.zeros(k)
-  for j in range(k):
-    inverted_sum = 0
-    for i in range(j,k):
-      inverted_sum = inverted_sum + (1/(i+1))
-    weights[j] =  inverted_sum/k
-  return weights
-
-# Main function to perform CPTO-WNN time series forecasting
-def forecast(x,k,p,n):
-  T = len(x)
-  distances = np.zeros(T-2*n-p)
-  distances_m = np.zeros(T-2*n-p)
-  s = np.zeros(n)
-  forecast = np.zeros(n)
-  b = np.zeros(n)
-  weighted_value = 0
-  indicator_function = 0
-  # Step 1: Outliers adjustment
-  x  = DAO(x)
-  
-  # Step 2: Variance stabilization
-  g,lam = stabilize_variance(x[:T-n])
-  
-  # Step 3: Detrending
-  h = detrend(g)
-  #g_series = pd.Series(g, index=pd.date_range("1-1-2019", periods=len(g), freq="W"), name="Dengue")
-  #h_decomp = seasonal.STL(g_series)
-  #h_fit = h_decomp.fit()
-  #h_trend = np.array(h_fit.trend.values,dtype=float)
-  #h_seasonal = np.array(h_fit.seasonal.values,dtype=float)
-  #h_remainder = np.array(h_fit.resid.values,dtype=float)
-  #h = h_seasonal + h_remainder
-  # Step 4: Distance vector
-  for i in range(T-2*n-p):
-    array1 = h[T-n-p-1:T-n]
-    array2 = h[i:i+p]
-    distances[i] = euclidean(array1,array2)
-
-  # Step 5: Sorted distance
-  distances_m = sorted(distances)
-
-  #Setp 5: Neighborhood Set
-  NS = distances.argsort()[:k]
-  
-  weights = rank_order_centroid(k)
-  #Last known value before forecast
-  Y = g[T-n-1]
-  #Y = g[len(g)-1]
-  for c in range(n):
-    for j in range(k):
-      weighted_value = 0
-      detrending_value = 0
-      indicator_function = 0
-      for i in range(len(NS)):
-        if(distances[NS[i]]==distances_m[j]):
-          indicator_function = indicator_function + 1
-          detrending_value = detrending_value + h[i+p+(c-1)]
-      weighted_value = weights[j]/indicator_function
-      s[c] = s[c] + weighted_value * detrending_value
-    #Once we remove the trend by implementing
-    # the Holt’s method, we forecast the seasonal and remainder components by
-    # the k-NN regression method. 
-    # The forecast of the trend component, the seasonal component, and the remainder
-    # component are added to generate the final forecast
-    #b[c] = s[c] + Y + h_trend[i+p+(c-1)]
-    b[c] = s[c] + Y
-    Y = b[c]
-    forecast[c] = inv_boxcox(b[c],lam)
-    if(np.isnan(forecast[c])):
-      forecast[c] = 0
-  return forecast
-
-def cross_validate_knn(x,k_values,w_values,training_sets,n):
-  size_ts = len(x)
-  size_training_data = size_ts - n
-  I = 1
-  best_mape = np.inf
-  best_forecast = np.zeros(size_ts)
-  best_k = 0
-  best_w = 0
-  for k in range(1,k_values):
-    for w in range(1,w_values):
-      if( w + k <= size_ts - n * I - n + 1 ):
-        generated_x = np.zeros(size_ts)
-        generated_x[:size_training_data] 
-        generated_x = forecast(training_sets,k_values,w_values,n)
-        error_value = logq(x,generated_x)
-        
-        #Best case scenario of forecast is when error_value is 1
-        #This happens when generated_x = x
-        #logq = x/generated_x
-        #logq = x/x
-        #logq = 1
-        if(abs(error_value-1)<abs(best_mape-1)):
-          best_k = k
-          best_w = w
-          
-          best_mape = error_value
-          best_forecast = generated_x
-          #print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
-        #if(error_value>=best_mape and error_value<(best_mape+best_mape/20)):
-        #  print(f'{input_year},{input_department},{metric_name},{k},{w},{error_value}')
-  #print(f'best_k={best_k},best_w={best_w}')
-  return best_forecast,best_mape
-
-def sarima_forecast(time_series,size_training_data,forecasted_values):
+def naive_mean(time_series,forecasted_values):
+  data = time_series
+  model = NaiveMean()
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def naive_seasonal(time_series,forecasted_values):
+  data = time_series
+  model = NaiveSeasonal(52)
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def naive_drift(time_series,forecasted_values):
+  data = time_series
+  model = NaiveDrift()
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def naive_moving_average(time_series,forecasted_values):
+  data = time_series
+  model = NaiveMovingAverage(input_chunk_length=4)
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def auto_arima(time_series,forecasted_values):
   data = time_series
   #train, test = model_selection.train_test_split(data)
-  arima = auto_arima(data, error_action='ignore', trace=True, suppress_warnings=True,maxiter=10,seasonal=True,m=52,max_D=1,max_d=1,max_P=2,max_p=2,max_Q=2,max_q=2)
+  arima = AutoARIMA(data, error_action='ignore', trace=True, suppress_warnings=True,maxiter=10,seasonal=True,m=52,max_D=1,max_d=1,max_P=2,max_p=2,max_Q=2,max_q=2)
   generated_time_series = arima.predict(n_periods=forecasted_values)
-  return generated_time_series[size_training_data:]
+  return generated_time_series.values()
+def exponential_smoothing(time_series,forecasted_values):
+  data = time_series
+  model = ExponentialSmoothing(seasonal_periods=52)
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def auto_theta(time_series,forecasted_values):
+  data = time_series
+  model = AutoTheta(season_length=52)
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def prophet_forecast(time_series,forecasted_values):
+  data = time_series
+  model = Prophet(
+    add_seasonalities=
+    {
+      'name': 'yearly_seasonality',  # (name of the seasonality component),
+      'seasonal_periods': 52,  # (nr of steps composing a season),
+      'fourier_order': 5,  # (number of Fourier components to use),
+    }
+  )
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def linear_regression(time_series,forecasted_values):
+  data = time_series
+  model = LinearRegressionModel(lags=52)
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def random_forest(time_series,forecasted_values):
+  data = time_series
+  model = RandomForestModel(lags=52,n_estimators=100)
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def rnn_forecast(time_series,forecasted_values):
+  data = time_series
+  model = RNNModel(
+    model='RNN',
+    hidden_size=25, 
+    n_rnn_layers=2, 
+    dropout=0.1, 
+    batch_size=16, 
+    n_epochs=100, 
+    optimizer_kwargs={'lr':1e-3}, 
+    random_state=42, 
+    log_tensorboard=False, 
+    force_reset=True
+  )
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def lstm_forecast(time_series,forecasted_values):
+  data = time_series
+  model = RNNModel(
+    model='LSTM',
+    hidden_size=25, 
+    n_rnn_layers=2, 
+    dropout=0.1, 
+    batch_size=16, 
+    n_epochs=100, 
+    optimizer_kwargs={'lr':1e-3}, 
+    random_state=42, 
+    log_tensorboard=False, 
+    force_reset=True
+  )
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def n_linear_forecast(time_series,forecasted_values):
+  data = time_series
+  model = NLinearModel(
+    input_chunk_length=52,
+    n_epochs=100,
+    random_state=42,
+    force_reset=True
+  )
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def tcn_forecast(time_series,forecasted_values):
+  data = time_series
+  model = TCNModel(
+    input_chunk_length=52,
+    n_epochs=100,
+    random_state=42,
+    force_reset=True
+  )
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def naive_ensemble_forecast(time_series,forecasted_values):
+  data = time_series
+  model = NaiveEnsembleModel(
+    models=[
+      NaiveMean(),
+      NaiveSeasonal(K=52),
+      NaiveDrift()
+    ]
+  )
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
+def regression_ensemble_forecast(time_series,forecasted_values):
+  data = time_series
+  model = RegressionEnsembleModel(
+    base_models=[
+      AutoARIMA(),
+      ExponentialSmoothing(seasonal_periods=52),
+      AutoTheta(season_length=52),
+      Prophet(
+        add_seasonalities=
+        {
+          'name': 'yearly_seasonality',  # (name of the seasonality component),
+          'seasonal_periods': 52,  # (nr of steps composing a season),
+          'fourier_order': 5,  # (number of Fourier components to use),
+        }
+      )
+    ],
+    regression_model=RandomForestModel(n_estimators=100)
+  )
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
+  return generated_time_series.values()
 def plot_two_time_series(ts_original, ts_generado,department,year):
     # Create a figure and axis
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -375,18 +402,31 @@ def get_cluster_clusters_knn(input_year,input_month,input_department,number_year
   knn_time_series = np.array(neighbors_ts,dtype=float).flatten()
   return knn_time_series
 
-def generate_forecast(input_year,input_department,metric_name,original_time_series,k,n,month,forecasted_value):
+def generate_forecast(
+    input_year,
+    input_month,
+    input_department,
+    number_years,
+    number_neighbors,
+    values_to_forecast):
   #variables
   size_ts = len(original_time_series)
-  forecast_values = forecasted_value
-  size_training_data = size_ts - forecast_values
   neighbor_size=4
+  original_time_series = []
+  historical_time_series = get_historical_data(input_year,input_department)
+  knn_time_series = get_knn(input_year,input_month,input_department,number_years*number_neighbors)
+  cluster_clusters_knn = get_cluster_clusters_knn(input_year,input_month,input_department,number_years,number_neighbors)
+  #Time series for projections
+  sarima_historical_time_series = []
+  knn_historical_time_series = []
+  lstm_historical_time_series = []
+  rnn_historical_time_series = []
+  prophet_historical_time_series = []
+  sarima_historical_time_series = []
+  sarima_historical_time_series = []
+  sarima_historical_time_series = []
+  sarima_historical_time_series = []
   
-  #historical_time_series = get_historical_data(original_time_series,size_training_data,input_year,input_department)
-  #knn_time_series = get_knn(original_time_series,input_year,input_department,metric_name,neighbor_size)
-  number_years=n
-  number_neighbors=k
-  knn_time_series = get_cluster_clusters_knn(original_time_series,input_year,input_department,metric_name,number_years,number_neighbors)
   final_time_series = np.zeros(size_ts,dtype=float)
   final_time_series[:size_training_data] = original_time_series[:size_training_data]
   #final_time_series[size_training_data:] = forecast(knn_time_series,k,w,forecast_values)
@@ -400,7 +440,21 @@ def generate_forecast(input_year,input_department,metric_name,original_time_seri
 
 #variables
 def project_time_series(k,n,month,forecasted_value):
-  years = [current_year]
+  months_original_time_series=[
+    ['OCTUBRE','2022'],
+    ['NOVIEMBRE','2022'],
+    ['DICIEMBRE','2022'],
+    ['ENERO','2023'],
+    ['FEBRERO','2023'],
+    ['MARZO','2023'],
+    ['ABRIL','2023'],
+    ['MAYO','2023'],
+    ['JUNIO','2023'],
+    ['JULIO','2023'],
+    ['AGOSTO','2023'],
+    ['SEPTIEMBRE','2023']
+  ]
+  year = 2022
   best_error = np.inf
   best_k= np.inf
   best_w = np.inf
@@ -411,39 +465,43 @@ def project_time_series(k,n,month,forecasted_value):
   error_in_department = np.zeros(24)
   puntaje_funciones = np.zeros(len(conjunto_funciones))
   current_error = 0
-  for input_year in years:
-    for input_department in departments:
-      distancias = []
-      threads = []
-      original_time_series = []
-      #Obtener el ts_original
-      filename = f'time_series_{input_year}.csv'
-      original_time_series = load_time_series(processed_data_path,filename,input_department)
-      metric_index = 0
-      for metric_name in conjunto_funciones:
-        nueva_distancia = generate_forecast(input_year,input_department,metric_name,original_time_series,k,n,forecasted_value)
-        distancias.append(nueva_distancia)
-        print(input_department)
-        print(nueva_distancia[2])
-      #Resultados
-      for i in range(len(conjunto_funciones)):
-        puntaje_funciones[conjunto_funciones.index(distancias[i][1])] = puntaje_funciones[conjunto_funciones.index(distancias[i][1])] + distancias[i][0]
-      sorted_distancias = sorted(distancias, key=lambda x: x[0])
-      #for element in sorted_distancias:
-      #    print(element[:2])
-      generated_time_series = sorted_distancias[0][2]
-      error_in_department[departments.index(input_department)] = error_in_department[departments.index(input_department)] + sorted_distancias[0][0]
-      current_error = current_error + sorted_distancias[0][0]
-      error = np.zeros(52)
-      n = len(error)
-      #plot_variance(error,sorted_distancias[0][0],input_department,input_year)
-      plot_two_time_series(original_time_series, sorted_distancias[0][2],input_department,input_year)
-    #print(f'k:{k}\tw:{w}\terror:{current_error}')
-    if(current_error < best_error):
-      best_error = current_error
-      best_k = k
-      #best_w = w
-      #print(f'best_k={best_k},best_w={best_w},error={best_error}')
+  for input_department in departments:
+    distancias = []
+    threads = []
+    original_time_series = []
+    #Obtener el ts_original
+    for month in months_original_time_series:
+      input_year = int(month[1])
+      input_month = months.index(month[0])
+      filename = f'{input_department}.csv'
+      path = os.path.join(ts_historico_path,f'{input_year}',f'{input_month}',filename)
+      temp_ts = load_time_series(path)
+      original_time_series.append(temp_ts)
+    metric_index = 0
+    for metric_name in conjunto_funciones:
+      nueva_distancia = generate_forecast(input_year,input_department,metric_name,original_time_series,k,n,forecasted_value)
+      distancias.append(nueva_distancia)
+      print(input_department)
+      print(nueva_distancia[2])
+    #Resultados
+    for i in range(len(conjunto_funciones)):
+      puntaje_funciones[conjunto_funciones.index(distancias[i][1])] = puntaje_funciones[conjunto_funciones.index(distancias[i][1])] + distancias[i][0]
+    sorted_distancias = sorted(distancias, key=lambda x: x[0])
+    #for element in sorted_distancias:
+    #    print(element[:2])
+    generated_time_series = sorted_distancias[0][2]
+    error_in_department[departments.index(input_department)] = error_in_department[departments.index(input_department)] + sorted_distancias[0][0]
+    current_error = current_error + sorted_distancias[0][0]
+    error = np.zeros(52)
+    n = len(error)
+    #plot_variance(error,sorted_distancias[0][0],input_department,input_year)
+    plot_two_time_series(original_time_series, sorted_distancias[0][2],input_department,input_year)
+  #print(f'k:{k}\tw:{w}\terror:{current_error}')
+  if(current_error < best_error):
+    best_error = current_error
+    best_k = k
+    #best_w = w
+    #print(f'best_k={best_k},best_w={best_w},error={best_error}')
           
 
 
