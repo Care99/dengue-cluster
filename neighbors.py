@@ -17,11 +17,12 @@ from darts.models import AutoARIMA,ExponentialSmoothing,AutoTheta,Prophet
 #SKLearn-Like Models 
 from darts.models import LinearRegressionModel,RandomForestModel
 #PyTorch (Lightning)-based Models
-from darts.models import RNNModel,NLinearModel,TCNModel
+from darts.models import RNNModel,NLinearModel,TCNModel,NBEATSModel
 #Ensemble Models
 from darts.models import NaiveEnsembleModel,RegressionEnsembleModel
 
 from darts.metrics import accuracy,coefficient_of_variation,dtw_metric,mae,mape,precision,r2_score,rmse,smape
+from darts import TimeSeries
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
 csv_path = os.path.join(script_directory,'csv')
@@ -417,27 +418,33 @@ def generate_forecast(
   knn_time_series = get_knn(input_year,input_month,input_department,number_years*number_neighbors)
   cluster_clusters_knn = get_cluster_clusters_knn(input_year,input_month,input_department,number_years,number_neighbors)
   #Time series for projections
-  sarima_historical_time_series = []
-  knn_historical_time_series = []
-  lstm_historical_time_series = []
-  rnn_historical_time_series = []
-  prophet_historical_time_series = []
-  sarima_historical_time_series = []
-  sarima_historical_time_series = []
-  sarima_historical_time_series = []
-  sarima_historical_time_series = []
-  
-  final_time_series = np.zeros(size_ts,dtype=float)
-  final_time_series[:size_training_data] = original_time_series[:size_training_data]
-  #final_time_series[size_training_data:] = forecast(knn_time_series,k,w,forecast_values)
-  final_time_series[size_training_data:] = sarima_forecast(knn_time_series,size_training_data)
-  final_time_series = add_zeros(final_time_series)
-  
-  #obtener error
-  error_dist = logq(original_time_series, final_time_series)
-  nueva_distancia = (error_dist,metric_name,final_time_series)
-  return nueva_distancia
-
+  projected_historical_time_series = []
+  projected_knn_time_series = []
+  projected_cluster_clusters_knn = []
+  for model in models:
+    for month in months:
+      current_time_series = []
+      path = os.path.join(ts_historico_path,f'{input_year}',f'{month}',f'{input_department}.csv')
+      current_time_series = load_time_series(path)
+      size_ts = len(current_time_series)
+      historical_time_series = historical_time_series[size_ts:]+[current_time_series]
+      knn_time_series = knn_time_series[size_ts:]+[current_time_series]
+      cluster_clusters_knn = cluster_clusters_knn[size_ts:]+[current_time_series]
+      projected_historical_time_series.append(model.__func__(historical_time_series,values_to_forecast))
+      projected_knn_time_series.append(model.__func__(knn_time_series,values_to_forecast))
+      projected_cluster_clusters_knn.append(model.__func__(knn_time_series,values_to_forecast))
+    save_time_series_as_csv(input_department,projected_historical_time_series,model,'HISTORICAL')
+    save_time_series_as_csv(input_department,projected_knn_time_series,model,'KNN')
+    save_time_series_as_csv(input_department,projected_cluster_clusters_knn,model,'CLUSTER_CLUSTERS')
+def save_time_series_as_csv(department,time_series,model,classification):
+  incidence_data = pd.DataFrame(time_series)
+  # Save the DataFrame as a CSV file
+  output_file_name = f'{department}.csv'
+  path = os.path.join(csv_path,'forecast',{classification},{model})
+  os.makedirs(path,exist_ok=True)
+  output_file = os.path.join(path, output_file_name)
+  incidence_data.to_csv(output_file, header=False, index=False)
+  print(f"Saved: csv/forecast/{classification}/{model}/{output_file_name}")
 #variables
 def project_time_series(k,n,month,forecasted_value):
   months_original_time_series=[
