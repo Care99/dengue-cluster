@@ -85,6 +85,20 @@ models = [
 conjunto_funciones = [ 
    "bhattacharyya",
 ]
+months_original_time_series=[
+    ['OCTUBRE','2022'],
+    ['NOVIEMBRE','2022'],
+    ['DICIEMBRE','2022'],
+    ['ENERO','2023'],
+    ['FEBRERO','2023'],
+    ['MARZO','2023'],
+    ['ABRIL','2023'],
+    ['MAYO','2023'],
+    ['JUNIO','2023'],
+    ['JULIO','2023'],
+    ['AGOSTO','2023'],
+    ['SEPTIEMBRE','2023']
+  ]
 initial_year = 2019
 current_year = 2022
 def logq(time_series,forecast):
