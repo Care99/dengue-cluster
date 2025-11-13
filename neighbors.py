@@ -270,44 +270,6 @@ def regression_ensemble_forecast(time_series,forecasted_values):
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
-def plot_two_time_series(ts_original, ts_generado,department,year):
-    # Create a figure and axis
-    fig, ax = plt.subplots(figsize=(10, 6))
-    size_ts = 52
-    # Plot time series 1 and 2
-    ax.plot(range(1, size_ts+1), ts_original, marker='o', linestyle='-', color='b', label='Time Series Original')
-    ax.plot(range(1, size_ts+1), ts_generado, marker='s', linestyle='--', color='r', label='Time Series Generado')
-    # Add labels and title
-    ax.set_xlabel('Time')
-    ax.set_ylabel('Values')
-    ax.set_title('Comparison of Time Series')
-    ax.legend()
-    # Show plot
-    plt.tight_layout()
-    #plt.show()
-    plot_path = os.path.join(processed_data_path,f'{department}_{year}.svg')
-    plt.savefig(plot_path)
-    plt.clf()
-    plt.close()
-
-def plot_variance(ts,error_dist,department,year):
-  # Create a figure and axis
-  fig, ax = plt.subplots(figsize=(10, 6))
-  # Plot time series 1 and 2
-  ax.plot(range(1, 53), ts, marker='o', linestyle='-', color='b', label='Time Series')
-  # Add labels and title
-  ax.set_xlabel('Week')
-  ax.set_ylabel('Dissimilarity')
-  ax.set_title(f'dissimilarity:{error_dist}')
-  ax.legend()
-  # Show plot
-  plt.tight_layout()
-  #plt.show()
-  plot_path = os.path.join(processed_data_path,f'{department}_{year}_diss.svg')
-  plt.savefig(plot_path)
-  plt.clf()
-  plt.close()
-
 def find_nearest_neighbor(csv_path, index, num_neighbors):
   # Read the CSV file into a DataFrame
   df = pd.read_csv(csv_path, header=None, index_col=None, skiprows=1).iloc[:, 1:]
