@@ -412,6 +412,16 @@ def generate_forecast(
     save_time_series_as_csv(input_department,projected_historical_time_series,model,'HISTORICAL')
     save_time_series_as_csv(input_department,projected_knn_time_series,model,'KNN')
     save_time_series_as_csv(input_department,projected_cluster_clusters_knn,model,'CLUSTER_CLUSTERS')
+    original_time_series = TimeSeries.from_values(original_time_series)
+    projected_historical_time_series = TimeSeries.from_values(projected_historical_time_series)
+    projected_knn_time_series = TimeSeries.from_values(projected_knn_time_series)
+    projected_cluster_clusters_knn = TimeSeries.from_values(projected_cluster_clusters_knn)
+    save_time_series_as_svg(input_department,projected_historical_time_series,model,'HISTORICAL')
+    save_time_series_as_svg(input_department,projected_knn_time_series,model,'KNN')
+    save_time_series_as_svg(input_department,projected_cluster_clusters_knn,model,'CLUSTER_CLUSTERS')
+    save_error(input_department,projected_historical_time_series,model,'HISTORICAL')
+    save_error(input_department,projected_knn_time_series,model,'KNN')
+    save_error(input_department,projected_cluster_clusters_knn,model,'CLUSTER_CLUSTERS')
 def save_time_series_as_csv(department,time_series,model,classification):
   incidence_data = pd.DataFrame(time_series)
   # Save the DataFrame as a CSV file
