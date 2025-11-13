@@ -432,85 +432,9 @@ def save_time_series_as_csv(department,time_series,model,classification):
   incidence_data.to_csv(output_file, header=False, index=False)
   print(f"Saved: csv/forecast/{classification}/{model}/{output_file_name}")
 #variables
-def project_time_series(k,n,month,forecasted_value):
-  months_original_time_series=[
-    ['OCTUBRE','2022'],
-    ['NOVIEMBRE','2022'],
-    ['DICIEMBRE','2022'],
-    ['ENERO','2023'],
-    ['FEBRERO','2023'],
-    ['MARZO','2023'],
-    ['ABRIL','2023'],
-    ['MAYO','2023'],
-    ['JUNIO','2023'],
-    ['JULIO','2023'],
-    ['AGOSTO','2023'],
-    ['SEPTIEMBRE','2023']
-  ]
-  year = 2022
-  best_error = np.inf
-  best_k= np.inf
-  best_w = np.inf
-  #k=18
-  #w=9
-  #for k in range(1,30):
-  #  for w in range(1,53):
-  error_in_department = np.zeros(24)
-  puntaje_funciones = np.zeros(len(conjunto_funciones))
-  current_error = 0
+def project_time_series(k,n,forecasted_value):
   for input_department in departments:
-    distancias = []
-    threads = []
-    original_time_series = []
-    #Obtener el ts_original
     for month in months_original_time_series:
       input_year = int(month[1])
       input_month = months.index(month[0])
-      filename = f'{input_department}.csv'
-      path = os.path.join(ts_historico_path,f'{input_year}',f'{input_month}',filename)
-      temp_ts = load_time_series(path)
-      original_time_series.append(temp_ts)
-    metric_index = 0
-    for metric_name in conjunto_funciones:
-      nueva_distancia = generate_forecast(input_year,input_department,metric_name,original_time_series,k,n,forecasted_value)
-      distancias.append(nueva_distancia)
-      print(input_department)
-      print(nueva_distancia[2])
-    #Resultados
-    for i in range(len(conjunto_funciones)):
-      puntaje_funciones[conjunto_funciones.index(distancias[i][1])] = puntaje_funciones[conjunto_funciones.index(distancias[i][1])] + distancias[i][0]
-    sorted_distancias = sorted(distancias, key=lambda x: x[0])
-    #for element in sorted_distancias:
-    #    print(element[:2])
-    generated_time_series = sorted_distancias[0][2]
-    error_in_department[departments.index(input_department)] = error_in_department[departments.index(input_department)] + sorted_distancias[0][0]
-    current_error = current_error + sorted_distancias[0][0]
-    error = np.zeros(52)
-    n = len(error)
-    #plot_variance(error,sorted_distancias[0][0],input_department,input_year)
-    plot_two_time_series(original_time_series, sorted_distancias[0][2],input_department,input_year)
-  #print(f'k:{k}\tw:{w}\terror:{current_error}')
-  if(current_error < best_error):
-    best_error = current_error
-    best_k = k
-    #best_w = w
-    #print(f'best_k={best_k},best_w={best_w},error={best_error}')
-          
-
-
-  print('==========================================')
-  print('Puntaje final')
-  print(f'best_k={best_k},best_w={best_w},error={best_error}')
-  i = 0
-  for metric in conjunto_funciones:
-    print(f'{metric}={puntaje_funciones[i]}')
-    i = i + 1
-
-  print('==========================================')
-  print('Ganador')
-  print(min(puntaje_funciones))
-  print('==========================================')
-  print('Error por ciudad:')
-  for i in range(24): 
-    print(f'{departments[i]}:{error_in_department[i]}')  
-  return [departments,error_in_department]
+      generate_forecast(input_year,input_month,input_department,k,n,forecasted_value)
