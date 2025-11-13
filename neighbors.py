@@ -122,7 +122,7 @@ def naive_mean(time_series,forecasted_values):
   return generated_time_series.values()
 def naive_seasonal(time_series,forecasted_values):
   data = time_series
-  model = NaiveSeasonal(52)
+  model = NaiveSeasonal(K=52)
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
@@ -134,7 +134,7 @@ def naive_drift(time_series,forecasted_values):
   return generated_time_series.values()
 def naive_moving_average(time_series,forecasted_values):
   data = time_series
-  model = NaiveMovingAverage(input_chunk_length=4)
+  model = NaiveMovingAverage(input_chunk_length=12)
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
@@ -253,7 +253,7 @@ def regression_ensemble_forecast(time_series,forecasted_values):
   data = time_series
   model = RegressionEnsembleModel(
     base_models=[
-      AutoARIMA(),
+      AutoARIMA(error_action='ignore', trace=True, suppress_warnings=True,maxiter=10,seasonal=True,m=52,max_D=1,max_d=1,max_P=2,max_p=2,max_Q=2,max_q=2),
       ExponentialSmoothing(seasonal_periods=52),
       AutoTheta(season_length=52),
       Prophet(
