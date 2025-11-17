@@ -29,11 +29,11 @@ csv_path = os.path.join(script_directory,'csv')
 cluster_matriz_path = os.path.join(csv_path,'cluster_matriz')
 matriz_ventana_path = os.path.join(csv_path,'matriz_ventana')
 ts_historico_path = os.path.join(csv_path,'ts_historico')
-departments = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
-              'Centro est','Centro norte','Centro sur','Chaco','CORDILLERA',
-              'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
+departments = ['ALTO_PARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
+              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
+              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
               'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-              'CAAZAPA','NEEMBUCU','ALTO PARAGUAY']
+              'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
 years = [2019,2020,2021,2022]
 months = [
   "ENERO",
