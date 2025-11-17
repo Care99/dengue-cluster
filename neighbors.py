@@ -475,3 +475,5 @@ def project_time_series(k,n,forecasted_value):
       input_year = int(month[1])
       input_month = months.index(month[0])
       generate_forecast(input_year,input_month,input_department,k,n,forecasted_value)
+
+project_time_series(4,2,1)
