@@ -64,24 +64,6 @@ month_window = [
   "NOVIEMBRE-DICIEMBRE-ENERO",
   "DICIEMBRE-ENERO-FEBRERO"
 ]
-models = [
-  'naive_mean',
-  'naive_seasonal',
-  'naive_drift',
-  'naive_movingAverage',
-  'auto_arima',
-  'exponential_smoothing',
-  'auto_theta',
-  'prophet',
-  'linear_regression_model',
-  'random_forest_model',
-  'rnn_model',
-  'lstm_model',
-  'nLinear_model',
-  'tcn_model',
-  'naive_ensemble_model',
-  'regression_ensemble_model'
-  ]
 #departments = ['ALTO PARARANA']
 conjunto_funciones = [ 
    "bhattacharyya",
@@ -271,6 +253,24 @@ def regression_ensemble_forecast(time_series,forecasted_values):
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
+models = [
+  naive_mean,
+  naive_seasonal,
+  naive_drift,
+  #naive_moving_average,
+  auto_arima,
+  exponential_smoothing,
+  auto_theta,
+  prophet_forecast,
+  linear_regression,
+  random_forest,
+  rnn_forecast,
+  lstm_forecast,
+  n_linear_forecast,
+  tcn_forecast,
+  naive_ensemble_forecast,
+  regression_ensemble_forecast
+  ]
 def find_nearest_neighbor(csv_path, index, num_neighbors):
   # Read the CSV file into a DataFrame
   df = pd.read_csv(csv_path, header=None, index_col=None, skiprows=1).iloc[:, 1:]
