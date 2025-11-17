@@ -321,7 +321,7 @@ def find_nearest_year(csv_path, index, num_neighbors):
 
 def load_time_series(path):
   df = pd.read_csv(path,header=None)
-  time_series = df.to_numpy(dtype=float)
+  time_series = df.to_numpy(dtype=float).flatten().tolist()
   return time_series
 
 def get_historical_data(input_year,input_department):
