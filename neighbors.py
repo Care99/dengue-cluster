@@ -324,14 +324,30 @@ def load_time_series(path):
   time_series = df.to_numpy(dtype=float).flatten().tolist()
   return time_series
 
-def get_historical_data(input_year,input_department):
+def get_historical_data(input_department):
   historical_time_series = []
-  for year in range(initial_year,input_year):
-    for month in months:
+  for year in range(initial_year,2023):
+    if(year==2019):
+      for month in ["OCTUBRE","NOVIEMBRE","DICIEMBRE"]:
         filename = f'{input_department}.csv'
-        path = os.path.join(ts_historico_path,{year},{month},filename)
+        path = os.path.join(ts_historico_path,str(year),month,filename)
         temp_ts = load_time_series(path)
-    historical_time_series.append(temp_ts)
+        for value in temp_ts:
+          historical_time_series.append(value)
+    if(year==2022):
+      for month in ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE"]:
+        filename = f'{input_department}.csv'
+        path = os.path.join(ts_historico_path,str(year),month,filename)
+        temp_ts = load_time_series(path)
+        for value in temp_ts:
+          historical_time_series.append(value)
+    else:
+      for month in months:
+        filename = f'{input_department}.csv'
+        path = os.path.join(ts_historico_path,str(year),month,filename)
+        temp_ts = load_time_series(path)
+        for value in temp_ts:
+          historical_time_series.append(value)
   return historical_time_series
 
 def get_knn(input_year,input_month,input_department,neighbor_size):
