@@ -23,6 +23,7 @@ from darts.models import NaiveEnsembleModel,RegressionEnsembleModel
 
 from darts.metrics import accuracy,coefficient_of_variation,dtw_metric,mae,mape,precision,r2_score,rmse,smape
 from darts import TimeSeries
+from darts.utils.timeseries_generation import datetime_attribute_timeseries
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
 csv_path = os.path.join(script_directory,'csv')
