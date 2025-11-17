@@ -403,48 +403,67 @@ def generate_forecast(
     input_department,
     number_years,
     number_neighbors,
-    values_to_forecast):
+    months_to_forecast):
   #variables
-  size_ts = len(original_time_series)
-  neighbor_size=4
   original_time_series = []
-  historical_time_series = get_historical_data(input_year,input_department)
-  knn_time_series = get_knn(input_year,input_month,input_department,number_years*number_neighbors)
-  cluster_clusters_knn = get_cluster_clusters_knn(input_year,input_month,input_department,number_years,number_neighbors)
+  historical_time_series = get_historical_data(input_department)
+  #knn_time_series = get_knn(input_year,input_month,input_department,number_years*number_neighbors)
+  #cluster_clusters_knn = get_cluster_clusters_knn(input_year,input_month,input_department,number_years,number_neighbors)
   #Time series for projections
-  projected_historical_time_series = []
-  projected_knn_time_series = []
-  projected_cluster_clusters_knn = []
+  months = [['OCTUBRE',2022],
+            ['NOVIEMBRE',2022],
+            ['DICIEMBRE',2022],
+            ['ENERO',2023],
+            ['FEBRERO',2023],
+            ['MARZO',2023],
+            ['ABRIL',2023],
+            ['MAYO',2023],
+            ['JUNIO',2023],
+            ['JULIO',2023],
+            ['AGOSTO',2023],
+            ['SEPTIEMBRE',2023],
+            ['OCTUBRE',2022]]
   for model in models:
-    for month in months:
-      current_time_series = []
-      path = os.path.join(ts_historico_path,f'{input_year}',f'{month}',f'{input_department}.csv')
+    projected_historical_time_series = []
+    projected_knn_time_series = []
+    projected_cluster_clusters_knn = []
+    for i in range(len(months)-1):
+      path = os.path.join(ts_historico_path,f'{input_year}',f'{months[i][0]}',f'{input_department}.csv')
       current_time_series = load_time_series(path)
-      size_ts = len(current_time_series)
-      historical_time_series = historical_time_series[size_ts:]+[current_time_series]
-      knn_time_series = knn_time_series[size_ts:]+[current_time_series]
-      cluster_clusters_knn = cluster_clusters_knn[size_ts:]+[current_time_series]
-      projected_historical_time_series.append(model.__func__(historical_time_series,values_to_forecast))
-      projected_knn_time_series.append(model.__func__(knn_time_series,values_to_forecast))
-      projected_cluster_clusters_knn.append(model.__func__(knn_time_series,values_to_forecast))
-    save_time_series_as_csv(input_department,projected_historical_time_series,model,'HISTORICAL')
-    save_time_series_as_csv(input_department,projected_knn_time_series,model,'KNN')
-    save_time_series_as_csv(input_department,projected_cluster_clusters_knn,model,'CLUSTER_CLUSTERS')
+      size_ts = 0
+      for j in range(months_to_forecast):
+        path_next = os.path.join(ts_historico_path,f'{input_year}',f'{months[i+1][0]}',f'{input_department}.csv')
+        next_time_series = load_time_series(path_next)
+        size_ts += len(next_time_series)
+      for value in current_time_series:
+        historical_time_series.append(value)
+      historical_time_series = historical_time_series[size_ts:]
+      #knn_time_series = knn_time_series[:size_ts]+[current_time_series]
+      #cluster_clusters_knn = cluster_clusters_knn[:size_ts]+[current_time_series]
+      forecasted_values = model(TimeSeries.from_values(historical_time_series),size_ts)
+
+      for value in forecasted_values:
+        projected_historical_time_series.append(value[0])
+      #projected_knn_time_series.append(model(knn_time_series,values_to_forecast))
+      #rojected_cluster_clusters_knn.append(model(cluster_clusters_knn,values_to_forecast))
+    save_time_series_as_csv(input_department,projected_historical_time_series,model.__qualname__,'HISTORICAL')
+    #save_time_series_as_csv(input_department,projected_knn_time_series,model.__qualname__,'KNN')
+    #save_time_series_as_csv(input_department,projected_cluster_clusters_knn,model.__qualname__,'CLUSTER_CLUSTERS')
     original_time_series = TimeSeries.from_values(original_time_series)
     projected_historical_time_series = TimeSeries.from_values(projected_historical_time_series)
-    projected_knn_time_series = TimeSeries.from_values(projected_knn_time_series)
-    projected_cluster_clusters_knn = TimeSeries.from_values(projected_cluster_clusters_knn)
-    save_time_series_as_svg(input_department,projected_historical_time_series,model,'HISTORICAL')
-    save_time_series_as_svg(input_department,projected_knn_time_series,model,'KNN')
-    save_time_series_as_svg(input_department,projected_cluster_clusters_knn,model,'CLUSTER_CLUSTERS')
-    save_error(input_department,projected_historical_time_series,model,'HISTORICAL')
-    save_error(input_department,projected_knn_time_series,model,'KNN')
-    save_error(input_department,projected_cluster_clusters_knn,model,'CLUSTER_CLUSTERS')
+    #projected_knn_time_series = TimeSeries.from_values(projected_knn_time_series)
+    #projected_cluster_clusters_knn = TimeSeries.from_values(projected_cluster_clusters_knn)
+    #save_time_series_as_svg(input_department,projected_historical_time_series,model,'HISTORICAL')
+    #save_time_series_as_svg(input_department,projected_knn_time_series,model,'KNN')
+    #save_time_series_as_svg(input_department,projected_cluster_clusters_knn,model,'CLUSTER_CLUSTERS')
+    #save_error(input_department,projected_historical_time_series,model,'HISTORICAL')
+    #save_error(input_department,projected_knn_time_series,model,'KNN')
+    #save_error(input_department,projected_cluster_clusters_knn,model,'CLUSTER_CLUSTERS')
 def save_time_series_as_csv(department,time_series,model,classification):
   incidence_data = pd.DataFrame(time_series)
   # Save the DataFrame as a CSV file
   output_file_name = f'{department}.csv'
-  path = os.path.join(csv_path,'forecast',{classification},{model})
+  path = os.path.join(csv_path,'forecast',classification,model)
   os.makedirs(path,exist_ok=True)
   output_file = os.path.join(path, output_file_name)
   incidence_data.to_csv(output_file, header=False, index=False)
