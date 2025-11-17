@@ -124,8 +124,9 @@ def naive_moving_average(time_series,forecasted_values):
 def auto_arima(time_series,forecasted_values):
   data = time_series
   #train, test = model_selection.train_test_split(data)
-  arima = AutoARIMA(data, error_action='ignore', trace=True, suppress_warnings=True,maxiter=10,seasonal=True,m=52,max_D=1,max_d=1,max_P=2,max_p=2,max_Q=2,max_q=2)
-  generated_time_series = arima.predict(n_periods=forecasted_values)
+  model = AutoARIMA(season_length=52)
+  model.fit(data)
+  generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
 def exponential_smoothing(time_series,forecasted_values):
   data = time_series
