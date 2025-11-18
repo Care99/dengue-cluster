@@ -11,9 +11,7 @@ numpy==1.26.4
 openpyxl
 pandas
 pmdarima
-rpy2
 scikit-learn
 scipy
 statsmodels
 xlsxwriter
-instaloader
