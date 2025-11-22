@@ -24,17 +24,40 @@ from darts.models import NaiveEnsembleModel,RegressionEnsembleModel
 from darts.metrics import accuracy,coefficient_of_variation,dtw_metric,mae,mape,precision,r2_score,rmse,smape
 from darts import TimeSeries
 from darts.utils.timeseries_generation import datetime_attribute_timeseries
+import torch
+torch.set_float32_matmul_precision('medium')
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
 csv_path = os.path.join(script_directory,'csv')
 cluster_matriz_path = os.path.join(csv_path,'cluster_matriz')
 matriz_ventana_path = os.path.join(csv_path,'matriz_ventana')
 ts_historico_path = os.path.join(csv_path,'ts_historico')
-departments = ['ALTO_PARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
-              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
-              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
-              'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-              'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
+departments = [
+  #'ALTO_PARANA',
+  #'AMAMBAY',
+  'ASUNCION'
+  #'CAAGUAZU',
+  #'CENTRAL',
+  #'CENTRO_EST',
+  #'CENTRO_NORTE',
+  #'CENTRO_SUR',
+  #'CHACO',
+  #'CORDILLERA',
+  #'METROPOLITANO',
+  #'PARAGUARI',
+  #'PARAGUAY',
+  #'PTE_HAYES',
+  #'SAN_PEDRO',
+  #'CANINDEYU',
+  #'CONCEPCION',
+  #'ITAPUA',
+  #'MISIONES',
+  #'BOQUERON',
+  #'GUAIRA',
+  #'CAAZAPA',
+  #'NEEMBUCU',
+  #'ALTO_PARAGUAY'
+  ]
 years = [2019,2020,2021,2022]
 months = [
   "ENERO",
@@ -186,10 +209,11 @@ def lstm_forecast(time_series,forecasted_values):
   data = time_series
   model = RNNModel(
     model='LSTM',
-    hidden_size=25, 
+    input_chunk_length=1,
+    hidden_dim=25, 
     n_rnn_layers=2, 
-    dropout=0.1, 
-    batch_size=16, 
+    dropout=0.0, 
+    batch_size=16,
     n_epochs=100, 
     optimizer_kwargs={'lr':1e-3}, 
     random_state=42, 
@@ -256,21 +280,21 @@ def regression_ensemble_forecast(time_series,forecasted_values):
   return generated_time_series.values()
 models = [
   naive_mean,
-  naive_seasonal,
-  naive_drift,
+  #naive_seasonal,
+  #naive_drift,
   #naive_moving_average,
   auto_arima,
-  exponential_smoothing,
-  auto_theta,
-  prophet_forecast,
+  #exponential_smoothing,
+  #auto_theta,
+  #prophet_forecast,
   linear_regression,
-  random_forest,
-  rnn_forecast,
+  #random_forest,
+  #rnn_forecast,
   lstm_forecast,
-  n_linear_forecast,
-  tcn_forecast,
-  naive_ensemble_forecast,
-  regression_ensemble_forecast
+  #n_linear_forecast,
+  #tcn_forecast,
+  #naive_ensemble_forecast,
+  #regression_ensemble_forecast
   ]
 def find_nearest_neighbor(csv_path, index, num_neighbors):
   # Read the CSV file into a DataFrame
@@ -399,7 +423,6 @@ def get_cluster_clusters_knn(input_year,input_month,input_department,number_year
 
 def generate_forecast(
     input_year,
-    input_month,
     input_department,
     number_years,
     number_neighbors,
@@ -422,28 +445,25 @@ def generate_forecast(
             ['JULIO',2023],
             ['AGOSTO',2023],
             ['SEPTIEMBRE',2023],
-            ['OCTUBRE',2022]]
+            ['OCTUBRE',2023]]
   for model in models:
     projected_historical_time_series = []
     projected_knn_time_series = []
     projected_cluster_clusters_knn = []
     for i in range(len(months)-1):
-      path = os.path.join(ts_historico_path,f'{input_year}',f'{months[i][0]}',f'{input_department}.csv')
+      path = os.path.join(ts_historico_path,f'{months[i][1]}',f'{months[i][0]}',f'{input_department}.csv')
       current_time_series = load_time_series(path)
       size_ts = 0
       for j in range(months_to_forecast):
-        path_next = os.path.join(ts_historico_path,f'{input_year}',f'{months[i+1][0]}',f'{input_department}.csv')
+        path_next = os.path.join(ts_historico_path,f'{months[i+1][1]}',f'{months[i+1][0]}',f'{input_department}.csv')
         next_time_series = load_time_series(path_next)
         size_ts += len(next_time_series)
-      for value in current_time_series:
-        historical_time_series.append(value)
+      historical_time_series.extend(current_time_series)
       historical_time_series = historical_time_series[size_ts:]
       #knn_time_series = knn_time_series[:size_ts]+[current_time_series]
       #cluster_clusters_knn = cluster_clusters_knn[:size_ts]+[current_time_series]
       forecasted_values = model(TimeSeries.from_values(historical_time_series),size_ts)
-
-      for value in forecasted_values:
-        projected_historical_time_series.append(value[0])
+      projected_historical_time_series.extend(forecasted_values)
       #projected_knn_time_series.append(model(knn_time_series,values_to_forecast))
       #rojected_cluster_clusters_knn.append(model(cluster_clusters_knn,values_to_forecast))
     save_time_series_as_csv(input_department,projected_historical_time_series,model.__qualname__,'HISTORICAL')
@@ -471,9 +491,7 @@ def save_time_series_as_csv(department,time_series,model,classification):
 #variables
 def project_time_series(k,n,forecasted_value):
   for input_department in departments:
-    for month in months_original_time_series:
-      input_year = int(month[1])
-      input_month = months.index(month[0])
-      generate_forecast(input_year,input_month,input_department,k,n,forecasted_value)
+    input_year=2022
+    generate_forecast(input_year,input_department,k,n,forecasted_value)
 
 project_time_series(4,2,1)
