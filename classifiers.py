@@ -41,7 +41,7 @@ def load_df(year,month,department):
     filtered_data['rolling_mean_3'] = grouped['incidence'].transform(lambda x: x.rolling(3).mean())
 
     # Seasonal indicator (week of year)
-    filtered_data['week_of_year'] = pd.to_datetime(df['week']).dt.isocalendar().week
+    #filtered_data['week_of_year'] = pd.to_datetime(df['week']).dt.isocalendar().week
 
     # Drop rows with NaN (due to lagging)
     #filtered_data = filtered_data.dropna()
