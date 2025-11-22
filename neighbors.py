@@ -299,24 +299,23 @@ def generate_forecast(
     months_to_forecast):
   #variables
   classifications = [
-        'HISTORICAL',[],
-        'KNN',[],
-        'CLUSTER_CLUSTERS',[],
-        'CART',[],
-        'RANDOM_FOREST',[],
-        'KNN_CLASSIFIER',[],
-        'TAN',[]
+        ['HISTORICAL',[]],
+        ['KNN',[]],
+        ['CLUSTER_CLUSTERS',[]],
+        ['CART',[]],
+        ['RANDOM_FOREST',[]],
+        ['KNN_CLASSIFIER',[]],
+        ['TAN',[]]
       ]
   projected_classifications = [
-        'HISTORICAL',[],
-        'KNN',[],
-        'CLUSTER_CLUSTERS',[],
-        'CART',[],
-        'RANDOM_FOREST',[],
-        'KNN_CLASSIFIER',[],
-        'TAN',[]
+        ['HISTORICAL',[]],
+        ['KNN',[]],
+        ['CLUSTER_CLUSTERS',[]],
+        ['CART',[]],
+        ['RANDOM_FOREST',[]],
+        ['KNN_CLASSIFIER',[]],
+        ['TAN',[]]
       ]
-  original_time_series = []
   classifications[0][1] = get_historical_data(input_department)
   classifications[3][1],classifications[4][1],classifications[5][1],classifications[6][1] = evaluate_models(input_year,i,input_department,number_years,number_neighbors)
   #Time series for projections
@@ -334,9 +333,6 @@ def generate_forecast(
             ['SEPTIEMBRE',2023],
             ['OCTUBRE',2023]]
   for model in models:
-    projected_historical_time_series = []
-    projected_knn_time_series = []
-    projected_cluster_clusters_knn = []
     for i in range(len(months)-1):
       classifications[1][1] = get_knn(input_year,i,input_department,number_years*number_neighbors)
       classifications[2][1] = get_cluster_clusters_knn(input_year,i,input_department,number_years,number_neighbors)
