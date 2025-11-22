@@ -347,14 +347,15 @@ def generate_forecast(
         path_next = os.path.join(ts_historico_path,f'{months[i+1][1]}',f'{months[i+1][0]}',f'{input_department}.csv')
         next_time_series = load_time_series(path_next)
         size_ts += len(next_time_series)
-      for k in range(len(classifications)):
-        classifications[k][1].extend(current_time_series)
-        classifications[k][1] = classifications[k][1][size_ts:]
-        forecasted_values = model(TimeSeries.from_values(classifications[k][1]),size_ts)
-        projected_classifications[k][1].extend(forecasted_values)
-    save_time_series_as_csv(input_department,projected_classifications[k][1],model.__qualname__,projected_classifications[k][0])
-    save_time_series_as_svg(input_department,projected_classifications[k][1],model,projected_classifications[k][0])
-    save_error(input_department,projected_classifications[k][1],model,projected_classifications[k][0])
+      for j in range(len(classifications)):
+        classifications[j][1].extend(current_time_series)
+        classifications[j][1] = classifications[j][1][size_ts:]
+        forecasted_values = model(TimeSeries.from_values(classifications[j][1]),size_ts)
+        projected_classifications[j][1].extend(forecasted_values)
+    for i in range(len(projected_classifications)):
+      save_time_series_as_csv(input_department,projected_classifications[i][1],model.__qualname__,projected_classifications[i][0])
+      save_time_series_as_svg(input_department,projected_classifications[i][1],model,projected_classifications[i][0])
+      save_error(input_department,projected_classifications[i][1],model,projected_classifications[i][0])
 def save_time_series_as_csv(department,time_series,model,classification):
   incidence_data = pd.DataFrame(time_series)
   # Save the DataFrame as a CSV file
