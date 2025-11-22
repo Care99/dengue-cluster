@@ -6,8 +6,8 @@ from scipy.spatial.distance import euclidean
 #from tslearn.metrics import dtw
 import os
 import matplotlib as mplt
-
-from classifiers import evaluate_models; mplt.use('SVG',force=True)
+import classifiers
+from classifiers import evaluate_models, fill_na; mplt.use('SVG',force=True)
 from matplotlib import pyplot as plt
 import numpy as np
 from statsmodels.tsa.seasonal import MSTL
@@ -317,7 +317,7 @@ def generate_forecast(
         ['TAN',[]]
       ]
   classifications[0][1] = get_historical_data(input_department)
-  classifications[3][1],classifications[4][1],classifications[5][1],classifications[6][1] = evaluate_models(input_year,i,input_department,number_years,number_neighbors)
+  classifications[3][1],classifications[4][1],classifications[5][1],classifications[6][1] = evaluate_models(classifications[0][1],number_years,number_neighbors)
   #Time series for projections
   months = [['OCTUBRE',2022],
             ['NOVIEMBRE',2022],

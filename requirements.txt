@@ -11,6 +11,7 @@ numpy==1.26.4
 openpyxl
 pandas
 pmdarima
+pyAgrum
 scikit-learn
 scipy
 statsmodels
