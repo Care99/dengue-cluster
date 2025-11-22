@@ -365,6 +365,36 @@ def save_time_series_as_csv(department,time_series,model,classification):
   output_file = os.path.join(path, output_file_name)
   incidence_data.to_csv(output_file, header=False, index=False)
   print(f"Saved: csv/forecast/{classification}/{model}/{output_file_name}")
+def save_time_series_as_svg(input_department,time_series,model,classification):
+  plt.figure(figsize=(10, 6))
+  plt.plot(time_series, label='Forecasted Incidence', color='blue')
+  plt.title(f'Forecasted Incidence for {input_department} using {model.__qualname__} - {classification}')
+  plt.xlabel('Time')
+  plt.ylabel('Incidence')
+  plt.legend()
+  path = os.path.join(csv_path,'forecast',classification,model.__qualname__)
+  os.makedirs(path,exist_ok=True)
+  output_file_name = f'{input_department}.svg'
+  output_file = os.path.join(path, output_file_name)
+  plt.savefig(output_file)
+  plt.close()
+  print(f"Saved: csv/forecast/{classification}/{model.__qualname__}/{output_file_name}")
+def save_error(input_department,time_series,model,classification):
+  original_time_series = []
+  for month_year in months_original_time_series:
+    filename = f'{input_department}.csv'
+    path = os.path.join(ts_historico_path,str(month_year[1]),month_year[0],filename)
+    temp_ts = load_time_series(path)
+    for value in temp_ts:
+      original_time_series.append(value)
+  logq_error = logq(original_time_series,time_series)
+  path = os.path.join(csv_path,'forecast',classification,model.__qualname__)
+  os.makedirs(path,exist_ok=True)
+  output_file_name = f'{input_department}_error.txt'
+  output_file = os.path.join(path, output_file_name)
+  with open(output_file, 'w') as f:
+    f.write(f'LogQ Error: {logq_error}\n')
+  print(f"Saved: csv/forecast/{classification}/{model.__qualname__}/{output_file_name}")
 #variables
 def project_time_series(k,n,forecasted_value):
   for input_department in departments:
