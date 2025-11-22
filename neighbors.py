@@ -5,7 +5,9 @@ from scipy.special import inv_boxcox
 from scipy.spatial.distance import euclidean
 #from tslearn.metrics import dtw
 import os
-import matplotlib as mplt; mplt.use('SVG',force=True)
+import matplotlib as mplt
+
+from classifiers import evaluate_models; mplt.use('SVG',force=True)
 from matplotlib import pyplot as plt
 import numpy as np
 from statsmodels.tsa.seasonal import MSTL
@@ -126,24 +128,7 @@ def naive_mean(time_series,forecasted_values):
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
-def naive_seasonal(time_series,forecasted_values):
-  data = time_series
-  model = NaiveSeasonal(K=52)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def naive_drift(time_series,forecasted_values):
-  data = time_series
-  model = NaiveDrift()
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def naive_moving_average(time_series,forecasted_values):
-  data = time_series
-  model = NaiveMovingAverage(input_chunk_length=12)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
+
 def auto_arima(time_series,forecasted_values):
   data = time_series
   #train, test = model_selection.train_test_split(data)
@@ -151,57 +136,9 @@ def auto_arima(time_series,forecasted_values):
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
-def exponential_smoothing(time_series,forecasted_values):
-  data = time_series
-  model = ExponentialSmoothing(seasonal_periods=52)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def auto_theta(time_series,forecasted_values):
-  data = time_series
-  model = AutoTheta(season_length=52)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def prophet_forecast(time_series,forecasted_values):
-  data = time_series
-  model = Prophet(
-    add_seasonalities=
-    {
-      'name': 'yearly_seasonality',  # (name of the seasonality component),
-      'seasonal_periods': 52,  # (nr of steps composing a season),
-      'fourier_order': 5,  # (number of Fourier components to use),
-    }
-  )
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
 def linear_regression(time_series,forecasted_values):
   data = time_series
   model = LinearRegressionModel(lags=52)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def random_forest(time_series,forecasted_values):
-  data = time_series
-  model = RandomForestModel(lags=52,n_estimators=100)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def rnn_forecast(time_series,forecasted_values):
-  data = time_series
-  model = RNNModel(
-    model='RNN',
-    hidden_size=25, 
-    n_rnn_layers=2, 
-    dropout=0.1, 
-    batch_size=16, 
-    n_epochs=100, 
-    optimizer_kwargs={'lr':1e-3}, 
-    random_state=42, 
-    log_tensorboard=False, 
-    force_reset=True
-  )
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
@@ -223,78 +160,11 @@ def lstm_forecast(time_series,forecasted_values):
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
-def n_linear_forecast(time_series,forecasted_values):
-  data = time_series
-  model = NLinearModel(
-    input_chunk_length=52,
-    n_epochs=100,
-    random_state=42,
-    force_reset=True
-  )
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def tcn_forecast(time_series,forecasted_values):
-  data = time_series
-  model = TCNModel(
-    input_chunk_length=52,
-    n_epochs=100,
-    random_state=42,
-    force_reset=True
-  )
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def naive_ensemble_forecast(time_series,forecasted_values):
-  data = time_series
-  model = NaiveEnsembleModel(
-    models=[
-      NaiveMean(),
-      NaiveSeasonal(K=52),
-      NaiveDrift()
-    ]
-  )
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def regression_ensemble_forecast(time_series,forecasted_values):
-  data = time_series
-  model = RegressionEnsembleModel(
-    base_models=[
-      AutoARIMA(error_action='ignore', trace=True, suppress_warnings=True,maxiter=10,seasonal=True,m=52,max_D=1,max_d=1,max_P=2,max_p=2,max_Q=2,max_q=2),
-      ExponentialSmoothing(seasonal_periods=52),
-      AutoTheta(season_length=52),
-      Prophet(
-        add_seasonalities=
-        {
-          'name': 'yearly_seasonality',  # (name of the seasonality component),
-          'seasonal_periods': 52,  # (nr of steps composing a season),
-          'fourier_order': 5,  # (number of Fourier components to use),
-        }
-      )
-    ],
-    regression_model=RandomForestModel(n_estimators=100)
-  )
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
 models = [
   naive_mean,
-  #naive_seasonal,
-  #naive_drift,
-  #naive_moving_average,
   auto_arima,
-  #exponential_smoothing,
-  #auto_theta,
-  #prophet_forecast,
   linear_regression,
-  #random_forest,
-  #rnn_forecast,
   lstm_forecast,
-  #n_linear_forecast,
-  #tcn_forecast,
-  #naive_ensemble_forecast,
-  #regression_ensemble_forecast
   ]
 def find_nearest_neighbor(csv_path, index, num_neighbors):
   # Read the CSV file into a DataFrame
@@ -428,10 +298,26 @@ def generate_forecast(
     number_neighbors,
     months_to_forecast):
   #variables
-  original_time_series = []
-  historical_time_series = get_historical_data(input_department)
-  #knn_time_series = get_knn(input_year,input_month,input_department,number_years*number_neighbors)
-  #cluster_clusters_knn = get_cluster_clusters_knn(input_year,input_month,input_department,number_years,number_neighbors)
+  classifications = [
+        ['HISTORICAL',[]],
+        ['KNN',[]],
+        ['CLUSTER_CLUSTERS',[]],
+        ['CART',[]],
+        ['RANDOM_FOREST',[]],
+        ['KNN_CLASSIFIER',[]],
+        ['TAN',[]]
+      ]
+  projected_classifications = [
+        ['HISTORICAL',[]],
+        ['KNN',[]],
+        ['CLUSTER_CLUSTERS',[]],
+        ['CART',[]],
+        ['RANDOM_FOREST',[]],
+        ['KNN_CLASSIFIER',[]],
+        ['TAN',[]]
+      ]
+  classifications[0][1] = get_historical_data(input_department)
+  classifications[3][1],classifications[4][1],classifications[5][1],classifications[6][1] = evaluate_models(input_year,i,input_department,number_years,number_neighbors)
   #Time series for projections
   months = [['OCTUBRE',2022],
             ['NOVIEMBRE',2022],
@@ -447,10 +333,9 @@ def generate_forecast(
             ['SEPTIEMBRE',2023],
             ['OCTUBRE',2023]]
   for model in models:
-    projected_historical_time_series = []
-    projected_knn_time_series = []
-    projected_cluster_clusters_knn = []
     for i in range(len(months)-1):
+      classifications[1][1] = get_knn(input_year,i,input_department,number_years*number_neighbors)
+      classifications[2][1] = get_cluster_clusters_knn(input_year,i,input_department,number_years,number_neighbors)
       path = os.path.join(ts_historico_path,f'{months[i][1]}',f'{months[i][0]}',f'{input_department}.csv')
       current_time_series = load_time_series(path)
       size_ts = 0
@@ -458,27 +343,15 @@ def generate_forecast(
         path_next = os.path.join(ts_historico_path,f'{months[i+1][1]}',f'{months[i+1][0]}',f'{input_department}.csv')
         next_time_series = load_time_series(path_next)
         size_ts += len(next_time_series)
-      historical_time_series.extend(current_time_series)
-      historical_time_series = historical_time_series[size_ts:]
-      #knn_time_series = knn_time_series[:size_ts]+[current_time_series]
-      #cluster_clusters_knn = cluster_clusters_knn[:size_ts]+[current_time_series]
-      forecasted_values = model(TimeSeries.from_values(historical_time_series),size_ts)
-      projected_historical_time_series.extend(forecasted_values)
-      #projected_knn_time_series.append(model(knn_time_series,values_to_forecast))
-      #rojected_cluster_clusters_knn.append(model(cluster_clusters_knn,values_to_forecast))
-    save_time_series_as_csv(input_department,projected_historical_time_series,model.__qualname__,'HISTORICAL')
-    #save_time_series_as_csv(input_department,projected_knn_time_series,model.__qualname__,'KNN')
-    #save_time_series_as_csv(input_department,projected_cluster_clusters_knn,model.__qualname__,'CLUSTER_CLUSTERS')
-    original_time_series = TimeSeries.from_values(original_time_series)
-    projected_historical_time_series = TimeSeries.from_values(projected_historical_time_series)
-    #projected_knn_time_series = TimeSeries.from_values(projected_knn_time_series)
-    #projected_cluster_clusters_knn = TimeSeries.from_values(projected_cluster_clusters_knn)
-    #save_time_series_as_svg(input_department,projected_historical_time_series,model,'HISTORICAL')
-    #save_time_series_as_svg(input_department,projected_knn_time_series,model,'KNN')
-    #save_time_series_as_svg(input_department,projected_cluster_clusters_knn,model,'CLUSTER_CLUSTERS')
-    #save_error(input_department,projected_historical_time_series,model,'HISTORICAL')
-    #save_error(input_department,projected_knn_time_series,model,'KNN')
-    #save_error(input_department,projected_cluster_clusters_knn,model,'CLUSTER_CLUSTERS')
+      for j in range(len(classifications)):
+        classifications[j][1].extend(current_time_series)
+        classifications[j][1] = classifications[j][1][size_ts:]
+        forecasted_values = model(TimeSeries.from_values(classifications[j][1]),size_ts)
+        projected_classifications[j][1].extend(forecasted_values)
+    for i in range(len(projected_classifications)):
+      save_time_series_as_csv(input_department,projected_classifications[i][1],model.__qualname__,projected_classifications[i][0])
+      save_time_series_as_svg(input_department,projected_classifications[i][1],model,projected_classifications[i][0])
+      save_error(input_department,projected_classifications[i][1],model,projected_classifications[i][0])
 def save_time_series_as_csv(department,time_series,model,classification):
   incidence_data = pd.DataFrame(time_series)
   # Save the DataFrame as a CSV file
@@ -488,6 +361,36 @@ def save_time_series_as_csv(department,time_series,model,classification):
   output_file = os.path.join(path, output_file_name)
   incidence_data.to_csv(output_file, header=False, index=False)
   print(f"Saved: csv/forecast/{classification}/{model}/{output_file_name}")
+def save_time_series_as_svg(input_department,time_series,model,classification):
+  plt.figure(figsize=(10, 6))
+  plt.plot(time_series, label='Forecasted Incidence', color='blue')
+  plt.title(f'Forecasted Incidence for {input_department} using {model.__qualname__} - {classification}')
+  plt.xlabel('Time')
+  plt.ylabel('Incidence')
+  plt.legend()
+  path = os.path.join(csv_path,'forecast',classification,model.__qualname__)
+  os.makedirs(path,exist_ok=True)
+  output_file_name = f'{input_department}.svg'
+  output_file = os.path.join(path, output_file_name)
+  plt.savefig(output_file)
+  plt.close()
+  print(f"Saved: csv/forecast/{classification}/{model.__qualname__}/{output_file_name}")
+def save_error(input_department,time_series,model,classification):
+  original_time_series = []
+  for month_year in months_original_time_series:
+    filename = f'{input_department}.csv'
+    path = os.path.join(ts_historico_path,str(month_year[1]),month_year[0],filename)
+    temp_ts = load_time_series(path)
+    for value in temp_ts:
+      original_time_series.append(value)
+  logq_error = logq(original_time_series,time_series)
+  path = os.path.join(csv_path,'forecast',classification,model.__qualname__)
+  os.makedirs(path,exist_ok=True)
+  output_file_name = f'{input_department}_error.txt'
+  output_file = os.path.join(path, output_file_name)
+  with open(output_file, 'w') as f:
+    f.write(f'LogQ Error: {logq_error}\n')
+  print(f"Saved: csv/forecast/{classification}/{model.__qualname__}/{output_file_name}")
 #variables
 def project_time_series(k,n,forecasted_value):
   for input_department in departments:
