@@ -126,24 +126,7 @@ def naive_mean(time_series,forecasted_values):
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
-def naive_seasonal(time_series,forecasted_values):
-  data = time_series
-  model = NaiveSeasonal(K=52)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def naive_drift(time_series,forecasted_values):
-  data = time_series
-  model = NaiveDrift()
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def naive_moving_average(time_series,forecasted_values):
-  data = time_series
-  model = NaiveMovingAverage(input_chunk_length=12)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
+
 def auto_arima(time_series,forecasted_values):
   data = time_series
   #train, test = model_selection.train_test_split(data)
@@ -151,57 +134,9 @@ def auto_arima(time_series,forecasted_values):
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
-def exponential_smoothing(time_series,forecasted_values):
-  data = time_series
-  model = ExponentialSmoothing(seasonal_periods=52)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def auto_theta(time_series,forecasted_values):
-  data = time_series
-  model = AutoTheta(season_length=52)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def prophet_forecast(time_series,forecasted_values):
-  data = time_series
-  model = Prophet(
-    add_seasonalities=
-    {
-      'name': 'yearly_seasonality',  # (name of the seasonality component),
-      'seasonal_periods': 52,  # (nr of steps composing a season),
-      'fourier_order': 5,  # (number of Fourier components to use),
-    }
-  )
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
 def linear_regression(time_series,forecasted_values):
   data = time_series
   model = LinearRegressionModel(lags=52)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def random_forest(time_series,forecasted_values):
-  data = time_series
-  model = RandomForestModel(lags=52,n_estimators=100)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def rnn_forecast(time_series,forecasted_values):
-  data = time_series
-  model = RNNModel(
-    model='RNN',
-    hidden_size=25, 
-    n_rnn_layers=2, 
-    dropout=0.1, 
-    batch_size=16, 
-    n_epochs=100, 
-    optimizer_kwargs={'lr':1e-3}, 
-    random_state=42, 
-    log_tensorboard=False, 
-    force_reset=True
-  )
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
@@ -223,78 +158,11 @@ def lstm_forecast(time_series,forecasted_values):
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
-def n_linear_forecast(time_series,forecasted_values):
-  data = time_series
-  model = NLinearModel(
-    input_chunk_length=52,
-    n_epochs=100,
-    random_state=42,
-    force_reset=True
-  )
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def tcn_forecast(time_series,forecasted_values):
-  data = time_series
-  model = TCNModel(
-    input_chunk_length=52,
-    n_epochs=100,
-    random_state=42,
-    force_reset=True
-  )
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def naive_ensemble_forecast(time_series,forecasted_values):
-  data = time_series
-  model = NaiveEnsembleModel(
-    models=[
-      NaiveMean(),
-      NaiveSeasonal(K=52),
-      NaiveDrift()
-    ]
-  )
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
-def regression_ensemble_forecast(time_series,forecasted_values):
-  data = time_series
-  model = RegressionEnsembleModel(
-    base_models=[
-      AutoARIMA(error_action='ignore', trace=True, suppress_warnings=True,maxiter=10,seasonal=True,m=52,max_D=1,max_d=1,max_P=2,max_p=2,max_Q=2,max_q=2),
-      ExponentialSmoothing(seasonal_periods=52),
-      AutoTheta(season_length=52),
-      Prophet(
-        add_seasonalities=
-        {
-          'name': 'yearly_seasonality',  # (name of the seasonality component),
-          'seasonal_periods': 52,  # (nr of steps composing a season),
-          'fourier_order': 5,  # (number of Fourier components to use),
-        }
-      )
-    ],
-    regression_model=RandomForestModel(n_estimators=100)
-  )
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
 models = [
   naive_mean,
-  #naive_seasonal,
-  #naive_drift,
-  #naive_moving_average,
   auto_arima,
-  #exponential_smoothing,
-  #auto_theta,
-  #prophet_forecast,
   linear_regression,
-  #random_forest,
-  #rnn_forecast,
   lstm_forecast,
-  #n_linear_forecast,
-  #tcn_forecast,
-  #naive_ensemble_forecast,
-  #regression_ensemble_forecast
   ]
 def find_nearest_neighbor(csv_path, index, num_neighbors):
   # Read the CSV file into a DataFrame
