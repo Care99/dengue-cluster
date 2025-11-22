@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 import os
 import math
+from scipy.cluster.hierarchy import linkage, dendrogram
+import matplotlib.pyplot as plt
+from scipy.spatial.distance import pdist, squareform
+
 
 # Ventana de meses de octubre a septiembre
 meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
@@ -34,83 +38,84 @@ matriz_ventana = [
     "SEPTIEMBRE-OCTUBRE-NOVIEMBRE"
 ]
 
-def bhattacharyya(tseries1,tseries2):
-    value = 0.0
-    i = 0
-    min_len = min(len(tseries1),len(tseries2))
-    for i in range(min_len):
-        value += math.sqrt(tseries1[i]*tseries2[i])
-        if value == 0:
-            value += 1e-12
-    value = - np.log(value)
-    return abs(value)
 
-def iniciar_ts():
-    ts = {}
-    for d in range(len(departments)):
-        ts[d]= []
-    return ts
-        
 
 def generar_cluster_ventana():
     os.makedirs(input_base, exist_ok=True)
     # Hacer un loop para cada ventana
     for v in range(len(meses)-2):
+        row_dict = {}  # dictionary for one row per window
         for y in years:
-            ts= iniciar_ts()
-            cols = iniciar_ts()
-            for i in range(v,v+3):
-                year = y if i < 5 else y + 1
-                for d in range(len(departments)):
+            for d in range(len(departments)):
+                mes_value=[]
+                for i in range(v,v+3):
+                    year = y if i < 5 else y + 1
                     path = f'{input_base}/{year}/{meses[i]}/{departments[d]}.csv'
                     print(f"procesando {path}")
                     data = pd.read_csv(path, header=None).apply(pd.to_numeric, errors='coerce')
-                    fila = data.iloc[0].tolist()
-                    print(f"fila es {fila}")
-                    ts[d].extend(data.iloc[0].tolist())
-                    cols[d].extend([f"{meses[i]}_{j+1}" for j in range(len(data.iloc[0]))])
-            window_path = f'csv/cj/matriz_ventana/{meses[v]}-{meses[v+1]}-{meses[v+2]}/{y}-{y+1}'
-            os.makedirs(window_path,exist_ok=True)
-            for d in range(len(departments)):
-                pd_depa = pd.DataFrame([ts[d]], columns=cols[d])
-                pd_depa.to_csv(os.path.join(window_path,f'{departments[d]}.csv'), index=False)
-                print(f'saved: {window_path}/{departments[d]}.csv')
+                    mes_value.append(data.iloc[0].mean())  # <-- fix here
+                col_name=f"{departments[d]}_{y}-{y+1}"
+                row_dict[col_name] = np.mean(mes_value)
+        # Convert the row dictionary to a single-row DataFrame
+        df = pd.DataFrame([row_dict])
+        # Save the CSV
+        window_path = f'csv/cj/window_values'
+        os.makedirs(window_path, exist_ok=True)
+        file_name = f"{meses[v]}-{meses[v+1]}-{meses[v+2]}.csv"
+        df.to_csv(os.path.join(window_path,file_name ), index=False)
+        print(f"Saved: {window_path}/{file_name}")
 
 
-def generar_cluster_matriz_diferencia():
+def generar_cluster_jerarquico():
     for m in matriz_ventana:
-        print("\n ventana es " + m)
-        ts_dict = {}   # cumulative dictionary
-        for year_folder in years_folders:
-            folder_path = f"csv/cj/matriz_ventana/{m}/{year_folder}"
-            # Generate full paths and read CSVs in one line
-            row = {f"{d}_{year_folder}": pd.read_csv(os.path.join(folder_path, d + ".csv")).iloc[0].values for d in departments}
-            ts_dict.update(row)
-            # Compute Bhattacharyya distance matrix
-        names = list(ts_dict.keys())
-        print(names)
-        print("\n")
-        n = len(names)
-        print("len is " + str(n))
-        matrix = np.zeros((n, n))
+        hclust_dir = f"csv/cj/hclust/{m}"
+        os.makedirs(hclust_dir, exist_ok=True)
 
-        for i in range(n):
-            for j in range(n):
-                if i == j:
-                    matrix[i, j] = 0  # diagonal = 0
-                else:
-                    matrix[i, j] = bhattacharyya(ts_dict[names[i]], ts_dict[names[j]])
+        # Load CSV
+        df = pd.read_csv(f"csv/cj/window_values/{m}.csv")
 
-        # Save as CSV with headers
-        output_path=f"csv/cj/cluster_matriz/{m}"
-        os.makedirs(output_path,exist_ok=True)
+        # Transpose: index = department_year, column=value
+        df_t = df.T
+        df_t.columns = ["value"]
 
-        df = pd.DataFrame(matrix, index=names, columns=names)
-        file_nime = "mat_distancia.csv"
-        df.to_csv(os.path.join(output_path, file_nime))
-        print(f"guardado: {output_path}/{file_nime}")
+        # Hierarchical clustering
+        Z = linkage(df_t, method='ward', metric='euclidean')
 
+        # Save dendrogram SVG
+        out_path = "csv/cj/figures"
+        os.makedirs(out_path, exist_ok=True)
+        plt.figure(figsize=(20, 8))
+        dendrogram(Z, labels=df_t.index.tolist(), leaf_rotation=90)
+        plt.title(f"Hierarchical Clustering: {m}")
+        plt.tight_layout()
+        plt.savefig(f"{out_path}/{m}.svg", format="svg")
+        plt.close()
+        print(f"Saved dendrogram to {out_path}/{m}.svg")
 
+        # ---- SAVE LINKAGE MATRIX CORRECTLY ----
+        np.save(f"{hclust_dir}/Z.npy", Z)
+        print(f"Saved linkage matrix to {hclust_dir}/{m}_Z.npy")
+
+        # ---- SAVE LABEL ORDER CORRECTLY ----
+        df_t.to_csv(f"{hclust_dir}/labels.csv")
+        print(f"Saved labels to {hclust_dir}/{m}_labels.csv")
+
+def get_k_n_n(meses,label,k):
+    hclust_dir = "csv/cj/hclust"
+
+    # Load saved clustering state
+    Z = np.load(f"{hclust_dir}/{meses}/Z.npy")
+    df_t = pd.read_csv(f"{hclust_dir}/{meses}/labels.csv", index_col=0)
+    # Compute pairwise distances using the SAME metric
+    dist_matrix = squareform(pdist(df_t[["value"]], metric="euclidean"))
+    labels = df_t.index.tolist()
+    
+    idx = labels.index(label)
+    distances = dist_matrix[idx]
+
+    nearest_idx = distances.argsort()[1:k+1]  # skip itself (index 0)
+    print([(labels[i], distances[i]) for i in nearest_idx])
 
 #generar_cluster_ventana()
-generar_cluster_matriz_diferencia()
+#generar_cluster_jerarquico()
+get_k_n_n(meses="AGOSTO-SEPTIEMBRE-OCTUBRE",label="ASUNCION_2019-2020", k=10)
