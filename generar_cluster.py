@@ -4,8 +4,8 @@ import os
 import math
 
 # Ventana de meses de octubre a septiembre
-meses = ['OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
-            'MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE']
+meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
+            'MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO']
 
 years = [2019,2020,2021,2022]
 
@@ -29,7 +29,9 @@ matriz_ventana = [
     "MARZO-ABRIL-MAYO",
     "MAYO-JUNIO-JULIO",
     "NOVIEMBRE-DICIEMBRE-ENERO",
-    "OCTUBRE-NOVIEMBRE-DICIEMBRE"
+    "OCTUBRE-NOVIEMBRE-DICIEMBRE",
+    "AGOSTO-SEPTIEMBRE-OCTUBRE",
+    "SEPTIEMBRE-OCTUBRE-NOVIEMBRE"
 ]
 
 def bhattacharyya(tseries1,tseries2):
@@ -57,7 +59,7 @@ def generar_cluster_ventana():
             ts= iniciar_ts()
             cols = iniciar_ts()
             for i in range(v,v+3):
-                year = y if i < 3 else y + 1
+                year = y if i < 5 else y + 1
                 for d in range(len(departments)):
                     path = f'{input_base}/{year}/{meses[i]}/{departments[d]}.csv'
                     print(f"procesando {path}")
@@ -66,7 +68,7 @@ def generar_cluster_ventana():
                     print(f"fila es {fila}")
                     ts[d].extend(data.iloc[0].tolist())
                     cols[d].extend([f"{meses[i]}_{j+1}" for j in range(len(data.iloc[0]))])
-            window_path = f'csv/matriz_ventana/{meses[v]}-{meses[v+1]}-{meses[v+2]}/{y}-{y+1}'
+            window_path = f'csv/cdc/matriz_ventana/{meses[v]}-{meses[v+1]}-{meses[v+2]}/{y}-{y+1}'
             os.makedirs(window_path,exist_ok=True)
             for d in range(len(departments)):
                 pd_depa = pd.DataFrame([ts[d]], columns=cols[d])
@@ -76,7 +78,7 @@ def generar_cluster_ventana():
 def generar_cluster_matriz_diferencia():
     for m in matriz_ventana:
         for year_folder in years_folders:
-            folder_path = f"csv/matriz_ventana/{m}/{year_folder}"
+            folder_path = f"csv/cdc/matriz_ventana/{m}/{year_folder}"
             # Generate full paths and read CSVs in one line
             ts_dict = {d: pd.read_csv(os.path.join(folder_path, d + ".csv")).iloc[0].values for d in departments}
 
@@ -93,7 +95,7 @@ def generar_cluster_matriz_diferencia():
                         matrix[i, j] = bhattacharyya(ts_dict[names[i]], ts_dict[names[j]])
 
             # Save as CSV with headers
-            output_path=f"csv/cluster_matriz/{m}"
+            output_path=f"csv/cdc/cluster_matriz/{m}"
             os.makedirs(output_path,exist_ok=True)
 
             df = pd.DataFrame(matrix, index=names, columns=names)
@@ -103,9 +105,9 @@ def generar_cluster_matriz_diferencia():
 
 def generar_cluster_de_cluster_matriz_diferencia():
         for m in matriz_ventana:
-            folder_path = f"csv/cluster_matriz/{m}"
+            folder_path = f"csv/cdc/cluster_matriz/{m}"
             ts_dict = {}
-            for y in years_folders[:-1]:
+            for y in years_folders:
                 df = pd.read_csv(os.path.join(folder_path, y + ".csv"), index_col=0)
                 ts_dict[y] = df.iloc[0].astype(float).values  # convert to float
 
@@ -122,12 +124,9 @@ def generar_cluster_de_cluster_matriz_diferencia():
                         matrix[i, j] = bhattacharyya(ts_dict[names[i]], ts_dict[names[j]])
 
             # Save as CSV with headers
-            output_path=f"csv/cluster_matriz/{m}"
-            os.makedirs(output_path,exist_ok=True)
-
             df = pd.DataFrame(matrix, index=names, columns=names)
-            df.to_csv(os.path.join(output_path, "cluster_de_cluster.csv"))
-            print(f"saved: {output_path}/cluster_de_cluster.csv")
+            df.to_csv(os.path.join(folder_path, "cluster_de_cluster.csv"))
+            print(f"saved: {folder_path}/cluster_de_cluster.csv")
 
 
 generar_cluster_ventana()
