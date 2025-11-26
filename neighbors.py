@@ -155,7 +155,11 @@ def lstm_forecast(time_series,forecasted_values):
     optimizer_kwargs={'lr':1e-3}, 
     random_state=42, 
     log_tensorboard=False, 
-    force_reset=True
+    force_reset=True,
+    pl_trainer_kwargs={
+      "accelerator": "gpu",
+      "devices": [0]
+    },
   )
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
