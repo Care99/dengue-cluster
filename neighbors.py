@@ -122,9 +122,9 @@ def logq(time_series,forecast):
     value = numerator/denominator
     error = error + np.power(np.log(value),2)
   return error
-def naive_mean(time_series,forecasted_values):
+def naive_drift(time_series,forecasted_values):
   data = time_series
-  model = NaiveMean()
+  model = NaiveDrift()
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
@@ -161,7 +161,7 @@ def lstm_forecast(time_series,forecasted_values):
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series.values()
 models = [
-  naive_mean,
+  naive_drift,
   auto_arima,
   linear_regression,
   lstm_forecast,
