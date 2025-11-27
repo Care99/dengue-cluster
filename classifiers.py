@@ -2,6 +2,7 @@
 import os
 import pandas as pd
 import numpy as np
+from darts.models import SKLearnClassifierModel
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, roc_auc_score, roc_curve
@@ -44,18 +45,21 @@ def load_df(time_series):
 
 # 6. Models
 # CART
+# Classifies data by learning a series of decision rules from the features
 def CART(X_train, X_test, y_train, y_test):
     cart = DecisionTreeClassifier(max_depth=5, random_state=42)
     cart.fit(X_train, y_train)
     return cart.predict(X_test)
 
 # Random Forest
+# Ensemble method built on top of decision trees
 def RANDOM_FOREST(X_train, X_test, y_train, y_test):
     rf = RandomForestClassifier(n_estimators=100, random_state=42)
     rf.fit(X_train, y_train)
     return rf.predict(X_test)
 
 # KNN
+# Transform raw numeric time series into categorical labels 
 def KNN(X_train, X_test, y_train, y_test,knn_neighbors):
     scaler = StandardScaler()
     # Step 1: Handle missing values (impute with mean)
@@ -77,6 +81,7 @@ def KNN(X_train, X_test, y_train, y_test,knn_neighbors):
 
 
 # TAN (Tree Augmented Naive Bayes)
+# Builds a Bayesian Network from and uses it for classification tasks.
 def TAN(X_train, X_test, y_train, y_test):
     imputer = SimpleImputer(strategy='mean')
     X_train = imputer.fit_transform(X_train)
@@ -94,8 +99,8 @@ def fill_na(time_series):
 # 7. Evaluation
 def evaluate_models(time_series,k,n):
     X_train, X_test, y_train, y_test = load_df(time_series)
-    cart=CART(X_train, X_test, y_train, y_test)
-    rf=RANDOM_FOREST(X_train, X_test, y_train, y_test)
-    knn=KNN(X_train, X_test, y_train, y_test,k*n)
-    tan=TAN(X_train, X_test, y_train, y_test)
+    cart=SKLearnClassifierModel(CART(X_train, X_test, y_train, y_test))
+    rf=SKLearnClassifierModel(RANDOM_FOREST(X_train, X_test, y_train, y_test))
+    knn=SKLearnClassifierModel(KNN(X_train, X_test, y_train, y_test,k*n))
+    tan=SKLearnClassifierModel(TAN(X_train, X_test, y_train, y_test))
     return cart,rf,knn,tan
