@@ -364,14 +364,14 @@ def generate_forecast(
         time = end_time - start_time
         projected_classifications[j][1].extend(forecasted_values)
     for i in range(len(projected_classifications)):
-      save_time_series_as_csv(input_department,projected_classifications[i][1],model.__qualname__,projected_classifications[i][0])
-      plot_scatter(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0])
-      plot_histogram(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0])
-      save_error(input_department,projected_classifications[i][1],model,projected_classifications[i][0])
-      save_time(input_department,time,model,projected_classifications[i][0])
+      save_time_series_as_csv(input_department,projected_classifications[i][1],model.__qualname__,projected_classifications[i][0],months_to_forecast)
+      plot_scatter(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0],months_to_forecast)
+      plot_histogram(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0],months_to_forecast)
+      save_error(input_department,projected_classifications[i][1],model,projected_classifications[i][0],months_to_forecast)
+      save_time(input_department,time,model,projected_classifications[i][0],months_to_forecast)
 def save_time(department,time,model,classification):
   output_file_name = f'{department}_execution_time.txt'
-  path = os.path.join(csv_path,'forecast',classification,model)
+  path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   output_file = os.path.join(path, output_file_name)
   with open(output_file, 'w') as f:
@@ -381,7 +381,7 @@ def save_time_series_as_csv(department,time_series,model,classification):
   incidence_data = pd.DataFrame(time_series)
   # Save the DataFrame as a CSV file
   output_file_name = f'{department}.csv'
-  path = os.path.join(csv_path,'forecast',classification,model)
+  path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   output_file = os.path.join(path, output_file_name)
   incidence_data.to_csv(output_file, header=False, index=False)
@@ -393,13 +393,13 @@ def plot_scatter(actual,predicted,input_department,model,classification):
   plt.xlabel('Actual values')
   plt.ylabel('Predicted values')
   plt.legend()
-  path = os.path.join(csv_path,'forecast',classification,model.__qualname__)
+  path = os.path.join(csv_path,'forecast',classification,model.__qualname__,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   output_file_name = f'{input_department}.svg'
   output_file = os.path.join(path, output_file_name)
   plt.savefig(output_file)
   plt.close()
-  print(f"Saved: csv/forecast/{classification}/{model.__qualname__}/{output_file_name}")
+  print(f"Saved: {output_file}")
 def plot_histogram(actual,predicted,input_department,model,classification):
   plt.figure(figsize=(10, 6))
   errors = rmse(actual,predicted)
@@ -408,13 +408,13 @@ def plot_histogram(actual,predicted,input_department,model,classification):
   plt.xlabel('Error')
   plt.ylabel('Frequency')
   plt.legend()
-  path = os.path.join(csv_path,'forecast',classification,model.__qualname__)
+  path = os.path.join(csv_path,'forecast',classification,model.__qualname__,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   output_file_name = f'{input_department}.svg'
   output_file = os.path.join(path, output_file_name)
   plt.savefig(output_file)
   plt.close()
-  print(f"Saved: csv/forecast/{classification}/{model.__qualname__}/{output_file_name}")
+  print(f"Saved: {output_file}")
 def save_error(input_department,time_series,model,classification):
   original_time_series = []
   for month_year in months_original_time_series:
@@ -422,7 +422,7 @@ def save_error(input_department,time_series,model,classification):
     path = os.path.join(ts_historico_path,str(month_year[1]),month_year[0],filename)
     temp_ts = load_time_series(path)
     original_time_series.extend(temp_ts)
-  path = os.path.join(csv_path,'forecast',classification,model.__qualname__)
+  path = os.path.join(csv_path,'forecast',classification,model.__qualname__,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   mae_error = mae(original_time_series,time_series)
   output_file_name = f'{input_department}_mae.txt'
