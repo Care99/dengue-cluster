@@ -449,5 +449,7 @@ def project_time_series(k,n,forecasted_value):
   for input_department in departments:
     input_year=2022
     generate_forecast(input_year,input_department,k,n,forecasted_value)
-
-project_time_series(4,2,1)
+number_of_neighbors=4
+number_of_years=2
+for months_to_forecast in range(1,5):
+  project_time_series(number_of_neighbors,number_of_years,months_to_forecast)
