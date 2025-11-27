@@ -336,6 +336,13 @@ def generate_forecast(
             ['AGOSTO',2023],
             ['SEPTIEMBRE',2023],
             ['OCTUBRE',2023]]
+  # Load actual time series for comparison
+  original_time_series = []
+  for month_year in months_original_time_series:
+    filename = f'{input_department}.csv'
+    path = os.path.join(ts_historico_path,str(month_year[1]),month_year[0],filename)
+    temp_ts = load_time_series(path)
+    original_time_series.extend(temp_ts)
   for model in models:
     for i in range(len(months)-1):
       classifications[1][1] = get_knn(input_year,i,input_department,number_years*number_neighbors)
@@ -354,7 +361,8 @@ def generate_forecast(
         projected_classifications[j][1].extend(forecasted_values)
     for i in range(len(projected_classifications)):
       save_time_series_as_csv(input_department,projected_classifications[i][1],model.__qualname__,projected_classifications[i][0])
-      save_time_series_as_svg(input_department,projected_classifications[i][1],model,projected_classifications[i][0])
+      plot_scatter(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0])
+      plot_histogram(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0])
       save_error(input_department,projected_classifications[i][1],model,projected_classifications[i][0])
 def save_time_series_as_csv(department,time_series,model,classification):
   incidence_data = pd.DataFrame(time_series)
