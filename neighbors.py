@@ -5,6 +5,7 @@ from scipy.special import inv_boxcox
 from scipy.spatial.distance import euclidean
 #from tslearn.metrics import dtw
 import os
+import time
 import matplotlib as mplt
 import classifiers
 from classifiers import evaluate_models, fill_na; mplt.use('SVG',force=True)
@@ -357,13 +358,25 @@ def generate_forecast(
       for j in range(len(classifications)):
         classifications[j][1].extend(current_time_series)
         classifications[j][1] = classifications[j][1][size_ts:]
+        start_time = time.process_time()
         forecasted_values = model(TimeSeries.from_values(classifications[j][1]),size_ts)
+        end_time = time.process_time()
+        time = end_time - start_time
         projected_classifications[j][1].extend(forecasted_values)
     for i in range(len(projected_classifications)):
       save_time_series_as_csv(input_department,projected_classifications[i][1],model.__qualname__,projected_classifications[i][0])
       plot_scatter(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0])
       plot_histogram(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0])
       save_error(input_department,projected_classifications[i][1],model,projected_classifications[i][0])
+      save_time(input_department,time,model,projected_classifications[i][0])
+def save_time(department,time,model,classification):
+  output_file_name = f'{department}_execution_time.txt'
+  path = os.path.join(csv_path,'forecast',classification,model)
+  os.makedirs(path,exist_ok=True)
+  output_file = os.path.join(path, output_file_name)
+  with open(output_file, 'w') as f:
+    f.write(f'{time}')
+  print(f"Saved: {output_file}. Elapsed time: {time}")
 def save_time_series_as_csv(department,time_series,model,classification):
   incidence_data = pd.DataFrame(time_series)
   # Save the DataFrame as a CSV file
