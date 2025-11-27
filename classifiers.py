@@ -99,8 +99,8 @@ def fill_na(time_series):
 # 7. Evaluation
 def evaluate_models(time_series,k,n):
     X_train, X_test, y_train, y_test = load_df(time_series)
-    cart=SKLearnClassifierModel(CART(X_train, X_test, y_train, y_test))
-    rf=SKLearnClassifierModel(RANDOM_FOREST(X_train, X_test, y_train, y_test))
-    knn=SKLearnClassifierModel(KNN(X_train, X_test, y_train, y_test,k*n))
-    tan=SKLearnClassifierModel(TAN(X_train, X_test, y_train, y_test))
+    cart=SKLearnClassifierModel(model=CART(X_train, X_test, y_train, y_test))
+    rf=SKLearnClassifierModel(model=RANDOM_FOREST(X_train, X_test, y_train, y_test))
+    knn=SKLearnClassifierModel(model=KNN(X_train, X_test, y_train, y_test,k*n))
+    tan=SKLearnClassifierModel(model=TAN(X_train, X_test, y_train, y_test))
     return cart,rf,knn,tan
