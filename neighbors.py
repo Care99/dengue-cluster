@@ -385,16 +385,29 @@ def save_error(input_department,time_series,model,classification):
     filename = f'{input_department}.csv'
     path = os.path.join(ts_historico_path,str(month_year[1]),month_year[0],filename)
     temp_ts = load_time_series(path)
-    for value in temp_ts:
-      original_time_series.append(value)
-  logq_error = logq(original_time_series,time_series)
+    original_time_series.extend(temp_ts)
   path = os.path.join(csv_path,'forecast',classification,model.__qualname__)
   os.makedirs(path,exist_ok=True)
-  output_file_name = f'{input_department}_error.txt'
+  mae_error = mae(original_time_series,time_series)
+  output_file_name = f'{input_department}_mae.txt'
   output_file = os.path.join(path, output_file_name)
+  write_error(output_file,mae_error)
+  mape_error = mape(original_time_series,time_series)
+  output_file_name = f'{input_department}_mape.txt'
+  output_file = os.path.join(path, output_file_name)
+  write_error(output_file,mape_error)
+  rmse_error = rmse(original_time_series,time_series)
+  output_file_name = f'{input_department}_rmse.txt'
+  output_file = os.path.join(path, output_file_name)
+  write_error(output_file,rmse_error)
+  smape_error = smape(original_time_series,time_series)
+  output_file_name = f'{input_department}_smape.txt'
+  output_file = os.path.join(path, output_file_name)
+  write_error(output_file,smape_error)
+def write_error(output_file, error):
   with open(output_file, 'w') as f:
-    f.write(f'LogQ Error: {logq_error}\n')
-  print(f"Saved: csv/forecast/{classification}/{model.__qualname__}/{output_file_name}")
+    f.write(f'{error}')
+  print(f"Saved: {output_file}")
 #variables
 def project_time_series(k,n,forecasted_value):
   for input_department in departments:
