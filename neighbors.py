@@ -355,13 +355,14 @@ def generate_forecast(
         path_next = os.path.join(ts_historico_path,f'{months[i+1][1]}',f'{months[i+1][0]}',f'{input_department}.csv')
         next_time_series = load_time_series(path_next)
         size_ts += len(next_time_series)
+      time = 0
       for j in range(len(classifications)):
         classifications[j][1].extend(current_time_series)
         classifications[j][1] = classifications[j][1][size_ts:]
         start_time = time.process_time()
         forecasted_values = model(TimeSeries.from_values(classifications[j][1]),size_ts)
         end_time = time.process_time()
-        time = end_time - start_time
+        time += end_time - start_time
         projected_classifications[j][1].extend(forecasted_values)
     for i in range(len(projected_classifications)):
       save_time_series_as_csv(input_department,projected_classifications[i][1],model.__qualname__,projected_classifications[i][0],months_to_forecast)
