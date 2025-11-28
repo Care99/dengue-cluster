@@ -322,7 +322,9 @@ def generate_forecast(
         ['TAN',[]]
       ]
   classifications[0][1] = get_historical_data(input_department)
-  classifications[3][1],classifications[4][1],classifications[5][1],classifications[6][1] = evaluate_models(classifications[0][1],number_years,number_neighbors)
+  classifications[3][1],classifications[4][1],classifications[5][1],classifications[6][1] = evaluate_models(
+          classifications[0][1],
+          number_years,number_neighbors)
   #Time series for projections
   months = [['OCTUBRE',2022],
             ['NOVIEMBRE',2022],
@@ -365,11 +367,38 @@ def generate_forecast(
         time += end_time - start_time
         projected_classifications[j][1].extend(forecasted_values)
     for i in range(len(projected_classifications)):
-      save_time_series_as_csv(input_department,projected_classifications[i][1],model.__qualname__,projected_classifications[i][0],months_to_forecast)
-      plot_scatter(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0],months_to_forecast)
-      plot_histogram(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0],months_to_forecast)
-      save_error(input_department,projected_classifications[i][1],model,projected_classifications[i][0],months_to_forecast)
-      save_time(input_department,time,model,projected_classifications[i][0],months_to_forecast)
+      save_time_series_as_csv(
+              input_department,
+              projected_classifications[i][1],
+              model.__qualname__,
+              projected_classifications[i][0],
+              months_to_forecast)
+      plot_scatter(
+              original_time_series,
+              projected_classifications[i][1],
+              input_department,
+              model,
+              projected_classifications[i][0],
+              months_to_forecast)
+      plot_histogram(
+              original_time_series,
+              projected_classifications[i][1],
+              input_department,
+              model,
+              projected_classifications[i][0],
+              months_to_forecast)
+      save_error(
+              input_department,
+              projected_classifications[i][1],
+              model,
+              projected_classifications[i][0],
+              months_to_forecast)
+      save_time(
+              input_department,
+              time,
+              model,
+              projected_classifications[i][0],
+              months_to_forecast)
 def save_time(department,time,model,classification):
   output_file_name = f'{department}_execution_time.txt'
   path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
