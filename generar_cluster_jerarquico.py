@@ -3,8 +3,11 @@ import numpy as np
 import os
 import math
 from scipy.cluster.hierarchy import linkage, dendrogram
+import matplotlib as mplt
 import matplotlib.pyplot as plt
+from classifiers import evaluate_models, fill_na; mplt.use('SVG',force=True)
 from scipy.spatial.distance import pdist, squareform
+from darts import TimeSeries
 
 
 # Ventana de meses de octubre a septiembre
@@ -133,13 +136,13 @@ def get_k_n_n(mes:str, departamento:str, k:int, n:int):
     
     for i in range(len(nearest_idx)):
         label_i = labels[nearest_idx[i]]  
-        ts=get_ts(meses_str, label_i)
+        ts=TimeSeries.from_values(get_ts(meses_str, label_i))
         knn_ts.append(ts)
-    print(knn_ts)
+    #print(knn_ts)
     return knn_ts
 
 
-def get_ts(meses_str: str, department_year: str) -> pd.Series:
+def get_ts(meses_str: str, department_year: str) :
     months = meses_str.split("-")
     BASE_PATH = "csv/ts_historico"
     ts_data = []
@@ -152,10 +155,8 @@ def get_ts(meses_str: str, department_year: str) -> pd.Series:
             raise FileNotFoundError(f"{csv_path} does not exist")    
         # CSV has no header, assume single column
         df = pd.read_csv(csv_path, header=None)
-        ts_data.append(pd.Series(df.values.flatten()))
-    # Concatenate all three months
-    ts_concat = pd.concat(ts_data, ignore_index=True)
-    return ts_concat
+        ts_data.extend(pd.Series(df.values.flatten()))
+    return ts_data[:12]
 
 
 #generar_cluster_ventana()

@@ -8,7 +8,6 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, roc_auc_score, roc_curve
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 
@@ -58,27 +57,6 @@ def RANDOM_FOREST(X_train, X_test, y_train, y_test):
     rf.fit(X_train, y_train)
     return rf.predict(X_test)
 
-# KNN
-# Transform raw numeric time series into categorical labels 
-def KNN(X_train, X_test, y_train, y_test,knn_neighbors):
-    scaler = StandardScaler()
-    # Step 1: Handle missing values (impute with mean)
-    imputer = SimpleImputer(strategy='mean')
-    X_train = imputer.fit_transform(X_train)
-    X_test = imputer.transform(X_test)
-
-    # Step 2: Scale using the same scaler
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
-
-    # Step 3: Fit and predict
-    knn = KNeighborsClassifier(n_neighbors=knn_neighbors)
-    knn.fit(X_train_scaled, y_train)
-    y_pred = knn.predict(X_test_scaled)
-
-    return y_pred
-
 
 # TAN (Tree Augmented Naive Bayes)
 # Builds a Bayesian Network from and uses it for classification tasks.
@@ -101,6 +79,5 @@ def evaluate_models(time_series,k,n):
     X_train, X_test, y_train, y_test = load_df(time_series)
     cart=SKLearnClassifierModel(model=CART(X_train, X_test, y_train, y_test))
     rf=SKLearnClassifierModel(model=RANDOM_FOREST(X_train, X_test, y_train, y_test))
-    knn=SKLearnClassifierModel(model=KNN(X_train, X_test, y_train, y_test,k*n))
     tan=SKLearnClassifierModel(model=TAN(X_train, X_test, y_train, y_test))
-    return cart,rf,knn,tan
+    return cart,rf,tan

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import math
-
+from darts import TimeSeries
 # Ventana de meses de octubre a septiembre
 meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
             'MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO']
@@ -169,16 +169,16 @@ def get_k_n_n(mes:str, departamento:str, k:int, n:int):
     for year, dep_list in zip(k_nearest_years, n_nearest_neighbours):
         for dep in dep_list:
             knn_labels.append(f"{dep}_{year}")
-    print(knn_labels)
+    #print(knn_labels)
 
     knn_ts = []
     for dept in knn_labels:
-        ts=get_ts(meses_str, dept)
+        ts=TimeSeries.from_values(get_ts(meses_str, dept))
         knn_ts.append(ts)
-    print(knn_ts)
+    #print(knn_ts)
     return knn_ts
 
-def get_ts(meses_str: str, department_year: str) -> pd.Series:
+def get_ts(meses_str: str, department_year: str) :
     months = meses_str.split("-")
     BASE_PATH = "csv/ts_historico"
     ts_data = []
@@ -191,13 +191,12 @@ def get_ts(meses_str: str, department_year: str) -> pd.Series:
             raise FileNotFoundError(f"{csv_path} does not exist")    
         # CSV has no header, assume single column
         df = pd.read_csv(csv_path, header=None)
-        ts_data.append(pd.Series(df.values.flatten()))
-    # Concatenate all three months
-    ts_concat = pd.concat(ts_data, ignore_index=True)
-    return ts_concat
+        ts_data.extend(pd.Series(df.values.flatten()))
+    return ts_data[:12]
+
 
 
 #generar_cluster_ventana()
 #generar_cluster_matriz_diferencia()
 #generar_cluster_de_cluster_matriz_diferencia()
-get_k_n_n(mes="JULIO",departamento="CENTRO_SUR", k=2, n=4) #K = YEAR, N= locations
+#get_k_n_n(mes="JULIO",departamento="CENTRO_SUR", k=2, n=4) #K = YEAR, N= locations

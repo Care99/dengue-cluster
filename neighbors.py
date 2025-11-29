@@ -1,3 +1,6 @@
+from generar_cluster import get_k_n_n as c_get_knn
+from generar_cluster_jerarquico import get_k_n_n as cj_get_knn
+from generar_cluster_de_cluster import get_k_n_n as cdc_get_knn
 import math
 import pandas as pd
 from scipy.stats import boxcox
@@ -5,13 +8,14 @@ from scipy.special import inv_boxcox
 from scipy.spatial.distance import euclidean
 #from tslearn.metrics import dtw
 import os
-import time
+from time import process_time
 import matplotlib as mplt
 import classifiers
 from classifiers import evaluate_models, fill_na; mplt.use('SVG',force=True)
 from matplotlib import pyplot as plt
 import numpy as np
 from statsmodels.tsa.seasonal import MSTL
+from darts import concatenate
 #Forecasting models
 #Baseline Models 
 from darts.models import NaiveMean,NaiveSeasonal,NaiveDrift,NaiveMovingAverage
@@ -128,7 +132,7 @@ def naive_drift(time_series,forecasted_values):
   model = NaiveDrift()
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
+  return generated_time_series.values().flatten()
 
 def auto_arima(time_series,forecasted_values):
   data = time_series
@@ -136,13 +140,13 @@ def auto_arima(time_series,forecasted_values):
   model = AutoARIMA(season_length=52)
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
+  return generated_time_series.values().flatten()
 def linear_regression(time_series,forecasted_values):
   data = time_series
   model = LinearRegressionModel(lags=52)
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
+  return generated_time_series.values().flatten()
 def lstm_forecast(time_series,forecasted_values):
   data = time_series
   model = RNNModel(
@@ -164,12 +168,12 @@ def lstm_forecast(time_series,forecasted_values):
   )
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values()
+  return generated_time_series.values().flatten()
 models = [
   naive_drift,
-  auto_arima,
-  linear_regression,
-  lstm_forecast,
+  #auto_arima,
+  #linear_regression,
+  #lstm_forecast,
   ]
 def find_nearest_neighbor(csv_path, index, num_neighbors):
   # Read the CSV file into a DataFrame
@@ -305,24 +309,25 @@ def generate_forecast(
   #variables
   classifications = [
         ['HISTORICAL',[]],
-        ['KNN',[]],
-        ['CLUSTER_CLUSTERS',[]],
-        ['CART',[]],
-        ['RANDOM_FOREST',[]],
-        ['KNN_CLASSIFIER',[]],
-        ['TAN',[]]
+        ['CLUSTER',[]],
+        ['HIERARCHICAL',[]],
+        ['CLUSTER_CLUSTERS',[]]
+        #['CART',[]],
+        #['RANDOM_FOREST',[]],
+        #['TAN',[]]
       ]
   projected_classifications = [
         ['HISTORICAL',[]],
-        ['KNN',[]],
-        ['CLUSTER_CLUSTERS',[]],
-        ['CART',[]],
-        ['RANDOM_FOREST',[]],
-        ['KNN_CLASSIFIER',[]],
-        ['TAN',[]]
+        ['CLUSTER',[]],
+        ['HIERARCHICAL',[]],
+        ['CLUSTER_CLUSTERS',[]]
+        #['CART',[]],
+        #['RANDOM_FOREST',[]],
+        #['TAN',[]]
       ]
-  classifications[0][1] = get_historical_data(input_department)
-  classifications[3][1],classifications[4][1],classifications[5][1],classifications[6][1] = evaluate_models(classifications[0][1],number_years,number_neighbors)
+  historical_time_series = get_historical_data(input_department)
+  classifications[0][1] = TimeSeries.from_values(historical_time_series)
+  #classifications[4][1],classifications[5][1],classifications[6][1] = evaluate_models(historical_time_series,number_years,number_neighbors)
   #Time series for projections
   months = [['OCTUBRE',2022],
             ['NOVIEMBRE',2022],
@@ -344,10 +349,12 @@ def generate_forecast(
     path = os.path.join(ts_historico_path,str(month_year[1]),month_year[0],filename)
     temp_ts = load_time_series(path)
     original_time_series.extend(temp_ts)
+  original_time_series.pop()
   for model in models:
-    for i in range(len(months)-1):
-      classifications[1][1] = get_knn(input_year,i,input_department,number_years*number_neighbors)
-      classifications[2][1] = get_cluster_clusters_knn(input_year,i,input_department,number_years,number_neighbors)
+    for i in range(0,len(months)-1,months_to_forecast):
+      classifications[1][1] = concatenate(c_get_knn(months[i][0],input_department,number_of_years,number_of_neighbors),axis=1).mean(axis=1)
+      classifications[2][1] = concatenate(cj_get_knn(months[i][0],input_department,number_of_years,number_of_neighbors),axis=1).mean(axis=1)
+      classifications[3][1] = concatenate(cdc_get_knn(months[i][0],input_department,number_of_years,number_of_neighbors),axis=1).mean(axis=1)
       path = os.path.join(ts_historico_path,f'{months[i][1]}',f'{months[i][0]}',f'{input_department}.csv')
       current_time_series = load_time_series(path)
       size_ts = 0
@@ -356,21 +363,25 @@ def generate_forecast(
         next_time_series = load_time_series(path_next)
         size_ts += len(next_time_series)
       time = 0
+      historical_time_series.extend(current_time_series)
+      historical_time_series = historical_time_series[size_ts:]
+      classifications[0][1] = TimeSeries.from_values(historical_time_series)
       for j in range(len(classifications)):
-        classifications[j][1].extend(current_time_series)
-        classifications[j][1] = classifications[j][1][size_ts:]
-        start_time = time.process_time()
-        forecasted_values = model(TimeSeries.from_values(classifications[j][1]),size_ts)
-        end_time = time.process_time()
+        start_time = process_time()
+        forecasted_values = model(classifications[j][1],size_ts)
+        end_time = process_time()
         time += end_time - start_time
         projected_classifications[j][1].extend(forecasted_values)
+    #rojected_classifications[1][1] = TimeSeries.from_values(projected_classifications[1][1]).mean(axis=1).values
+    #projected_classifications[2][1] = TimeSeries.from_values(projected_classifications[2][1]).mean(axis=1).values
+    #projected_classifications[3][1] = TimeSeries.from_values(projected_classifications[3][1]).mean(axis=1).values
     for i in range(len(projected_classifications)):
       save_time_series_as_csv(input_department,projected_classifications[i][1],model.__qualname__,projected_classifications[i][0],months_to_forecast)
       plot_scatter(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0],months_to_forecast)
-      plot_histogram(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0],months_to_forecast)
-      save_error(input_department,projected_classifications[i][1],model,projected_classifications[i][0],months_to_forecast)
-      save_time(input_department,time,model,projected_classifications[i][0],months_to_forecast)
-def save_time(department,time,model,classification):
+      #plot_histogram(original_time_series,projected_classifications[i][1],input_department,model,projected_classifications[i][0],months_to_forecast)
+      #save_error(input_department,projected_classifications[i][1],model,projected_classifications[i][0],months_to_forecast)
+      #save_time(input_department,time,model,projected_classifications[i][0],months_to_forecast)
+def save_time(department,time,model,classification,months_to_forecast):
   output_file_name = f'{department}_execution_time.txt'
   path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
@@ -378,7 +389,7 @@ def save_time(department,time,model,classification):
   with open(output_file, 'w') as f:
     f.write(f'{time}')
   print(f"Saved: {output_file}. Elapsed time: {time}")
-def save_time_series_as_csv(department,time_series,model,classification):
+def save_time_series_as_csv(department,time_series,model,classification,months_to_forecast):
   incidence_data = pd.DataFrame(time_series)
   # Save the DataFrame as a CSV file
   output_file_name = f'{department}.csv'
@@ -386,8 +397,8 @@ def save_time_series_as_csv(department,time_series,model,classification):
   os.makedirs(path,exist_ok=True)
   output_file = os.path.join(path, output_file_name)
   incidence_data.to_csv(output_file, header=False, index=False)
-  print(f"Saved: csv/forecast/{classification}/{model}/{output_file_name}")
-def plot_scatter(actual,predicted,input_department,model,classification):
+  print(f"Saved: {output_file}")
+def plot_scatter(actual,predicted,input_department,model,classification,months_to_forecast):
   plt.figure(figsize=(10, 6))
   plt.scatter(actual,predicted)
   plt.title(f'Scatter plot for {input_department} using {model.__qualname__} - {classification}')
@@ -401,7 +412,7 @@ def plot_scatter(actual,predicted,input_department,model,classification):
   plt.savefig(output_file)
   plt.close()
   print(f"Saved: {output_file}")
-def plot_histogram(actual,predicted,input_department,model,classification):
+def plot_histogram(actual,predicted,input_department,model,classification,months_to_forecast):
   plt.figure(figsize=(10, 6))
   errors = rmse(actual,predicted)
   plt.hist(actual,predicted)
@@ -416,7 +427,7 @@ def plot_histogram(actual,predicted,input_department,model,classification):
   plt.savefig(output_file)
   plt.close()
   print(f"Saved: {output_file}")
-def save_error(input_department,time_series,model,classification):
+def save_error(input_department,time_series,model,classification,months_to_forecast):
   original_time_series = []
   for month_year in months_original_time_series:
     filename = f'{input_department}.csv'
