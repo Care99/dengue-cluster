@@ -34,6 +34,21 @@ matriz_ventana = [
     "SEPTIEMBRE-OCTUBRE-NOVIEMBRE"
 ]
 
+dict_ventana = {
+    "JULIO": "ABRIL-MAYO-JUNIO",
+    "MARZO": "DICIEMBRE-ENERO-FEBRERO",
+    "ABRIL": "ENERO-FEBRERO-MARZO",
+    "MAYO": "FEBRERO-MARZO-ABRIL",
+    "OCTUBRE": "JULIO-AGOSTO-SEPTIEMBRE",
+    "SEPTIEMBRE": "JUNIO-JULIO-AGOSTO",
+    "JUNIO": "MARZO-ABRIL-MAYO",
+    "AGOSTO": "MAYO-JUNIO-JULIO",
+    "FEBRERO": "NOVIEMBRE-DICIEMBRE-ENERO",
+    "ENERO": "OCTUBRE-NOVIEMBRE-DICIEMBRE",
+    "NOVIEMBRE": "AGOSTO-SEPTIEMBRE-OCTUBRE",
+    "DICIEMBRE": "SEPTIEMBRE-OCTUBRE-NOVIEMBRE"
+}
+
 def bhattacharyya(tseries1,tseries2):
     value = 0.0
     i = 0
@@ -111,6 +126,45 @@ def generar_cluster_matriz_diferencia():
         print(f"guardado: {output_path}/{file_nime}")
 
 
+def get_k_n_n(mes:str, departamento:str, k:int, n:int):
+    meses_str = dict_ventana[mes]
+    label = departamento + "_2022-2023"
+    knn = k*n
+
+    file_path = f'csv/c/cluster_matriz/{meses_str}/mat_distancia.csv'
+    df = pd.read_csv(file_path, sep=",", index_col=0)
+    
+    distances = df.loc[label].copy()
+    nearest_idx = distances.nsmallest(knn).index.tolist()
+    print(nearest_idx)
+   
+    knn_ts = []
+    for dept in nearest_idx:
+        ts=get_ts(meses_str, dept)
+        knn_ts.append(ts)
+    print(knn_ts)
+    return knn_ts
+
+def get_ts(meses_str: str, department_year: str) -> pd.Series:
+    months = meses_str.split("-")
+    BASE_PATH = "csv/ts_historico"
+    ts_data = []
+    department, years_str = department_year.rsplit('_', 1)
+    for mes in months:
+        pos = 1 if meses.index(mes) > 5 else 0
+        year = years_str.split("-")[pos]
+        csv_path = os.path.join(BASE_PATH, str(year), mes, f"{department}.csv")
+        if not os.path.exists(csv_path):
+            raise FileNotFoundError(f"{csv_path} does not exist")    
+        # CSV has no header, assume single column
+        df = pd.read_csv(csv_path, header=None)
+        ts_data.append(pd.Series(df.values.flatten()))
+    # Concatenate all three months
+    ts_concat = pd.concat(ts_data, ignore_index=True)
+    return ts_concat
+
+
 
 #generar_cluster_ventana()
-generar_cluster_matriz_diferencia()
+#generar_cluster_matriz_diferencia()
+get_k_n_n(mes="JULIO",departamento="CENTRO_SUR", k=2, n=4)
