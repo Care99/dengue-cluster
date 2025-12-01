@@ -3,8 +3,11 @@ import numpy as np
 import os
 import math
 from scipy.cluster.hierarchy import linkage, dendrogram
+import matplotlib as mplt
 import matplotlib.pyplot as plt
+from classifiers import evaluate_models, fill_na; mplt.use('SVG',force=True)
 from scipy.spatial.distance import pdist, squareform
+from darts import TimeSeries
 
 
 # Ventana de meses de octubre a septiembre
@@ -38,7 +41,20 @@ matriz_ventana = [
     "SEPTIEMBRE-OCTUBRE-NOVIEMBRE"
 ]
 
-
+dict_ventana = {
+    "JULIO": "ABRIL-MAYO-JUNIO",
+    "MARZO": "DICIEMBRE-ENERO-FEBRERO",
+    "ABRIL": "ENERO-FEBRERO-MARZO",
+    "MAYO": "FEBRERO-MARZO-ABRIL",
+    "OCTUBRE": "JULIO-AGOSTO-SEPTIEMBRE",
+    "SEPTIEMBRE": "JUNIO-JULIO-AGOSTO",
+    "JUNIO": "MARZO-ABRIL-MAYO",
+    "AGOSTO": "MAYO-JUNIO-JULIO",
+    "FEBRERO": "NOVIEMBRE-DICIEMBRE-ENERO",
+    "ENERO": "OCTUBRE-NOVIEMBRE-DICIEMBRE",
+    "NOVIEMBRE": "AGOSTO-SEPTIEMBRE-OCTUBRE",
+    "DICIEMBRE": "SEPTIEMBRE-OCTUBRE-NOVIEMBRE"
+}
 
 def generar_cluster_ventana():
     os.makedirs(input_base, exist_ok=True)
@@ -100,12 +116,14 @@ def generar_cluster_jerarquico():
         df_t.to_csv(f"{hclust_dir}/labels.csv")
         print(f"Saved labels to {hclust_dir}/{m}_labels.csv")
 
-def get_k_n_n(meses,label,k):
+def get_k_n_n(mes:str, departamento:str, k:int, n:int):
     hclust_dir = "csv/cj/hclust"
-
+    meses_str = dict_ventana[mes]
+    label = departamento + "_2022-2023"
+    knn = k*n
     # Load saved clustering state
-    Z = np.load(f"{hclust_dir}/{meses}/Z.npy")
-    df_t = pd.read_csv(f"{hclust_dir}/{meses}/labels.csv", index_col=0)
+    Z = np.load(f"{hclust_dir}/{meses_str}/Z.npy")
+    df_t = pd.read_csv(f"{hclust_dir}/{meses_str}/labels.csv", index_col=0)
     # Compute pairwise distances using the SAME metric
     dist_matrix = squareform(pdist(df_t[["value"]], metric="euclidean"))
     labels = df_t.index.tolist()
@@ -113,9 +131,34 @@ def get_k_n_n(meses,label,k):
     idx = labels.index(label)
     distances = dist_matrix[idx]
 
-    nearest_idx = distances.argsort()[1:k+1]  # skip itself (index 0)
-    print([(labels[i], distances[i]) for i in nearest_idx])
+    nearest_idx = distances.argsort()[0:knn]
+    knn_ts = []
+    
+    for i in range(len(nearest_idx)):
+        label_i = labels[nearest_idx[i]]  
+        ts=TimeSeries.from_values(get_ts(meses_str, label_i))
+        knn_ts.append(ts)
+    #print(knn_ts)
+    return knn_ts
+
+
+def get_ts(meses_str: str, department_year: str) :
+    months = meses_str.split("-")
+    BASE_PATH = "csv/ts_historico"
+    ts_data = []
+    department, years_str = department_year.rsplit('_', 1)
+    for mes in months:
+        pos = 1 if meses.index(mes) > 5 else 0
+        year = years_str.split("-")[pos]
+        csv_path = os.path.join(BASE_PATH, str(year), mes, f"{department}.csv")
+        if not os.path.exists(csv_path):
+            raise FileNotFoundError(f"{csv_path} does not exist")    
+        # CSV has no header, assume single column
+        df = pd.read_csv(csv_path, header=None)
+        ts_data.extend(pd.Series(df.values.flatten()))
+    return ts_data[:12]
+
 
 #generar_cluster_ventana()
 #generar_cluster_jerarquico()
-get_k_n_n(meses="AGOSTO-SEPTIEMBRE-OCTUBRE",label="ASUNCION_2019-2020", k=10)
+get_k_n_n(mes="ABRIL",departamento="CENTRAL", k=2, n=4)
