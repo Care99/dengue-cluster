@@ -339,7 +339,7 @@ def generate_forecast(
     size_ts = 0
     next_time_series = []
     for j in range(i-3,i):
-      path_next = os.path.join(ts_historico_path,f'{months[i+1][1]}',f'{months[i+1][0]}',f'{input_department}.csv')
+      path_next = os.path.join(ts_historico_path,f'{months[j][1]}',f'{months[j][0]}',f'{input_department}.csv')
       temp_ts = load_time_series(path_next)
       size_ts += len(temp_ts)
       next_time_series.extend(next_time_series)
