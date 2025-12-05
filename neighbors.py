@@ -360,12 +360,11 @@ def generate_forecast(
     projected_time_series.extend(forecasted_values)
     historical_time_series.extend(next_time_series)
     historical_time_series = historical_time_series[size_ts:]
-  for i in range(len(projected_time_series)):
-    save_time_series_as_csv(input_department,projected_time_series,model.__qualname__,classification.__qualname__,months_to_forecast)
-    #plot_scatter(historical_time_series,projected_time_series,input_department,model,classification.__qualname__,months_to_forecast)
-    #plot_histogram(historical_time_series,projected_time_series,input_department,model,classification.__qualname__,months_to_forecast)
-    save_error(input_department,projected_time_series,model,classification.__qualname__,months_to_forecast)
-    save_time(input_department,time,model,classification.__qualname__,months_to_forecast)
+  save_time_series_as_csv(input_department,projected_time_series,model.__qualname__,classification.__qualname__,months_to_forecast)
+  #plot_scatter(historical_time_series,projected_time_series,input_department,model,classification.__qualname__,months_to_forecast)
+  #plot_histogram(historical_time_series,projected_time_series,input_department,model,classification.__qualname__,months_to_forecast)
+  save_error(input_department,projected_time_series,model,classification.__qualname__,months_to_forecast)
+  save_time(input_department,time,model,classification.__qualname__,months_to_forecast)
 def save_time(department,time,model,classification,months_to_forecast):
   output_file_name = f'{department}_execution_time.txt'
   path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
