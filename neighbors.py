@@ -309,7 +309,6 @@ def get_cluster_clusters_knn(input_year,input_month,input_department,number_year
   return knn_time_series
 
 def generate_forecast(
-    input_year,
     input_department,
     number_years,
     number_neighbors,
@@ -352,7 +351,7 @@ def generate_forecast(
         time_series = TimeSeries.from_values(historical_time_series)
         forecasted_values = model(time_series,size_ts)
       case 'c_get_knn' | 'cj_get_knn' | 'cdc_get_knn':
-        time_series = concatenate(classification(months[i][0],input_department,number_of_years,number_of_neighbors),axis=1).mean(axis=1)
+        time_series = concatenate(classification(months[i][0],input_department,number_years,number_neighbors),axis=1).mean(axis=1)
         forecasted_values = model(time_series,size_ts)
       case 'CART' | 'RANDOM_FOREST' | 'TAN':
         forecasted_values = classification(historical_time_series,size_ts)
