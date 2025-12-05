@@ -314,7 +314,8 @@ def generate_forecast(
     number_years,
     number_neighbors,
     months_to_forecast,
-    classification):
+    classification,
+    model):
   #variables
   historical_time_series = get_historical_data(input_department)
   projected_time_series = []
@@ -335,40 +336,38 @@ def generate_forecast(
             ['AGOSTO',2023],
             ['SEPTIEMBRE',2023],
             ['OCTUBRE',2023]]
-  for model in models:
-    for i in range(0,len(months)-1,months_to_forecast):
-      path = os.path.join(ts_historico_path,f'{months[i][1]}',f'{months[i][0]}',f'{input_department}.csv')
-      current_time_series = load_time_series(path)
-      size_ts = 0
-      next_time_series = []
-      for j in range(i,i+3):
-        path_next = os.path.join(ts_historico_path,f'{months[i+1][1]}',f'{months[i+1][0]}',f'{input_department}.csv')
-        temp_ts = load_time_series(path_next)
-        size_ts += len(temp_ts)
-        next_time_series.extend(next_time_series)
-      historical_time_series = historical_time_series[size_ts:]
-      time = 0
-      start_time = process_time()
-      match classification.__qualname__:
-        case 'historical':
-          time_series = TimeSeries.from_values(historical_time_series)
-          forecasted_values = model(time_series,size_ts)
-        case 'c_get_knn' | 'cj_get_knn' | 'cdc_get_knn':
-          time_series = concatenate(classification(months[i][0],input_department,number_of_years,number_of_neighbors),axis=1).mean(axis=1)
-          forecasted_values = model(time_series,size_ts)
-        case 'CART' | 'RANDOM_FOREST' | 'TAN':
-          forecasted_values = classification(historical_time_series,size_ts)
-      end_time = process_time()
-      time += end_time - start_time
-      projected_time_series.extend(forecasted_values)
-      historical_time_series.extend(next_time_series)
-      historical_time_series = historical_time_series[size_ts:]
-    for i in range(len(projected_time_series)):
-      save_time_series_as_csv(input_department,projected_time_series,model.__qualname__,classification.__qualname__,months_to_forecast)
-      #plot_scatter(original_time_series,projected_time_series,input_department,model,classification.__qualname__,months_to_forecast)
-      #plot_histogram(original_time_series,projected_time_series,input_department,model,classification.__qualname__,months_to_forecast)
-      save_error(input_department,projected_time_series,model,classification.__qualname__,months_to_forecast)
-      save_time(input_department,time,model,classification.__qualname__,months_to_forecast)
+  for i in range(0,len(months)-1,months_to_forecast):
+    path = os.path.join(ts_historico_path,f'{months[i][1]}',f'{months[i][0]}',f'{input_department}.csv')
+    size_ts = 0
+    next_time_series = []
+    for j in range(i,i+3):
+      path_next = os.path.join(ts_historico_path,f'{months[i+1][1]}',f'{months[i+1][0]}',f'{input_department}.csv')
+      temp_ts = load_time_series(path_next)
+      size_ts += len(temp_ts)
+      next_time_series.extend(next_time_series)
+    historical_time_series = historical_time_series[size_ts:]
+    time = 0
+    start_time = process_time()
+    match classification.__qualname__:
+      case 'historical':
+        time_series = TimeSeries.from_values(historical_time_series)
+        forecasted_values = model(time_series,size_ts)
+      case 'c_get_knn' | 'cj_get_knn' | 'cdc_get_knn':
+        time_series = concatenate(classification(months[i][0],input_department,number_of_years,number_of_neighbors),axis=1).mean(axis=1)
+        forecasted_values = model(time_series,size_ts)
+      case 'CART' | 'RANDOM_FOREST' | 'TAN':
+        forecasted_values = classification(historical_time_series,size_ts)
+    end_time = process_time()
+    time += end_time - start_time
+    projected_time_series.extend(forecasted_values)
+    historical_time_series.extend(next_time_series)
+    historical_time_series = historical_time_series[size_ts:]
+  for i in range(len(projected_time_series)):
+    save_time_series_as_csv(input_department,projected_time_series,model.__qualname__,classification.__qualname__,months_to_forecast)
+    #plot_scatter(historical_time_series,projected_time_series,input_department,model,classification.__qualname__,months_to_forecast)
+    #plot_histogram(historical_time_series,projected_time_series,input_department,model,classification.__qualname__,months_to_forecast)
+    save_error(input_department,projected_time_series,model,classification.__qualname__,months_to_forecast)
+    save_time(input_department,time,model,classification.__qualname__,months_to_forecast)
 def save_time(department,time,model,classification,months_to_forecast):
   output_file_name = f'{department}_execution_time.txt'
   path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
