@@ -337,7 +337,6 @@ def generate_forecast(
             ['SEPTIEMBRE',2023],
             ['OCTUBRE',2023]]
   for i in range(0,len(months)-1,months_to_forecast):
-    path = os.path.join(ts_historico_path,f'{months[i][1]}',f'{months[i][0]}',f'{input_department}.csv')
     size_ts = 0
     next_time_series = []
     for j in range(i,i+3):
