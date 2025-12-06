@@ -319,10 +319,7 @@ def generate_forecast(
   historical_time_series = get_historical_data(input_department)
   projected_time_series = []
   #Time series for projections
-  months = [['JULIO',2022],
-            ['AGOSTO',2022],
-            ['SEPTIEMBRE',2022],
-            ['OCTUBRE',2022],
+  months = [['OCTUBRE',2022],
             ['NOVIEMBRE',2022],
             ['DICIEMBRE',2022],
             ['ENERO',2023],
