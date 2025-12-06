@@ -143,7 +143,7 @@ def generar_serie_tiempo(deps,month_year_list):
         for month, year in month_year_list:
             results[dep][month] = {}
             real_data_ts = get_real_data_ts(dep,month,year)
-            print(len(real_data_ts))
+            print(f"datos real: {real_data_ts}, size:{len(real_data_ts)}")
             for fc_idx, fc in enumerate(funciones_cluster):
                 funcion_name = fc.__name__
 
@@ -160,7 +160,7 @@ def generar_serie_tiempo(deps,month_year_list):
                 # Collect forecasts for all neighbors
                 for ts in ts_neighbors:
                     ts_values = ts.values().flatten()
-                    f = forecast_1_month(ts_values, (month, year))
+                    f = forecast_1_month(ts_values, (month, year),len(real_data_ts))
                     for model_name, forecast in f.items():
                         forecasts_each_ts[model_name].append(forecast)
 
