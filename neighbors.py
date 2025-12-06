@@ -42,7 +42,7 @@ ts_historico_path = os.path.join(csv_path,'ts_historico')
 departments = [
   'ALTO_PARANA',
   'AMAMBAY',
-  'ASUNCION'
+  'ASUNCION',
   'CAAGUAZU',
   'CENTRAL',
   'CENTRO_EST',
@@ -330,12 +330,11 @@ def generate_forecast(
             ['JUNIO',2023],
             ['JULIO',2023],
             ['AGOSTO',2023],
-            ['SEPTIEMBRE',2023],
-            ['OCTUBRE',2023]]
-  for i in range(3,len(months)-1,months_to_forecast):
+            ['SEPTIEMBRE',2023]]
+  for i in range(months_to_forecast,len(months),months_to_forecast):
     size_ts = 0
     next_time_series = []
-    for j in range(i-3,i):
+    for j in range(i-months_to_forecast,i):
       path_next = os.path.join(ts_historico_path,f'{months[j][1]}',f'{months[j][0]}',f'{input_department}.csv')
       temp_ts = load_time_series(path_next)
       size_ts += len(temp_ts)
@@ -344,7 +343,7 @@ def generate_forecast(
     time = 0
     start_time = process_time()
     match classification.__qualname__:
-      case 'historical':
+      case 'get_historical_data':
         time_series = TimeSeries.from_values(historical_time_series)
         forecasted_values = model(time_series,size_ts)
       case 'c_get_knn' | 'cj_get_knn' | 'cdc_get_knn':
@@ -438,15 +437,30 @@ def write_error(output_file, error):
     f.write(f'{error}')
   print(f"Saved: {output_file}")
 #variables
-def project_time_series(k,n,forecasted_value):
+def project_time_series(number_years,
+      number_neighbors,
+      months_to_forecast,
+      classification,
+      model
+      ):
   for input_department in departments:
-    input_year=2022
-    generate_forecast(input_year,input_department,k,n,forecasted_value)
-number_of_neighbors=4
-number_of_years=2
+    generate_forecast(
+      input_department,
+      number_years,
+      number_neighbors,
+      months_to_forecast,
+      classification,
+      model
+      )
+number_neighbors=4
+number_years=2
 months_to_forecast=1
-project_time_series(number_of_neighbors,number_of_years,months_to_forecast)
-months_to_forecast=2
-project_time_series(number_of_neighbors,number_of_years,months_to_forecast)
-months_to_forecast=4
-project_time_series(number_of_neighbors,number_of_years,months_to_forecast)
+classification=get_historical_data
+model=auto_arima
+project_time_series(
+      number_years,
+      number_neighbors,
+      months_to_forecast,
+      classification,
+      model
+      )
