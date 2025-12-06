@@ -16,3 +16,6 @@ scikit-learn
 scipy
 statsmodels
 xlsxwriter
+pyagrum
+statsforecast
+datasetsforecast

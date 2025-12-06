@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 
 # Optional: TAN classifier from pyAgrum
-import pyagrum.skbn as skbn
+import pyAgrum.skbn as skbn
 
 #data.csv path
 csv_path = "csv"
