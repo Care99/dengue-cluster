@@ -6,16 +6,19 @@ import pandas as pd
 from scipy.stats import boxcox
 from scipy.special import inv_boxcox
 from scipy.spatial.distance import euclidean
+from sklearn.preprocessing import MinMaxScaler
 #from tslearn.metrics import dtw
 import os
 from time import process_time
 import matplotlib as mplt
-import classifiers
-from classifiers import evaluate_models, fill_na; mplt.use('SVG',force=True)
+from classifiers import CART, RANDOM_FOREST, TAN
+mplt.use('SVG',force=True)
 from matplotlib import pyplot as plt
 import numpy as np
 from statsmodels.tsa.seasonal import MSTL
 from darts import concatenate
+from darts.dataprocessing.transformers import Scaler
+from darts.dataprocessing.transformers import InvertibleMapper
 #Forecasting models
 #Baseline Models 
 from darts.models import NaiveMean,NaiveSeasonal,NaiveDrift,NaiveMovingAverage
@@ -114,57 +117,49 @@ months_original_time_series=[
   ]
 initial_year = 2019
 current_year = 2022
-def get_real_data(input_department):
-  original_time_series = []
-  for month_year in months_original_time_series:
-    filename = f'{input_department}.csv'
-    path = os.path.join(ts_historico_path,str(month_year[1]),month_year[0],filename)
-    temp_ts = load_time_series(path)
-    original_time_series.extend(temp_ts)
-  return original_time_series
-def logq(time_series,forecast):
-  n = len(time_series)
-  error = 0
-  for i in range(n):
-    numerator = forecast[i]
-    denominator = time_series[i]
-    if(numerator==0):
-      numerator=0.001
-    if(denominator==0):
-      denominator=0.001
-    value = numerator/denominator
-    error = error + np.power(np.log(value),2)
-  return error
+# Apply log transformation (ensure all values > 0)
+def safe_log(x):
+    return np.log1p(x)  # log(1 + x) handles zeros
+
+def safe_exp(x):
+    return np.expm1(x)  # exp(x) - 1 inverse
+
+# Transform the data
+log_transformer = InvertibleMapper(
+    fn= safe_log,
+    inverse_fn= safe_exp
+)
 def naive_drift(time_series,forecasted_values):
   data = time_series
   model = NaiveDrift()
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values().flatten()
+  return generated_time_series
 
 def auto_arima(time_series,forecasted_values):
   data = time_series
   #train, test = model_selection.train_test_split(data)
-  model = AutoARIMA(season_length=52)
+  model = AutoARIMA(season_length=4)
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values().flatten()
+  return generated_time_series
 def linear_regression(time_series,forecasted_values):
   data = time_series
-  model = LinearRegressionModel(lags=52)
+  model = LinearRegressionModel(lags=4)
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values().flatten()
+  return generated_time_series
 def lstm_forecast(time_series,forecasted_values):
   data = time_series
   model = RNNModel(
     model='LSTM',
-    input_chunk_length=1,
+    input_chunk_length=12,
+    output_chunk_length=forecasted_values,
     hidden_dim=25, 
-    n_rnn_layers=2, 
+    n_rnn_layers=1, 
     dropout=0.0, 
-    batch_size=16,
-    n_epochs=100, 
+    batch_size=2,
+    n_epochs=50, 
     optimizer_kwargs={'lr':1e-3}, 
     random_state=42, 
     log_tensorboard=False, 
@@ -176,59 +171,13 @@ def lstm_forecast(time_series,forecasted_values):
   )
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
-  return generated_time_series.values().flatten()
+  return generated_time_series
 models = [
   naive_drift,
   auto_arima,
   linear_regression,
   lstm_forecast,
   ]
-def find_nearest_neighbor(csv_path, index, num_neighbors):
-  # Read the CSV file into a DataFrame
-  df = pd.read_csv(csv_path, header=None, index_col=None, skiprows=1).iloc[:, 1:]
-  # Extract the distance matrix
-  matriz_distancia = df.values
-  # Check the shape of the distance matrix
-  if matriz_distancia.shape[0] != matriz_distancia.shape[1]:
-      raise ValueError("The distance matrix is not square.")
-  # Extract the distances for the given department index
-  distances = matriz_distancia[index]
-  # Get the indices of the nearest neighbors (excluding the department itself)
-  nearest_indices = np.argsort(distances)
-  return_indices = np.zeros(num_neighbors,dtype=int)
-  i = 0
-  for indice in nearest_indices:
-    year = initial_year + int(indice/24)
-    if(year<current_year):
-      return_indices[i] = indice
-      i = i + 1
-      if( i == num_neighbors ):
-        break
-  return return_indices
-
-def find_nearest_year(csv_path, index, num_neighbors):
-  # Read the CSV file into a DataFrame
-  df = pd.read_csv(csv_path, header=None, index_col=None, skiprows=1).iloc[:, 1:]
-  # Extract the distance matrix
-  matriz_distancia = df.values
-  # Check the shape of the distance matrix
-  if matriz_distancia.shape[0] != matriz_distancia.shape[1]:
-      raise ValueError("The distance matrix is not square.")
-  # Extract the distances for the given department index
-  distances = matriz_distancia[index]
-  # Get the indices of the nearest neighbors (excluding the department itself)
-  nearest_indices = np.argsort(distances)
-  return_indices = np.zeros(num_neighbors,dtype=int)
-  i = 0
-  for indice in nearest_indices:
-      if(indice != index):
-        return_indices[i] = initial_year + indice
-        i = i + 1
-        if( i == num_neighbors ):
-          break
-  return return_indices
-
-#10700
 
 def load_time_series(path):
   df = pd.read_csv(path,header=None)
@@ -238,75 +187,29 @@ def load_time_series(path):
 def get_historical_data(input_department):
   historical_time_series = []
   for year in range(initial_year,2023):
-    if(year==2019):
-      for month in ["OCTUBRE","NOVIEMBRE","DICIEMBRE"]:
-        filename = f'{input_department}.csv'
-        path = os.path.join(ts_historico_path,str(year),month,filename)
-        temp_ts = load_time_series(path)
-        for value in temp_ts:
-          historical_time_series.append(value)
-    if(year==2022):
-      for month in ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE"]:
-        filename = f'{input_department}.csv'
-        path = os.path.join(ts_historico_path,str(year),month,filename)
-        temp_ts = load_time_series(path)
-        for value in temp_ts:
-          historical_time_series.append(value)
-    else:
-      for month in months:
-        filename = f'{input_department}.csv'
-        path = os.path.join(ts_historico_path,str(year),month,filename)
-        temp_ts = load_time_series(path)
-        for value in temp_ts:
-          historical_time_series.append(value)
+    match year:
+      case 2019:
+        for month in ["OCTUBRE","NOVIEMBRE","DICIEMBRE"]:
+          filename = f'{input_department}.csv'
+          path = os.path.join(ts_historico_path,str(year),month,filename)
+          temp_ts = load_time_series(path)
+          for value in temp_ts:
+            historical_time_series.append(value)
+      case 2022:
+        for month in ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE"]:
+          filename = f'{input_department}.csv'
+          path = os.path.join(ts_historico_path,str(year),month,filename)
+          temp_ts = load_time_series(path)
+          for value in temp_ts:
+            historical_time_series.append(value)
+      case _:
+        for month in months:
+          filename = f'{input_department}.csv'
+          path = os.path.join(ts_historico_path,str(year),month,filename)
+          temp_ts = load_time_series(path)
+          for value in temp_ts:
+            historical_time_series.append(value)
   return historical_time_series
-
-def get_knn(input_year,input_month,input_department,neighbor_size):
-  neighbors_ts = []
-  neighbors = []
-  # Find nearest neighbor for the given year
-  filename = 'cluster_jerarquico.csv'
-  path = os.path.join(cluster_matriz_path,month_window[input_month],filename)
-  index = f'{input_department}-{input_year}-{input_year+1}'
-  neighbors = find_nearest_neighbor(csv_path,index,neighbor_size)
-
-  #Dado los años/departamentos mas cercanos, obtener sus ts
-  for neighbor in neighbors:
-    year = initial_year + int(neighbor/24)
-    department = departments[int(neighbor)%24]
-    filename = f'{departments[department]}.csv'
-    path = os.path.join(ts_historico_path,f'{year}',f'{months[input_month]}',filename)
-    temp_ts = load_time_series(path)
-    neighbors_ts.append(temp_ts)
-  neighbors_ts.reverse()
-  knn_time_series = np.array(neighbors_ts,dtype=float).flatten()
-  return knn_time_series
-
-def get_cluster_clusters_knn(input_year,input_month,input_department,number_years,number_neighbors):
-  neighbors_ts = []
-  neighbors = []
-  temp_ts = []
-  # Find nearest neighbor for the given year
-  filename = 'cluster_de_cluster.csv'
-  path = os.path.join(cluster_matriz_path,month_window[input_month],filename)
-  index = input_year - initial_year
-  years = find_nearest_year(csv_path,index,number_years)
-
-  #Dado los años/departamentos mas cercanos, obtener sus ts
-  for year in years:
-    filename = f'{year}-{year+1}.csv'
-    path = os.path.join(cluster_matriz_path,month_window[input_month],filename)
-    index = departments.index(input_department)
-    neighbors = find_nearest_neighbor(path,index,number_neighbors)
-    for neighbor in neighbors:
-      department = departments[neighbor]
-      filename = f'{departments[department]}.csv'
-      path = os.path.join(ts_historico_path,f'{year}',f'{months[input_month]}',filename)
-      temp_ts = load_time_series(path)
-      neighbors_ts.append(temp_ts)
-  neighbors_ts.reverse()
-  knn_time_series = np.array(neighbors_ts,dtype=float).flatten()
-  return knn_time_series
 
 def generate_forecast(
     input_department,
@@ -331,37 +234,61 @@ def generate_forecast(
             ['JULIO',2023],
             ['AGOSTO',2023],
             ['SEPTIEMBRE',2023]]
-  for i in range(months_to_forecast,len(months),months_to_forecast):
+  for i in range(0,len(months),months_to_forecast):
     size_ts = 0
     next_time_series = []
-    for j in range(i-months_to_forecast,i):
+    for j in range(i,i+months_to_forecast):
       path_next = os.path.join(ts_historico_path,f'{months[j][1]}',f'{months[j][0]}',f'{input_department}.csv')
       temp_ts = load_time_series(path_next)
       size_ts += len(temp_ts)
-      next_time_series.extend(next_time_series)
-    historical_time_series = historical_time_series[size_ts:]
+      next_time_series.extend(temp_ts)
     time = 0
     start_time = process_time()
     match classification.__qualname__:
       case 'get_historical_data':
         time_series = TimeSeries.from_values(historical_time_series)
-        forecasted_values = model(time_series,size_ts)
-      case 'c_get_knn' | 'cj_get_knn' | 'cdc_get_knn':
-        time_series = concatenate(classification(months[i][0],input_department,number_years,number_neighbors),axis=1).mean(axis=1)
-        forecasted_values = model(time_series,size_ts)
+        scaled_time_series = log_transformer.transform(time_series)
+        scaled_forecast = model(time_series,size_ts)
+        forecasted_values = log_transformer.inverse_transform(scaled_forecast).values().flatten() 
+      case 'get_k_n_n':
+        temp_ts = historical_time_series[:-12]
+        nearest_neighbors = classification(months[i][0],input_department,number_years,number_neighbors)
+        forecasted_values = []
+        for neighbor in nearest_neighbors:
+          time_series = []
+          time_series.extend(temp_ts)
+          time_series.extend(neighbor.values().flatten())
+          scaled_time_series = log_transformer.transform(TimeSeries.from_values(time_series))
+          scaled_forecast = model(scaled_time_series,size_ts)
+          forecast = log_transformer.inverse_transform(scaled_forecast)
+          forecasted_values.append(forecast)
+        forecasted_values = concatenate(forecasted_values,axis=1).mean(axis=1)
+        forecasted_values = forecasted_values.values().flatten()
       case 'CART' | 'RANDOM_FOREST' | 'TAN':
-        forecasted_values = classification(historical_time_series,size_ts)
-    end_time = process_time()
-    time += end_time - start_time
+        time_series = TimeSeries.from_values(historical_time_series)
+        scaled_time_series = log_transformer.transform(time_series)
+        scaled_forecast = classification(scaled_time_series,size_ts)
+        forecasted_values = log_transformer.inverse_transform(scaled_forecast)
+        forecasted_values = forecasted_values.values().flatten()
     projected_time_series.extend(forecasted_values)
     historical_time_series.extend(next_time_series)
     historical_time_series = historical_time_series[size_ts:]
+  historical_time_series = TimeSeries.from_values(historical_time_series[:-len(projected_time_series)])
+  projected_time_series = TimeSeries.from_values(projected_time_series)
+  end_time = process_time()
+  time = end_time - start_time
   save_time_series_as_csv(input_department,projected_time_series,model.__qualname__,classification.__qualname__,months_to_forecast)
-  #plot_scatter(historical_time_series,projected_time_series,input_department,model,classification.__qualname__,months_to_forecast)
-  #plot_histogram(historical_time_series,projected_time_series,input_department,model,classification.__qualname__,months_to_forecast)
-  save_error(input_department,projected_time_series,model,classification.__qualname__,months_to_forecast)
-  save_time(input_department,time,model,classification.__qualname__,months_to_forecast)
-def save_time(department,time,model,classification,months_to_forecast):
+  #plot_scatter(historical_time_series,projected_time_series,input_department,model.__qualname__,classification.__qualname__,months_to_forecast)
+  #plot_histogram(historical_time_series,projected_time_series,input_department,model.__qualname__,classification.__qualname__,months_to_forecast)
+  save_error(input_department,historical_time_series,projected_time_series,model.__qualname__,classification.__qualname__,months_to_forecast)
+  save_time(input_department,time,model.__qualname__,classification.__qualname__,months_to_forecast)
+def save_time(
+    department:str,
+    time:float,
+    model:str,
+    classification:str,
+    months_to_forecast:int
+  )->None:
   output_file_name = f'{department}_execution_time.txt'
   path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
@@ -369,23 +296,34 @@ def save_time(department,time,model,classification,months_to_forecast):
   with open(output_file, 'w') as f:
     f.write(f'{time}')
   print(f"Saved: {output_file}. Elapsed time: {time}")
-def save_time_series_as_csv(department,time_series,model,classification,months_to_forecast):
-  incidence_data = pd.DataFrame(time_series)
-  # Save the DataFrame as a CSV file
+def save_time_series_as_csv(
+    department:str,
+    time_series:TimeSeries,
+    model:str,
+    classification:str,
+    months_to_forecast:int
+  )->None:
   output_file_name = f'{department}.csv'
   path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   output_file = os.path.join(path, output_file_name)
-  incidence_data.to_csv(output_file, header=False, index=False)
+  time_series.to_csv(output_file, header=False, index=False)
   print(f"Saved: {output_file}")
-def plot_scatter(actual,predicted,input_department,model,classification,months_to_forecast):
+def plot_scatter(
+    actual:TimeSeries,
+    predicted:TimeSeries,
+    input_department:str,
+    model:str,
+    classification:str,
+    months_to_forecast:int
+  )->None:
   plt.figure(figsize=(10, 6))
   plt.scatter(actual,predicted)
-  plt.title(f'Scatter plot for {input_department} using {model.__qualname__} - {classification}')
+  plt.title(f'Scatter plot for {input_department} using {model} - {classification}')
   plt.xlabel('Actual values')
   plt.ylabel('Predicted values')
   plt.legend()
-  path = os.path.join(csv_path,'forecast',classification,model.__qualname__,f'{months_to_forecast}_months')
+  path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   output_file_name = f'{input_department}.svg'
   output_file = os.path.join(path, output_file_name)
@@ -396,34 +334,35 @@ def plot_histogram(actual,predicted,input_department,model,classification,months
   plt.figure(figsize=(10, 6))
   errors = rmse(actual,predicted)
   plt.hist(actual,predicted)
-  plt.title(f'Histogram for {input_department} using {model.__qualname__} - {classification}')
+  plt.title(f'Histogram for {input_department} using {model} - {classification}')
   plt.xlabel('Error')
   plt.ylabel('Frequency')
   plt.legend()
-  path = os.path.join(csv_path,'forecast',classification,model.__qualname__,f'{months_to_forecast}_months')
+  path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   output_file_name = f'{input_department}.svg'
   output_file = os.path.join(path, output_file_name)
   plt.savefig(output_file)
   plt.close()
   print(f"Saved: {output_file}")
-def save_error(input_department,time_series,model,classification,months_to_forecast):
-  original_time_series = []
-  for month_year in months_original_time_series:
-    filename = f'{input_department}.csv'
-    path = os.path.join(ts_historico_path,str(month_year[1]),month_year[0],filename)
-    temp_ts = load_time_series(path)
-    original_time_series.extend(temp_ts)
-  path = os.path.join(csv_path,'forecast',classification,model.__qualname__,f'{months_to_forecast}_months')
+def save_error(
+    input_department:str,
+    original_time_series:TimeSeries,
+    time_series:TimeSeries,
+    model:str,
+    classification:str,
+    months_to_forecast:int
+  )->None:
+  path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   mae_error = mae(original_time_series,time_series)
   output_file_name = f'{input_department}_mae.txt'
   output_file = os.path.join(path, output_file_name)
   write_error(output_file,mae_error)
-  mape_error = mape(original_time_series,time_series)
-  output_file_name = f'{input_department}_mape.txt'
-  output_file = os.path.join(path, output_file_name)
-  write_error(output_file,mape_error)
+  #mape_error = mape(original_time_series,time_series)
+  #output_file_name = f'{input_department}_mape.txt'
+  #output_file = os.path.join(path, output_file_name)
+  #write_error(output_file,mape_error)
   rmse_error = rmse(original_time_series,time_series)
   output_file_name = f'{input_department}_rmse.txt'
   output_file = os.path.join(path, output_file_name)
@@ -432,7 +371,10 @@ def save_error(input_department,time_series,model,classification,months_to_forec
   output_file_name = f'{input_department}_smape.txt'
   output_file = os.path.join(path, output_file_name)
   write_error(output_file,smape_error)
-def write_error(output_file, error):
+def write_error(
+    output_file:str,
+    error:float
+  )->None:
   with open(output_file, 'w') as f:
     f.write(f'{error}')
   print(f"Saved: {output_file}")
@@ -452,15 +394,23 @@ def project_time_series(number_years,
       classification,
       model
       )
-number_neighbors=4
+number_neighbors=2
 number_years=2
 months_to_forecast=1
-classification=get_historical_data
-model=auto_arima
-project_time_series(
+classification=TAN
+model=linear_regression
+generate_forecast(
+      'ASUNCION',
       number_years,
       number_neighbors,
       months_to_forecast,
       classification,
       model
       )
+#project_time_series(
+#      number_years,
+#      number_neighbors,
+#      months_to_forecast,
+#      classification,
+#      model
+#      )

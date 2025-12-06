@@ -2,18 +2,17 @@
 import os
 import pandas as pd
 import numpy as np
-from darts.models import SKLearnClassifierModel
+from darts.models import RegressionModel
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, roc_auc_score, roc_curve
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
-
+from darts import TimeSeries
 # Optional: TAN classifier from pyAgrum
-import pyagrum.skbn as skbn
-
+from pyagrum.skbn import BNClassifier
 #data.csv path
 csv_path = "csv"
 data_csv = os.path.join(csv_path, "casos.csv")
@@ -45,39 +44,30 @@ def load_df(time_series):
 # 6. Models
 # CART
 # Classifies data by learning a series of decision rules from the features
-def CART(X_train, X_test, y_train, y_test):
-    cart = DecisionTreeClassifier(max_depth=5, random_state=42)
-    cart.fit(X_train, y_train)
-    return cart.predict(X_test)
+def CART(time_series:TimeSeries,forecast_values:int):
+    cart = DecisionTreeRegressor(max_depth=5, random_state=42)
+    model = RegressionModel(model=cart,lags=12)
+    model.fit(time_series)
+    return model.predict(forecast_values)
 
 # Random Forest
 # Ensemble method built on top of decision trees
-def RANDOM_FOREST(X_train, X_test, y_train, y_test):
-    rf = RandomForestClassifier(n_estimators=100, random_state=42)
-    rf.fit(X_train, y_train)
-    return rf.predict(X_test)
+def RANDOM_FOREST(time_series:TimeSeries,forecast_values:int):
+    rf = RandomForestRegressor(n_estimators=100, random_state=42)
+    model = RegressionModel(model=rf,lags=12)
+    model.fit(time_series)
+    return model.predict(forecast_values)
 
 
 # TAN (Tree Augmented Naive Bayes)
 # Builds a Bayesian Network from and uses it for classification tasks.
-def TAN(X_train, X_test, y_train, y_test):
-    imputer = SimpleImputer(strategy='mean')
-    X_train = imputer.fit_transform(X_train)
-    X_test = imputer.transform(X_test)
-
-    tan = skbn.BNClassifier(learningMethod='TAN')
-    tan.fit(X_train, y_train)
-    return tan.predict(X_test)
+def TAN(time_series:TimeSeries,forecast_values:int):
+    time_series = time_series.values().flatten()
+    tan = BNClassifier(learningMethod='TAN')
+    tan.fit(time_series)
+    return tan.predict(forecast_values)
 
 
 def fill_na(time_series):
     series = pd.Series(time_series)
     return series.fillna(series.mean()).tolist()
-
-# 7. Evaluation
-def evaluate_models(time_series,k,n):
-    X_train, X_test, y_train, y_test = load_df(time_series)
-    cart=SKLearnClassifierModel(model=CART(X_train, X_test, y_train, y_test))
-    rf=SKLearnClassifierModel(model=RANDOM_FOREST(X_train, X_test, y_train, y_test))
-    tan=SKLearnClassifierModel(model=TAN(X_train, X_test, y_train, y_test))
-    return cart,rf,tan

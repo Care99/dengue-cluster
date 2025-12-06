@@ -5,7 +5,7 @@ import math
 from scipy.cluster.hierarchy import linkage, dendrogram
 import matplotlib as mplt
 import matplotlib.pyplot as plt
-from classifiers import evaluate_models, fill_na; mplt.use('SVG',force=True)
+mplt.use('SVG',force=True)
 from scipy.spatial.distance import pdist, squareform
 from darts import TimeSeries
 
