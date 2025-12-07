@@ -9,7 +9,6 @@ mplt.use('SVG',force=True)
 from scipy.spatial.distance import pdist, squareform
 from darts import TimeSeries
 
-
 # Ventana de meses de octubre a septiembre
 meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
             'MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO']
@@ -116,7 +115,7 @@ def generar_cluster_jerarquico():
         df_t.to_csv(f"{hclust_dir}/labels.csv")
         print(f"Saved labels to {hclust_dir}/{m}_labels.csv")
 
-def get_k_n_n(mes:str, departamento:str, k:int, n:int):
+def get_cluster_jerarquico(mes:str, departamento:str, k:int, n:int):
     hclust_dir = "csv/cj/hclust"
     meses_str = dict_ventana[mes]
     label = departamento + "_2022-2023"
@@ -161,4 +160,4 @@ def get_ts(meses_str: str, department_year: str) :
 
 #generar_cluster_ventana()
 #generar_cluster_jerarquico()
-get_k_n_n(mes="ABRIL",departamento="CENTRAL", k=2, n=4)
+#get_k_n_n(mes="ABRIL",departamento="CENTRAL", k=2, n=4)

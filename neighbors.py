@@ -1,6 +1,7 @@
-from generar_cluster import get_k_n_n as c_get_knn
-from generar_cluster_jerarquico import get_k_n_n as cj_get_knn
-from generar_cluster_de_cluster import get_k_n_n as cdc_get_knn
+from dateutil.tz import tzutc
+from generar_cluster import get_cluster
+from generar_cluster_jerarquico import get_cluster_jerarquico
+from generar_cluster_de_cluster import get_cluster_de_clusters
 import math
 import pandas as pd
 from scipy.stats import boxcox
@@ -158,8 +159,8 @@ def lstm_forecast(time_series,forecasted_values):
     hidden_dim=25, 
     n_rnn_layers=1, 
     dropout=0.0, 
-    batch_size=2,
-    n_epochs=50, 
+    batch_size=52, 
+    n_epochs=100,
     optimizer_kwargs={'lr':1e-3}, 
     random_state=42, 
     log_tensorboard=False, 
@@ -172,6 +173,8 @@ def lstm_forecast(time_series,forecasted_values):
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series
+def forecast_using_regression_models():
+  return 'forecast_using_regression_models'
 models = [
   naive_drift,
   auto_arima,
@@ -211,6 +214,26 @@ def get_historical_data(input_department):
             historical_time_series.append(value)
   return historical_time_series
 
+def get_2022_2023_data(input_department):
+  historical_time_series = []
+  for year in range(2022,2024):
+    match year:
+      case 2022:
+        for month in ["OCTUBRE","NOVIEMBRE","DICIEMBRE"]:
+          filename = f'{input_department}.csv'
+          path = os.path.join(ts_historico_path,str(year),month,filename)
+          temp_ts = load_time_series(path)
+          for value in temp_ts:
+            historical_time_series.append(value)
+      case 2023:
+        for month in ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE"]:
+          filename = f'{input_department}.csv'
+          path = os.path.join(ts_historico_path,str(year),month,filename)
+          temp_ts = load_time_series(path)
+          for value in temp_ts:
+            historical_time_series.append(value)
+  return historical_time_series
+
 def generate_forecast(
     input_department,
     number_years,
@@ -222,23 +245,28 @@ def generate_forecast(
   historical_time_series = get_historical_data(input_department)
   projected_time_series = []
   #Time series for projections
-  months = [['OCTUBRE',2022],
-            ['NOVIEMBRE',2022],
-            ['DICIEMBRE',2022],
-            ['ENERO',2023],
-            ['FEBRERO',2023],
-            ['MARZO',2023],
-            ['ABRIL',2023],
-            ['MAYO',2023],
-            ['JUNIO',2023],
-            ['JULIO',2023],
-            ['AGOSTO',2023],
-            ['SEPTIEMBRE',2023]]
+  months = [['1','OCTUBRE',2022],
+            ['5','NOVIEMBRE',2022],
+            ['3','DICIEMBRE',2022],
+            ['7','ENERO',2023],
+            ['4','FEBRERO',2023],
+            ['4','MARZO',2023],
+            ['1','ABRIL',2023],
+            ['6','MAYO',2023],
+            ['3','JUNIO',2023],
+            ['1','JULIO',2023],
+            ['5','AGOSTO',2023],
+            ['2','SEPTIEMBRE',2023]]
   for i in range(0,len(months),months_to_forecast):
     size_ts = 0
     next_time_series = []
+    if(i<3):
+      month_index = i + 10
+    else:
+      month_index = (i + 10)%12
+    start_date=f'{months[i][0]}/{month_index}/{months[i][2]} 10:00:00+00:00'
     for j in range(i,i+months_to_forecast):
-      path_next = os.path.join(ts_historico_path,f'{months[j][1]}',f'{months[j][0]}',f'{input_department}.csv')
+      path_next = os.path.join(ts_historico_path,f'{months[j][2]}',f'{months[j][1]}',f'{input_department}.csv')
       temp_ts = load_time_series(path_next)
       size_ts += len(temp_ts)
       next_time_series.extend(temp_ts)
@@ -246,26 +274,35 @@ def generate_forecast(
     start_time = process_time()
     match classification.__qualname__:
       case 'get_historical_data':
-        time_series = TimeSeries.from_values(historical_time_series)
+        time_series = TimeSeries.from_times_and_values(times=pd.date_range(start=start_date,periods=len(historical_time_series),freq='W') ,values=historical_time_series,freq='W')
+        time_series.time_index.tz_localize(tzutc())
         scaled_time_series = log_transformer.transform(time_series)
         scaled_forecast = model(time_series,size_ts)
         forecasted_values = log_transformer.inverse_transform(scaled_forecast).values().flatten() 
-      case 'get_k_n_n':
+      case 'get_cluster' | 'get_cluster_jerarquico' | 'get_cluster_de_clusters':
         temp_ts = historical_time_series[:-12]
-        nearest_neighbors = classification(months[i][0],input_department,number_years,number_neighbors)
+        nearest_neighbors = classification(months[i][1],input_department,number_years,number_neighbors)
         forecasted_values = []
         for neighbor in nearest_neighbors:
           time_series = []
           time_series.extend(temp_ts)
           time_series.extend(neighbor.values().flatten())
-          scaled_time_series = log_transformer.transform(TimeSeries.from_values(time_series))
+          scaled_time_series = TimeSeries.from_times_and_values(times=pd.date_range(start=start_date,periods=len(time_series),freq='W') ,values=time_series,freq='W')
+          scaled_time_series.time_index.tz_localize(tzutc())
+          scaled_time_series = log_transformer.transform(scaled_time_series)
+          if(model.__qualname__ == 'lstm_forecast'):
+            scaler = Scaler()
+            scaled_time_series = scaler.fit_transform(scaled_time_series)
           scaled_forecast = model(scaled_time_series,size_ts)
+          if(model.__qualname__ == 'lstm_forecast'):
+            scaled_forecast = scaler.inverse_transform(scaled_forecast)
           forecast = log_transformer.inverse_transform(scaled_forecast)
           forecasted_values.append(forecast)
         forecasted_values = concatenate(forecasted_values,axis=1).mean(axis=1)
         forecasted_values = forecasted_values.values().flatten()
       case 'CART' | 'RANDOM_FOREST' | 'TAN':
-        time_series = TimeSeries.from_values(historical_time_series)
+        time_series = TimeSeries.from_times_and_values(times=pd.date_range(start=start_date,periods=len(historical_time_series),freq='W') ,values=historical_time_series,freq='W')
+        time_series.time_index.tz_localize(tzutc())
         scaled_time_series = log_transformer.transform(time_series)
         scaled_forecast = classification(scaled_time_series,size_ts)
         forecasted_values = log_transformer.inverse_transform(scaled_forecast)
@@ -273,13 +310,16 @@ def generate_forecast(
     projected_time_series.extend(forecasted_values)
     historical_time_series.extend(next_time_series)
     historical_time_series = historical_time_series[size_ts:]
-  historical_time_series = TimeSeries.from_values(historical_time_series[:-len(projected_time_series)])
-  projected_time_series = TimeSeries.from_values(projected_time_series)
+  historical_time_series = get_2022_2023_data(input_department)
+  historical_time_series = TimeSeries.from_times_and_values(times=pd.date_range(start=start_date,periods=len(historical_time_series),freq='W') ,values=historical_time_series,freq='W')
+  historical_time_series.time_index.tz_localize(tzutc())
+  projected_time_series = TimeSeries.from_times_and_values(times=pd.date_range(start=start_date,periods=len(projected_time_series),freq='W') ,values=projected_time_series,freq='W')
+  projected_time_series.time_index.tz_localize(tzutc())
   end_time = process_time()
   time = end_time - start_time
   save_time_series_as_csv(input_department,projected_time_series,model.__qualname__,classification.__qualname__,months_to_forecast)
-  #plot_scatter(historical_time_series,projected_time_series,input_department,model.__qualname__,classification.__qualname__,months_to_forecast)
-  #plot_histogram(historical_time_series,projected_time_series,input_department,model.__qualname__,classification.__qualname__,months_to_forecast)
+  plot_scatter(historical_time_series,projected_time_series,input_department,model.__qualname__,classification.__qualname__,months_to_forecast)
+  plot_histogram(historical_time_series,projected_time_series,input_department,model.__qualname__,classification.__qualname__,months_to_forecast)
   save_error(input_department,historical_time_series,projected_time_series,model.__qualname__,classification.__qualname__,months_to_forecast)
   save_time(input_department,time,model.__qualname__,classification.__qualname__,months_to_forecast)
 def save_time(
@@ -317,34 +357,166 @@ def plot_scatter(
     classification:str,
     months_to_forecast:int
   )->None:
+  actual = actual.values().flatten()
+  predicted = predicted.values().flatten()
   plt.figure(figsize=(10, 6))
-  plt.scatter(actual,predicted)
-  plt.title(f'Scatter plot for {input_department} using {model} - {classification}')
-  plt.xlabel('Actual values')
-  plt.ylabel('Predicted values')
+  # Calculate regression line for reference
+  z = np.polyfit(actual, predicted, 1)
+  p = np.poly1d(z)
+  x_line = np.linspace(min(actual), max(actual), 100)
+  y_line = p(x_line)
+  
+  # Create color gradient based on prediction error
+  errors = np.abs(predicted - actual)
+  normalized_errors = (errors - errors.min()) / (errors.max() - errors.min())
+  plt.scatter(
+    actual,
+    predicted,
+    c=normalized_errors,
+    cmap='viridis',
+    alpha=0.7,
+    s=50 + 100 * normalized_errors,  # Size varies with error
+  )
+  # Perfect prediction line (y = x)
+  min_val = actual.min()
+  max_val = actual.max()
+  plt.plot(
+    [min_val, max_val], 
+    [min_val, max_val], 
+    'r--', 
+    alpha=0.8, 
+    linewidth=2
+  )
+  # Regression line
+  plt.plot(
+    x_line, 
+    y_line, 
+    'orange', 
+    alpha=0.8, 
+    linewidth=2, 
+    label=f'Regression (slope={z[0]:.3f})'
+  )    
+  # Title and labels with better formatting
+  plt.title(
+      f'Scatter Plot: {input_department}\n'
+      f'Model: {model} | Classification: {classification} | Horizon: {months_to_forecast} months',
+      fontsize=14, fontweight='bold', pad=20
+  )
+  plt.xlabel('Actual Values', fontsize=12, fontweight='bold')
+  plt.ylabel('Predicted Values', fontsize=12, fontweight='bold')
+  r2 = np.corrcoef(actual, predicted)[0, 1]**2
+  plt.text(0.05, 0.95, f'R² = {r2:.3f}', transform=plt.gca().transAxes,
+             fontsize=12, bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
   plt.legend()
   path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
-  output_file_name = f'{input_department}.svg'
+  output_file_name = f'{input_department}_scatter.svg'
   output_file = os.path.join(path, output_file_name)
   plt.savefig(output_file)
   plt.close()
   print(f"Saved: {output_file}")
-def plot_histogram(actual,predicted,input_department,model,classification,months_to_forecast):
-  plt.figure(figsize=(10, 6))
-  errors = rmse(actual,predicted)
-  plt.hist(actual,predicted)
-  plt.title(f'Histogram for {input_department} using {model} - {classification}')
-  plt.xlabel('Error')
-  plt.ylabel('Frequency')
-  plt.legend()
-  path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
-  os.makedirs(path,exist_ok=True)
-  output_file_name = f'{input_department}.svg'
-  output_file = os.path.join(path, output_file_name)
-  plt.savefig(output_file)
-  plt.close()
-  print(f"Saved: {output_file}")
+def plot_histogram(
+    actual: TimeSeries,
+    predicted: TimeSeries,
+    input_department: str,
+    model: str,
+    classification: str,
+    months_to_forecast: int
+) -> None:
+    # Extract data
+    actual_vals = actual.values().flatten()
+    predicted_vals = predicted.values().flatten()
+    
+    # Calculate IQR for actual values to determine reasonable bounds
+    actual_q1 = np.percentile(actual_vals, 25)
+    actual_q3 = np.percentile(actual_vals, 75)
+    actual_iqr = actual_q3 - actual_q1
+    
+    # Define bounds based on actual values (using 1.5*IQR rule or actual min/max)
+    lower_bound = max(predicted_vals.min(), actual_vals.min())
+    upper_bound = min(predicted_vals.max(), actual_q3 + 1.5 * actual_iqr)
+    
+    # Filter predicted values for visualization (but keep all for stats)
+    predicted_filtered = predicted_vals[(predicted_vals >= lower_bound) & 
+                                       (predicted_vals <= upper_bound)]
+    
+    # Create figure
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6), constrained_layout=True)
+    
+    # Use bins based on actual values range
+    bins = np.histogram_bin_edges(actual_vals, bins='auto')
+    
+    # --- Plot 1: Zoomed-in view (using actual value range) ---
+    ax1.hist(predicted_vals, bins=bins, alpha=0.6, label='Predicted',
+             color='#FF6B6B', edgecolor='black', linewidth=0.5,
+             range=(lower_bound, upper_bound))
+    ax1.hist(actual_vals, bins=bins, alpha=0.6, label='Actual',
+             color='#4ECDC4', edgecolor='black', linewidth=0.5)
+    
+    ax1.set_xlabel('Zoomed View (Actual Value Range)', fontsize=12)
+    ax1.set_ylabel('Frequency', fontsize=12)
+    ax1.legend(fontsize=11)
+    ax1.grid(True, alpha=0.3, linestyle='--')
+    
+    # Add outlier info
+    outlier_count = len(predicted_vals) - len(predicted_filtered)
+    outlier_pct = (outlier_count / len(predicted_vals)) * 100
+    info_text = f'Focus Range: [{lower_bound:.1f}, {upper_bound:.1f}]\n' \
+                f'Outliers excluded: {outlier_count} ({outlier_pct:.1f}%)'
+    ax1.text(0.08, 0.98, info_text, transform=ax1.transAxes,
+             fontsize=10, verticalalignment='bottom', horizontalalignment='right',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
+    
+    # --- Plot 2: Box plot for outlier visualization ---
+    data_to_plot = [actual_vals, predicted_vals]
+    box_colors = ['#4ECDC4', '#FF6B6B']
+    
+    bp = ax2.boxplot(data_to_plot, patch_artist=True, labels=['Actual', 'Predicted'],
+                     showfliers=True, whis=1.5)
+    
+    # Color the boxes
+    for patch, color in zip(bp['boxes'], box_colors):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.6)
+    
+    # Color the medians
+    for median in bp['medians']:
+        median.set(color='black', linewidth=2)
+    
+    # Add individual points for actual values (in background)
+    for i, (data, color) in enumerate(zip(data_to_plot, box_colors), 1):
+        # Add jitter to x-coordinate
+        x = np.random.normal(i, 0.04, size=len(data))
+        ax2.scatter(x, data, alpha=0.3, color=color, s=20)
+    
+    ax2.set_ylabel('Box Plot with Outliers', fontsize=12)
+    ax2.grid(True, alpha=0.3, linestyle='--', axis='y')
+    
+    # Add statistics as text
+    actual_stats = f'Actual: μ={np.mean(actual_vals):.1f}, σ={np.std(actual_vals):.1f}'
+    pred_stats = f'Predicted: μ={np.mean(predicted_vals):.1f}, σ={np.std(predicted_vals):.1f}'
+    ax2.text(0.98, 0.98, f'{actual_stats}\n{pred_stats}', 
+             transform=ax2.transAxes, fontsize=10,
+             verticalalignment='bottom',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
+    
+    # Main title
+    fig.suptitle(
+        f'Distribution Analysis with Outlier Handling: {input_department}\n'
+        f'Model: {model} | Classification: {classification} | Horizon: {months_to_forecast} months',
+        fontsize=16, fontweight='bold', y=1.02
+    )
+    
+    # Save
+    path = os.path.join(csv_path, 'forecast', classification, model, f'{months_to_forecast}_months')
+    os.makedirs(path, exist_ok=True)
+    output_file_name = f'{input_department}_hist.svg'
+    output_file = os.path.join(path, output_file_name)
+    plt.savefig(output_file, dpi=150, bbox_inches='tight')
+    plt.close()
+    
+    print(f"Saved: {output_file}")
+    print(f"Outlier info: {outlier_count} predicted values ({outlier_pct:.1f}%) excluded from histogram view")
 def save_error(
     input_department:str,
     original_time_series:TimeSeries,
@@ -367,7 +539,37 @@ def save_error(
   output_file_name = f'{input_department}_rmse.txt'
   output_file = os.path.join(path, output_file_name)
   write_error(output_file,rmse_error)
-  smape_error = smape(original_time_series,time_series)
+  try:
+    smape_error = smape(original_time_series,time_series)
+  except ValueError as e:
+    print(f"Darts SMAPE failed: {e}")
+    print("Calculating SMAPE manually...")
+    
+    # Extract values
+    original_vals = original_time_series.values().flatten()
+    predicted_vals = time_series.values().flatten()
+    
+    # Ensure arrays have same length
+    min_len = min(len(original_vals), len(predicted_vals))
+    original_vals = original_vals[:min_len]
+    predicted_vals = predicted_vals[:min_len]
+    
+    # Use absolute values to ensure positivity
+    abs_original = np.abs(original_vals)
+    abs_predicted = np.abs(predicted_vals)
+    
+    # Add epsilon to avoid division by zero
+    epsilon = 1e-10
+    abs_original = np.where(abs_original == 0, epsilon, abs_original)
+    abs_predicted = np.where(abs_predicted == 0, epsilon, abs_predicted)
+    
+    # Calculate SMAPE manually
+    numerator = np.abs(abs_original - abs_predicted)
+    denominator = abs_original + abs_predicted
+    smape_vals = 100 * numerator / denominator
+    smape_error = np.mean(smape_vals)
+    
+    print(f"SMAPE (manual calculation with absolute values): {smape_error:.2f}%")
   output_file_name = f'{input_department}_smape.txt'
   output_file = os.path.join(path, output_file_name)
   write_error(output_file,smape_error)
@@ -394,19 +596,31 @@ def project_time_series(number_years,
       classification,
       model
       )
-number_neighbors=2
-number_years=2
-months_to_forecast=1
-classification=TAN
-model=linear_regression
-generate_forecast(
-      'ASUNCION',
-      number_years,
-      number_neighbors,
-      months_to_forecast,
-      classification,
-      model
-      )
+number_years = 2
+number_neighbors = 2
+for classification in [CART,RANDOM_FOREST]:
+    for months_to_forecast in [1,2,4]:
+      for input_department in departments:
+        generate_forecast(
+          input_department,
+          number_years,
+          number_neighbors,
+          months_to_forecast,
+          classification,
+          forecast_using_regression_models
+        )
+for classification in [get_historical_data,get_cluster,get_cluster_jerarquico,get_cluster_de_clusters]:
+  for model in models:
+    for months_to_forecast in [1,2,4]:
+      for input_department in departments:
+        generate_forecast(
+          input_department,
+          number_years,
+          number_neighbors,
+          months_to_forecast,
+          classification,
+          model
+        )
 #project_time_series(
 #      number_years,
 #      number_neighbors,

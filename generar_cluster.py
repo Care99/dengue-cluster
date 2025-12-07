@@ -3,6 +3,7 @@ import numpy as np
 import os
 import math
 from darts import TimeSeries
+from fastdtw import fastdtw as dtw
 # Ventana de meses de octubre a septiembre
 meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
             'MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO']
@@ -114,7 +115,7 @@ def generar_cluster_matriz_diferencia():
                 if i == j:
                     matrix[i, j] = 0  # diagonal = 0
                 else:
-                    matrix[i, j] = bhattacharyya(ts_dict[names[i]], ts_dict[names[j]])
+                    matrix[i, j],path = dtw(ts_dict[names[i]], ts_dict[names[j]])
 
         # Save as CSV with headers
         output_path=f"csv/c/cluster_matriz/{m}"
@@ -126,7 +127,7 @@ def generar_cluster_matriz_diferencia():
         print(f"guardado: {output_path}/{file_nime}")
 
 
-def get_k_n_n(mes:str, departamento:str, k:int, n:int):
+def get_cluster(mes:str, departamento:str, k:int, n:int):
     meses_str = dict_ventana[mes]
     label = departamento + "_2022-2023"
     knn = k*n
