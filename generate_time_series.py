@@ -3,6 +3,17 @@ from neighbors import project_time_series
 from neighbors import load_time_series
 from graph_errors import generate_y_x_graph
 from sklearn.metrics import root_mean_squared_error
+import pandas as pd
+import numpy as np
+def load_time_series(path):
+    return np.array(
+        pd.read_csv(
+            filepath_or_buffer=path, 
+            header=None, 
+            index_col=None, 
+            skiprows=1
+        ).to_numpy
+    )
 """"
 Generates a set of projected time series based on the following variables:
 - K: Number of nearest neighbors
@@ -16,6 +27,11 @@ def calculate_projections():
     departments = ['ALTO_PARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
               'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
               'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
+    csv_path = os.path.join(script_directory,'csv')
+    resultado_funciones_path = os.path.join(csv_path,'resultado_funciones')
+    departments = ['ALTO PARARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
+              'Centro est','Centro norte','Centro sur','Chaco','CORDILLERA',
+              'Metropolitano','PARAGUARI','Paraguay','PTE HAYES','SAN PEDRO',
               'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
               'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
     months = [9,10,11,12,1,2,3,4,5,6,7,8]
@@ -36,7 +52,7 @@ def calculate_projections():
     forecasted_values = [4,8,12,16]
     real_time_series = [
         load_time_series(
-            processed_data_path,
+            csv_path,
             'time_series_{year}.csv',
             department
         ) 
@@ -88,10 +104,10 @@ def calculate_projections():
                         forecasted_values
                     )
                 )
-            error_one_month = calculate_rmse_error(forecast_one_month,real_time_series,nearest_neighbors,years_in_neighbor)
-            error_two_months = calculate_rmse_error(forecast_two_months,real_time_series,nearest_neighbors,years_in_neighbor)
-            error_three_months = calculate_rmse_error(forecast_three_months,real_time_series,nearest_neighbors,years_in_neighbor)
-            error_four_months = calculate_rmse_error(forecast_four_months,real_time_series,nearest_neighbors,years_in_neighbor)
+            error_one_month = root_mean_squared_error(forecast_one_month,real_time_series)
+            error_two_months = root_mean_squared_error(forecast_two_months,real_time_series)
+            error_three_months = root_mean_squared_error(forecast_three_months,real_time_series)
+            error_four_months = root_mean_squared_error(forecast_four_months,real_time_series)
             generate_y_x_graph(forecast_one_month,real_time_series,nearest_neighbors,years_in_neighbor)
             generate_y_x_graph(forecast_two_months,real_time_series,nearest_neighbors,years_in_neighbor)
             generate_y_x_graph(forecast_three_months,real_time_series,nearest_neighbors,years_in_neighbor)

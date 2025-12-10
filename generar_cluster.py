@@ -1,89 +1,169 @@
 import pandas as pd
 import numpy as np
 import os
-
+import math
+from darts import TimeSeries
+from fastdtw import fastdtw as dtw
 # Ventana de meses de octubre a septiembre
-ventana = [
-    "Octubre","Noviembre","Diciembre","Enero","Febrero","Marzo",
-    "Abril","Mayo","Junio","Julio","Agosto","Septiembre"
+meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
+            'MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO']
+
+years = [2019,2020,2021,2022]
+
+years_folders = ["2019-2020","2020-2021","2021-2022","2022-2023"]
+
+departments = ['ALTO_PARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
+              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
+              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
+              'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
+              'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
+
+input_base = "csv/ts_historico"
+
+matriz_ventana = [
+    "ABRIL-MAYO-JUNIO",
+    "DICIEMBRE-ENERO-FEBRERO",
+    "ENERO-FEBRERO-MARZO",
+    "FEBRERO-MARZO-ABRIL",
+    "JULIO-AGOSTO-SEPTIEMBRE",
+    "JUNIO-JULIO-AGOSTO",
+    "MARZO-ABRIL-MAYO",
+    "MAYO-JUNIO-JULIO",
+    "NOVIEMBRE-DICIEMBRE-ENERO",
+    "OCTUBRE-NOVIEMBRE-DICIEMBRE",
+    "AGOSTO-SEPTIEMBRE-OCTUBRE",
+    "SEPTIEMBRE-OCTUBRE-NOVIEMBRE"
 ]
 
-# Map each month to approximate last week index (for 3-week window)
-meses_a_ult_semana = {
-    "Octubre": 40, "Noviembre": 44, "Diciembre": 48,
-    "Enero": 4, "Febrero": 8, "Marzo": 12,
-    "Abril": 16, "Mayo": 20, "Junio": 24,
-    "Julio": 28, "Agosto": 32, "Septiembre": 36
+dict_ventana = {
+    "JULIO": "ABRIL-MAYO-JUNIO",
+    "MARZO": "DICIEMBRE-ENERO-FEBRERO",
+    "ABRIL": "ENERO-FEBRERO-MARZO",
+    "MAYO": "FEBRERO-MARZO-ABRIL",
+    "OCTUBRE": "JULIO-AGOSTO-SEPTIEMBRE",
+    "SEPTIEMBRE": "JUNIO-JULIO-AGOSTO",
+    "JUNIO": "MARZO-ABRIL-MAYO",
+    "AGOSTO": "MAYO-JUNIO-JULIO",
+    "FEBRERO": "NOVIEMBRE-DICIEMBRE-ENERO",
+    "ENERO": "OCTUBRE-NOVIEMBRE-DICIEMBRE",
+    "NOVIEMBRE": "AGOSTO-SEPTIEMBRE-OCTUBRE",
+    "DICIEMBRE": "SEPTIEMBRE-OCTUBRE-NOVIEMBRE"
 }
 
-def generar_cdc_departamento_mes(csv_path='csv/dengue_ts_historico.csv',
-                                 output_base='csv/matrix_diff'):
-    os.makedirs(output_base, exist_ok=True)
+def bhattacharyya(tseries1,tseries2):
+    value = 0.0
+    i = 0
+    min_len = min(len(tseries1),len(tseries2))
+    for i in range(min_len):
+        value += math.sqrt(tseries1[i]*tseries2[i])
+        if value == 0:
+            value += 1e-12
+    value = - np.log(value)
+    return abs(value)
 
-    # Leer CSV histórico
-    data = pd.read_csv(csv_path)
+def iniciar_ts():
+    ts = {}
+    for d in range(len(departments)):
+        ts[d]= []
+    return ts
+        
 
-    # Columnas con series
-    ts_columns = data.columns[1:]
-    data[ts_columns] = data[ts_columns].apply(pd.to_numeric, errors='coerce')
-
-    # Ordenar columnas cronológicamente
-    ts_columns_sorted = sorted(ts_columns, key=lambda x: (int(x.split('_')[0]), int(x.split('_week_')[1])))
-    data = data[['Department'] + ts_columns_sorted]
-
-    # Lista de años disponibles
-    years = sorted(list({int(c.split('_')[0]) for c in ts_columns_sorted}))
-
-    # Procesar cada departamento
-    for dept in data['Department'].unique():
-        dept_series = data[data['Department'] == dept].iloc[0, 1:]
-        dept_series.index = ts_columns_sorted
-
-        # Extraer serie por año, excluyendo 2023
-        yearly_series = {
-            year: dept_series[[c for c in ts_columns_sorted if c.startswith(str(year))]].to_numpy(dtype=float)
-            for year in years if year < 2022
-        }
-
-
-        for month, week_end in meses_a_ult_semana.items():
-            month_folder = os.path.join(output_base, month)
-            os.makedirs(month_folder, exist_ok=True)
-
-
-            # Lista de años disponibles (sin 2023)
-            available_years = list(yearly_series.keys())
-            n_years = len(available_years)
-            diff_matrix = np.zeros((n_years, n_years))
+def generar_cluster_ventana():
+    os.makedirs(input_base, exist_ok=True)
+    # Hacer un loop para cada ventana
+    for v in range(len(meses)-2):
+        for y in years:
+            ts= iniciar_ts()
+            cols = iniciar_ts()
+            for i in range(v,v+3):
+                year = y if i < 5 else y + 1
+                for d in range(len(departments)):
+                    path = f'{input_base}/{year}/{meses[i]}/{departments[d]}.csv'
+                    print(f"procesando {path}")
+                    data = pd.read_csv(path, header=None).apply(pd.to_numeric, errors='coerce')
+                    fila = data.iloc[0].tolist()
+                    print(f"fila es {fila}")
+                    ts[d].extend(data.iloc[0].tolist())
+                    cols[d].extend([f"{meses[i]}_{j+1}" for j in range(len(data.iloc[0]))])
+            window_path = f'csv/c/matriz_ventana/{meses[v]}-{meses[v+1]}-{meses[v+2]}/{y}-{y+1}'
+            os.makedirs(window_path,exist_ok=True)
+            for d in range(len(departments)):
+                pd_depa = pd.DataFrame([ts[d]], columns=cols[d])
+                pd_depa.to_csv(os.path.join(window_path,f'{departments[d]}.csv'), index=False)
+                print(f'saved: {window_path}/{departments[d]}.csv')
 
 
-            for i in range(n_years):
-                ts_i = yearly_series[available_years[i]]
-                ts_i_prev = yearly_series[available_years[i-1]] if i > 0 else np.zeros_like(ts_i)
+def generar_cluster_matriz_diferencia():
+    for m in matriz_ventana:
+        print("\n ventana es " + m)
+        ts_dict = {}   # cumulative dictionary
+        for year_folder in years_folders:
+            folder_path = f"csv/c/matriz_ventana/{m}/{year_folder}"
+            # Generate full paths and read CSVs in one line
+            row = {f"{d}_{year_folder}": pd.read_csv(os.path.join(folder_path, d + ".csv")).iloc[0].values for d in departments}
+            ts_dict.update(row)
+            # Compute Bhattacharyya distance matrix
+        names = list(ts_dict.keys())
+        print(names)
+        print("\n")
+        n = len(names)
+        print("len is " + str(n))
+        matrix = np.zeros((n, n))
 
-                start_prev = max(0, week_end - 8)
-                window_i = np.array(np.concatenate([ts_i_prev[start_prev:], ts_i[:4]]), dtype=float)
+        for i in range(n):
+            for j in range(n):
+                if i == j:
+                    matrix[i, j] = 0  # diagonal = 0
+                else:
+                    matrix[i, j],path = dtw(ts_dict[names[i]], ts_dict[names[j]])
 
-                for j in range(n_years):
-                    ts_j = yearly_series[available_years[j]]
-                    ts_j_prev = yearly_series[available_years[j-1]] if j > 0 else np.zeros_like(ts_j)
-                    window_j = np.array(np.concatenate([ts_j_prev[start_prev:], ts_j[:4]]), dtype=float)
+        # Save as CSV with headers
+        output_path=f"csv/c/cluster_matriz/{m}"
+        os.makedirs(output_path,exist_ok=True)
 
-                    if np.sum(window_i) == 0 or np.sum(window_j) == 0:
-                        diff_matrix[i, j] = 0
-                    else:
-                        w_i_norm = window_i / np.sum(window_i)
-                        w_j_norm = window_j / np.sum(window_j)
-                        bc = np.sum(np.sqrt(w_i_norm * w_j_norm))
-                        diff_matrix[i, j] = -np.log(max(bc, 1e-10))
+        df = pd.DataFrame(matrix, index=names, columns=names)
+        file_nime = "mat_distancia.csv"
+        df.to_csv(os.path.join(output_path, file_nime))
+        print(f"guardado: {output_path}/{file_nime}")
 
-            # Guardar CSV
-            diff_df = pd.DataFrame(diff_matrix, index=available_years, columns=available_years)
-            output_file = os.path.join(month_folder, f"{dept.replace(' ','_')}_md_{month}.csv")
-            diff_df.to_csv(output_file)
-            print(f"✅ Guardado: {output_file}")
 
-    print("Todas las matrices mensuales por departamento generadas.")
+def get_cluster(mes:str, departamento:str, k:int, n:int):
+    meses_str = dict_ventana[mes]
+    label = departamento + "_2022-2023"
+    knn = k*n
 
-if __name__ == "__main__":
-    generar_cdc_departamento_mes()
+    file_path = f'csv/c/cluster_matriz/{meses_str}/mat_distancia.csv'
+    df = pd.read_csv(file_path, sep=",", index_col=0)
+    
+    distances = df.loc[label].copy()
+    nearest_idx = distances.nsmallest(knn).index.tolist()
+    #print(nearest_idx)
+   
+    knn_ts = []
+    for dept in nearest_idx:
+        ts=TimeSeries.from_values(get_ts(meses_str, dept))
+        knn_ts.append(ts)
+    #print(knn_ts)
+    return knn_ts
+
+def get_ts(meses_str: str, department_year: str) :
+    months = meses_str.split("-")
+    BASE_PATH = "csv/ts_historico"
+    ts_data = []
+    department, years_str = department_year.rsplit('_', 1)
+    for mes in months:
+        pos = 1 if meses.index(mes) > 5 else 0
+        year = years_str.split("-")[pos]
+        csv_path = os.path.join(BASE_PATH, str(year), mes, f"{department}.csv")
+        if not os.path.exists(csv_path):
+            raise FileNotFoundError(f"{csv_path} does not exist")    
+        # CSV has no header, assume single column
+        df = pd.read_csv(csv_path, header=None)
+        ts_data.extend(pd.Series(df.values.flatten()))
+    return ts_data[:12]
+
+
+
+#generar_cluster_ventana()
+#generar_cluster_matriz_diferencia()
+#get_k_n_n(mes="JULIO",departamento="CENTRO_SUR", k=2, n=4)

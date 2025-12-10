@@ -1,4 +1,5 @@
 cython
+darts
 dictances
 fastdtw
 h5py
@@ -9,10 +10,13 @@ nose
 numpy==1.26.4
 openpyxl
 pandas
+pgmpy
 pmdarima
-rpy2
+pyAgrum
 scikit-learn
 scipy
 statsmodels
 xlsxwriter
-instaloader
+pyagrum
+statsforecast
+datasetsforecast
