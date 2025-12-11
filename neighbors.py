@@ -36,6 +36,7 @@ from darts.metrics import accuracy,coefficient_of_variation,dtw_metric,mae,mape,
 from darts import TimeSeries
 from darts.utils.timeseries_generation import datetime_attribute_timeseries
 import torch
+from datetime import datetime, timedelta
 torch.set_float32_matmul_precision('medium')
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
@@ -238,62 +239,36 @@ def generate_forecast(
     input_department,
     number_years,
     number_neighbors,
-    months_to_forecast,
+    weeks_to_forecast,
     classification,
     model):
   #variables
   historical_time_series = get_historical_data(input_department)
+  original_time_series = get_2022_2023_data(input_department)
   projected_time_series = []
-  #Time series for projections
-  months = [['1','OCTUBRE',2022],
-            ['5','NOVIEMBRE',2022],
-            ['3','DICIEMBRE',2022],
-            ['7','ENERO',2023],
-            ['4','FEBRERO',2023],
-            ['4','MARZO',2023],
-            ['1','ABRIL',2023],
-            ['6','MAYO',2023],
-            ['3','JUNIO',2023],
-            ['1','JULIO',2023],
-            ['5','AGOSTO',2023],
-            ['2','SEPTIEMBRE',2023]]
-  for i in range(0,len(months),months_to_forecast):
-    size_ts = 0
-    next_time_series = []
-    if(i<3):
-      month_index = i + 10
-    else:
-      month_index = (i + 10)%12
-    start_date=f'{months[i][0]}/{month_index}/{months[i][2]} 10:00:00+00:00'
-    for j in range(i,i+months_to_forecast):
-      path_next = os.path.join(ts_historico_path,f'{months[j][2]}',f'{months[j][1]}',f'{input_department}.csv')
-      temp_ts = load_time_series(path_next)
-      size_ts += len(temp_ts)
-      next_time_series.extend(temp_ts)
+  for week_index in range(0,53,weeks_to_forecast):
     time = 0
     start_time = process_time()
     match classification.__qualname__:
       case 'get_historical_data':
-        time_series = TimeSeries.from_times_and_values(times=pd.date_range(start=start_date,periods=len(historical_time_series),freq='W') ,values=historical_time_series,freq='W')
-        time_series.time_index.tz_localize(tzutc())
+        time_series = TimeSeries.from_values(values=historical_time_series)
         scaled_time_series = log_transformer.transform(time_series)
-        scaled_forecast = model(time_series,size_ts)
+        scaled_forecast = model(time_series,weeks_to_forecast)
         forecasted_values = log_transformer.inverse_transform(scaled_forecast).values().flatten() 
       case 'get_cluster' | 'get_cluster_jerarquico' | 'get_cluster_de_clusters':
         temp_ts = historical_time_series[:-12]
-        nearest_neighbors = classification(months[i][1],input_department,number_years,number_neighbors)
+        nearest_neighbors = classification(week_index,input_department,number_years,number_neighbors)
         forecasted_values = []
         for neighbor in nearest_neighbors:
           time_series = []
           time_series.extend(temp_ts)
           time_series.extend(neighbor.values().flatten())
-          scaled_time_series = TimeSeries.from_times_and_values(times=pd.date_range(start=start_date,periods=len(time_series),freq='W') ,values=time_series,freq='W')
-          scaled_time_series.time_index.tz_localize(tzutc())
+          scaled_time_series = TimeSeries.from_values(values=time_series)
           scaled_time_series = log_transformer.transform(scaled_time_series)
           if(model.__qualname__ == 'lstm_forecast'):
             scaler = Scaler()
             scaled_time_series = scaler.fit_transform(scaled_time_series)
-          scaled_forecast = model(scaled_time_series,size_ts)
+          scaled_forecast = model(scaled_time_series,weeks_to_forecast)
           if(model.__qualname__ == 'lstm_forecast'):
             scaled_forecast = scaler.inverse_transform(scaled_forecast)
           forecast = log_transformer.inverse_transform(scaled_forecast)
@@ -301,20 +276,16 @@ def generate_forecast(
         forecasted_values = concatenate(forecasted_values,axis=1).mean(axis=1)
         forecasted_values = forecasted_values.values().flatten()
       case 'CART' | 'RANDOM_FOREST' | 'TAN':
-        time_series = TimeSeries.from_times_and_values(times=pd.date_range(start=start_date,periods=len(historical_time_series),freq='W') ,values=historical_time_series,freq='W')
-        time_series.time_index.tz_localize(tzutc())
+        time_series = TimeSeries.from_values(values=historical_time_series)
         scaled_time_series = log_transformer.transform(time_series)
-        scaled_forecast = classification(scaled_time_series,size_ts)
+        scaled_forecast = classification(scaled_time_series,weeks_to_forecast)
         forecasted_values = log_transformer.inverse_transform(scaled_forecast)
         forecasted_values = forecasted_values.values().flatten()
     projected_time_series.extend(forecasted_values)
-    historical_time_series.extend(next_time_series)
-    historical_time_series = historical_time_series[size_ts:]
-  historical_time_series = get_2022_2023_data(input_department)
-  historical_time_series = TimeSeries.from_times_and_values(times=pd.date_range(start=start_date,periods=len(historical_time_series),freq='W') ,values=historical_time_series,freq='W')
-  historical_time_series.time_index.tz_localize(tzutc())
-  projected_time_series = TimeSeries.from_times_and_values(times=pd.date_range(start=start_date,periods=len(projected_time_series),freq='W') ,values=projected_time_series,freq='W')
-  projected_time_series.time_index.tz_localize(tzutc())
+    historical_time_series.extend(original_time_series[week_index:week_index+weeks_to_forecast-1])
+    historical_time_series = historical_time_series[weeks_to_forecast:]
+  historical_time_series = TimeSeries.from_values(values=original_time_series)
+  projected_time_series = TimeSeries.from_values(values=projected_time_series)
   end_time = process_time()
   time = end_time - start_time
   save_time_series_as_csv(input_department,projected_time_series,model.__qualname__,classification.__qualname__,months_to_forecast)
@@ -599,25 +570,25 @@ def project_time_series(number_years,
 number_years = 2
 number_neighbors = 2
 for classification in [CART,RANDOM_FOREST]:
-    for months_to_forecast in [1,2,4]:
+    for weeks_to_forecast in [1,2,3,4]:
       for input_department in departments:
         generate_forecast(
           input_department,
           number_years,
           number_neighbors,
-          months_to_forecast,
+          weeks_to_forecast,
           classification,
           forecast_using_regression_models
         )
 for classification in [get_historical_data,get_cluster,get_cluster_jerarquico,get_cluster_de_clusters]:
   for model in models:
-    for months_to_forecast in [1,2,4]:
+    for weeks_to_forecast in [1,2,3,4]:
       for input_department in departments:
         generate_forecast(
           input_department,
           number_years,
           number_neighbors,
-          months_to_forecast,
+          weeks_to_forecast,
           classification,
           model
         )
