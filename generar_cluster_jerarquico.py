@@ -68,7 +68,7 @@ def generar_cluster_ventana():
         row_dict = {}  # dictionary for one row per window
         for year_index in years:
             for department in departments:
-                print(f"procesando {year_index}-{year_index+1} semana {week_index} departamento {department}")
+                #print(f"procesando {year_index}-{year_index+1} semana {week_index} departamento {department}")
                 data = get_ts(f'{year_index}-{year_index+1}', str(week_index), department)
                 col_name=f"{department}_{year_index}-{year_index+1}"
                 row_dict[col_name] = np.mean(data)
@@ -79,7 +79,7 @@ def generar_cluster_ventana():
         os.makedirs(window_path, exist_ok=True)
         file_name = f"week_{week_index}.csv"
         df.to_csv(os.path.join(window_path,file_name ), index=False)
-        print(f"Saved: {window_path}/{file_name}")
+        #print(f"Saved: {window_path}/{file_name}")
 
 
 def generar_cluster_jerarquico():
@@ -106,15 +106,15 @@ def generar_cluster_jerarquico():
         plt.tight_layout()
         plt.savefig(f"{out_path}/week_{week_index}.svg", format="svg")
         plt.close()
-        print(f"Saved dendrogram to {out_path}/week_{week_index}.svg")
+        #print(f"Saved dendrogram to {out_path}/week_{week_index}.svg")
 
         # ---- SAVE LINKAGE MATRIX CORRECTLY ----
         np.save(f"{hclust_dir}/Z.npy", Z)
-        print(f"Saved linkage matrix to {hclust_dir}/Z.npy")
+        #print(f"Saved linkage matrix to {hclust_dir}/Z.npy")
 
         # ---- SAVE LABEL ORDER CORRECTLY ----
         df_t.to_csv(f"{hclust_dir}/labels.csv")
-        print(f"Saved labels to {hclust_dir}/labels.csv")
+        #print(f"Saved labels to {hclust_dir}/labels.csv")
 
 def get_cluster_jerarquico(semana:str, departamento:str, k:int, n:int):
     hclust_dir = "csv/cj/hclust"
@@ -137,10 +137,10 @@ def get_cluster_jerarquico(semana:str, departamento:str, k:int, n:int):
         label_i = labels[nearest_idx[i]]
         year = int(label_i.split("-")[1])-1
         department = label_i.split("-")[0][:-5]
-        print(f"Fetching TS for Year: {year}, Department: {department}")
+        #print(f"Fetching TS for Year: {year}, Department: {department}")
         ts=TimeSeries.from_values(get_ts(year=f'{year}-{year+1}',week=semana, department=department))
         knn_ts.append(ts)
-    print(knn_ts)
+    #print(knn_ts)
     return knn_ts
 
 

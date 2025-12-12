@@ -86,10 +86,10 @@ def generar_cluster_ventana():
                 year = y if i < 5 else y + 1
                 for d in range(len(departments)):
                     path = f'{input_base}/{year}/{meses[i]}/{departments[d]}.csv'
-                    print(f"procesando {path}")
+                    #print(f"procesando {path}")
                     data = pd.read_csv(path, header=None).apply(pd.to_numeric, errors='coerce')
                     fila = data.iloc[0].tolist()
-                    print(f"fila es {fila}")
+                    #print(f"fila es {fila}")
                     ts[d].extend(data.iloc[0].tolist())
                     cols[d].extend([f"{meses[i]}_{j+1}" for j in range(len(data.iloc[0]))])
             window_path = f'csv/cdc/matriz_ventana/{meses[v]}-{meses[v+1]}-{meses[v+2]}/{y}-{y+1}'
@@ -97,7 +97,7 @@ def generar_cluster_ventana():
             for d in range(len(departments)):
                 pd_depa = pd.DataFrame([ts[d]], columns=cols[d])
                 pd_depa.to_csv(os.path.join(window_path,f'{departments[d]}.csv'), index=False)
-                print(f'saved: {window_path}/{departments[d]}.csv')
+                #print(f'saved: {window_path}/{departments[d]}.csv')
 
 def generar_cluster_matriz_diferencia():
     for week_index in range(0,53):
@@ -147,7 +147,7 @@ def generar_cluster_matriz_diferencia():
 
             df = pd.DataFrame(matrix, index=names, columns=names)
             df.to_csv(output)
-            print(f"saved: {output}")
+            #print(f"saved: {output}")
 
 
 def generar_cluster_de_cluster_matriz_diferencia():
@@ -173,7 +173,7 @@ def generar_cluster_de_cluster_matriz_diferencia():
             # Save as CSV with headers
             df = pd.DataFrame(matrix, index=names, columns=names)
             df.to_csv(os.path.join(folder_path, "cluster_de_cluster.csv"))
-            print(f"saved: {folder_path}/cluster_de_cluster.csv")
+            #print(f"saved: {folder_path}/cluster_de_cluster.csv")
 
 
 def get_cluster_de_clusters(semana:str, departamento:str, k:int, n:int):
@@ -202,10 +202,10 @@ def get_cluster_de_clusters(semana:str, departamento:str, k:int, n:int):
 
     knn_ts = []
     for dept in knn_labels:
-        print(dept)
+        #print(dept)
         ts=TimeSeries.from_values(get_ts(year=dept[0], week=semana, department=dept[1]))
         knn_ts.append(ts)
-    print(knn_ts)
+    #print(knn_ts)
     return knn_ts
 
 def get_ts(year:str, week:str, department:str):

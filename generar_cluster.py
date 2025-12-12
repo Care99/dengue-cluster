@@ -86,10 +86,10 @@ def generar_cluster_ventana():
                 year = y if i < 5 else y + 1
                 for d in range(len(departments)):
                     path = f'{input_base}/{year}/{meses[i]}/{departments[d]}.csv'
-                    print(f"procesando {path}")
+                    #print(f"procesando {path}")
                     data = pd.read_csv(path, header=None).apply(pd.to_numeric, errors='coerce')
                     fila = data.iloc[0].tolist()
-                    print(f"fila es {fila}")
+                    #print(f"fila es {fila}")
                     ts[d].extend(data.iloc[0].tolist())
                     cols[d].extend([f"{meses[i]}_{j+1}" for j in range(len(data.iloc[0]))])
             window_path = f'csv/c/matriz_ventana/{meses[v]}-{meses[v+1]}-{meses[v+2]}/{y}-{y+1}'
@@ -97,22 +97,22 @@ def generar_cluster_ventana():
             for d in range(len(departments)):
                 pd_depa = pd.DataFrame([ts[d]], columns=cols[d])
                 pd_depa.to_csv(os.path.join(window_path,f'{departments[d]}.csv'), index=False)
-                print(f'saved: {window_path}/{departments[d]}.csv')
+                #print(f'saved: {window_path}/{departments[d]}.csv')
 
 
 def generar_cluster_matriz_diferencia():
     for week_index in range(0,53):
-        print(f"\n Semana: {week_index}")
+        #print(f"\n Semana: {week_index}")
         ts_dict = {}   # cumulative dictionary
         for year_folder in years_folders:
             # Generate full paths and read CSVs in one line
             row = {f"{d}_{year_folder}": get_ts(year=year_folder, week=f'{week_index}', department=d) for d in departments}
             ts_dict.update(row)
         names = list(ts_dict.keys())
-        print(names)
-        print("\n")
+        #print(names)
+        #print("\n")
         n = len(names)
-        print("len is " + str(n))
+        #print("len is " + str(n))
         matrix = np.zeros((n, n))
 
         for i in range(n):
@@ -130,7 +130,7 @@ def generar_cluster_matriz_diferencia():
         file_nime = "mat_distancia.csv"
         output_path = os.path.join(output_path,file_nime)
         df.to_csv(output_path)
-        print(f"guardado: {output_path}")
+        #print(f"guardado: {output_path}")
 
 
 def get_cluster(semana:str, departamento:str, k:int, n:int):
@@ -148,10 +148,10 @@ def get_cluster(semana:str, departamento:str, k:int, n:int):
     for dept in nearest_idx:
         year = int(dept.split("-")[1])-1
         department = dept.split("-")[0][:-5]
-        print(f"Fetching TS for Year: {year}, Department: {department}")
+        #print(f"Fetching TS for Year: {year}, Department: {department}")
         ts=TimeSeries.from_values(get_ts(year=f'{year}-{year+1}', week=semana, department=department))
         knn_ts.append(ts)
-    print(knn_ts)
+    #print(knn_ts)
     return knn_ts
 
 def get_ts(year:str, week:str, department:str):
@@ -170,4 +170,4 @@ def get_ts(year:str, week:str, department:str):
 
 #generar_cluster_ventana()
 #generar_cluster_matriz_diferencia()
-get_cluster(semana="0",departamento="CENTRO_SUR", k=2, n=4)
+#get_cluster(semana="0",departamento="CENTRO_SUR", k=2, n=4)
