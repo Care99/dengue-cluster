@@ -10,7 +10,7 @@ from scipy.spatial.distance import euclidean
 from sklearn.preprocessing import MinMaxScaler
 #from tslearn.metrics import dtw
 import os
-from time import process_time
+from time import time_ns
 import matplotlib as mplt
 from classifiers import CART, RANDOM_FOREST, TAN
 mplt.use('SVG',force=True)
@@ -247,8 +247,7 @@ def generate_forecast(
   original_time_series = get_2022_2023_data(input_department)
   projected_time_series = []
   for week_index in range(0,53,weeks_to_forecast):
-    time = 0
-    start_time = process_time()
+    start_time = time_ns()
     match classification.__qualname__:
       case 'get_historical_data':
         time_series = TimeSeries.from_values(values=historical_time_series)
@@ -282,26 +281,26 @@ def generate_forecast(
         forecasted_values = log_transformer.inverse_transform(scaled_forecast)
         forecasted_values = forecasted_values.values().flatten()
     projected_time_series.extend(forecasted_values)
-    historical_time_series.extend(original_time_series[week_index:week_index+weeks_to_forecast-1])
+    historical_time_series.extend(original_time_series[week_index:week_index+weeks_to_forecast])
     historical_time_series = historical_time_series[weeks_to_forecast:]
   historical_time_series = TimeSeries.from_values(values=original_time_series)
-  projected_time_series = TimeSeries.from_values(values=projected_time_series)
-  end_time = process_time()
-  time = end_time - start_time
-  save_time_series_as_csv(input_department,projected_time_series,model.__qualname__,classification.__qualname__,months_to_forecast)
-  plot_scatter(historical_time_series,projected_time_series,input_department,model.__qualname__,classification.__qualname__,months_to_forecast)
-  plot_histogram(historical_time_series,projected_time_series,input_department,model.__qualname__,classification.__qualname__,months_to_forecast)
-  save_error(input_department,historical_time_series,projected_time_series,model.__qualname__,classification.__qualname__,months_to_forecast)
-  save_time(input_department,time,model.__qualname__,classification.__qualname__,months_to_forecast)
+  projected_time_series = TimeSeries.from_values(values=projected_time_series[:53])
+  end_time = time_ns()
+  time = float(end_time - start_time) / float(1e9)
+  save_time_series_as_csv(input_department,projected_time_series,model.__qualname__,classification.__qualname__,weeks_to_forecast)
+  plot_scatter(historical_time_series,projected_time_series,input_department,model.__qualname__,classification.__qualname__,weeks_to_forecast)
+  plot_histogram(historical_time_series,projected_time_series,input_department,model.__qualname__,classification.__qualname__,weeks_to_forecast)
+  save_error(input_department,historical_time_series,projected_time_series,model.__qualname__,classification.__qualname__,weeks_to_forecast)
+  save_time(input_department,time,model.__qualname__,classification.__qualname__,weeks_to_forecast)
 def save_time(
     department:str,
     time:float,
     model:str,
     classification:str,
-    months_to_forecast:int
+    weeks_to_forecast:int
   )->None:
   output_file_name = f'{department}_execution_time.txt'
-  path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
+  path = os.path.join(csv_path,'forecast',classification,model,f'{weeks_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   output_file = os.path.join(path, output_file_name)
   with open(output_file, 'w') as f:
@@ -312,10 +311,10 @@ def save_time_series_as_csv(
     time_series:TimeSeries,
     model:str,
     classification:str,
-    months_to_forecast:int
+    weeks_to_forecast:int
   )->None:
   output_file_name = f'{department}.csv'
-  path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
+  path = os.path.join(csv_path,'forecast',classification,model,f'{weeks_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   output_file = os.path.join(path, output_file_name)
   time_series.to_csv(output_file, header=False, index=False)
@@ -326,7 +325,7 @@ def plot_scatter(
     input_department:str,
     model:str,
     classification:str,
-    months_to_forecast:int
+    weeks_to_forecast:int
   )->None:
   actual = actual.values().flatten()
   predicted = predicted.values().flatten()
@@ -370,7 +369,7 @@ def plot_scatter(
   # Title and labels with better formatting
   plt.title(
       f'Scatter Plot: {input_department}\n'
-      f'Model: {model} | Classification: {classification} | Horizon: {months_to_forecast} months',
+      f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} months',
       fontsize=14, fontweight='bold', pad=20
   )
   plt.xlabel('Actual Values', fontsize=12, fontweight='bold')
@@ -379,7 +378,7 @@ def plot_scatter(
   plt.text(0.05, 0.95, f'R² = {r2:.3f}', transform=plt.gca().transAxes,
              fontsize=12, bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
   plt.legend()
-  path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
+  path = os.path.join(csv_path,'forecast',classification,model,f'{weeks_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   output_file_name = f'{input_department}_scatter.svg'
   output_file = os.path.join(path, output_file_name)
@@ -392,7 +391,7 @@ def plot_histogram(
     input_department: str,
     model: str,
     classification: str,
-    months_to_forecast: int
+    weeks_to_forecast: int
 ) -> None:
     # Extract data
     actual_vals = actual.values().flatten()
@@ -474,12 +473,12 @@ def plot_histogram(
     # Main title
     fig.suptitle(
         f'Distribution Analysis with Outlier Handling: {input_department}\n'
-        f'Model: {model} | Classification: {classification} | Horizon: {months_to_forecast} months',
+        f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} months',
         fontsize=16, fontweight='bold', y=1.02
     )
     
     # Save
-    path = os.path.join(csv_path, 'forecast', classification, model, f'{months_to_forecast}_months')
+    path = os.path.join(csv_path, 'forecast', classification, model, f'{weeks_to_forecast}_months')
     os.makedirs(path, exist_ok=True)
     output_file_name = f'{input_department}_hist.svg'
     output_file = os.path.join(path, output_file_name)
@@ -494,9 +493,9 @@ def save_error(
     time_series:TimeSeries,
     model:str,
     classification:str,
-    months_to_forecast:int
+    weeks_to_forecast:int
   )->None:
-  path = os.path.join(csv_path,'forecast',classification,model,f'{months_to_forecast}_months')
+  path = os.path.join(csv_path,'forecast',classification,model,f'{weeks_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
   mae_error = mae(original_time_series,time_series)
   output_file_name = f'{input_department}_mae.txt'
@@ -554,7 +553,7 @@ def write_error(
 #variables
 def project_time_series(number_years,
       number_neighbors,
-      months_to_forecast,
+      weeks_to_forecast,
       classification,
       model
       ):
@@ -563,39 +562,32 @@ def project_time_series(number_years,
       input_department,
       number_years,
       number_neighbors,
-      months_to_forecast,
+      weeks_to_forecast,
       classification,
       model
       )
 number_years = 2
 number_neighbors = 2
-for classification in [CART,RANDOM_FOREST]:
-    for weeks_to_forecast in [1,2,3,4]:
-      for input_department in departments:
-        generate_forecast(
-          input_department,
-          number_years,
-          number_neighbors,
-          weeks_to_forecast,
-          classification,
-          forecast_using_regression_models
-        )
-for classification in [get_historical_data,get_cluster,get_cluster_jerarquico,get_cluster_de_clusters]:
-  for model in models:
-    for weeks_to_forecast in [1,2,3,4]:
-      for input_department in departments:
-        generate_forecast(
-          input_department,
-          number_years,
-          number_neighbors,
-          weeks_to_forecast,
-          classification,
-          model
-        )
-#project_time_series(
-#      number_years,
-#      number_neighbors,
-#      months_to_forecast,
-#      classification,
-#      model
-#      )
+#for classification in [CART,RANDOM_FOREST]:
+#    for weeks_to_forecast in [1,2,3,4]:
+#      for input_department in departments:
+#        generate_forecast(
+#          input_department,
+#          number_years,
+#          number_neighbors,
+#          weeks_to_forecast,
+#          classification,
+#          forecast_using_regression_models
+#        )
+#for classification in [get_historical_data,get_cluster,get_cluster_jerarquico,get_cluster_de_clusters]:
+#  for model in models:
+#    for weeks_to_forecast in [1,2,3,4]:
+#      for input_department in departments:
+#        generate_forecast(
+#          input_department,
+#          number_years,
+#          number_neighbors,
+#          weeks_to_forecast,
+#          classification,
+#          model
+#        )
