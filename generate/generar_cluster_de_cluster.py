@@ -6,13 +6,13 @@ from darts import TimeSeries
 import fastdtw
 from scipy.spatial.distance import euclidean
 from datetime import datetime, timedelta
-from utils.constants import departments
+from utils.constants import departments, start_date_index
+from utils.time_series import get_ts
 # Ventana de meses de octubre a septiembre
 meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
             'MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO']
 
 years = [2019,2020,2021,2022]
-start_date_index =["2019-07-13","2020-07-04","2021-07-10","2022-07-09"]
 years_folders = ["2019-2020","2020-2021","2021-2022","2022-2023"]
 
 input_base = "csv/ts_historico"
@@ -139,20 +139,6 @@ def get_cluster_de_clusters(semana:str, departamento:str, k:int, n:int):
         knn_ts.append(ts)
     #print(knn_ts)
     return knn_ts
-
-def get_ts(year:str, week:str, department:str):
-    ts_dict = {}
-    start_date = datetime.strptime(start_date_index[int(year.split('-')[0])-2019],'%Y-%m-%d') + timedelta(weeks=int(week))
-    end_date = start_date + timedelta(weeks=11)
-    filtered_data = data[
-        (data['disease'] == "DENGUE") 
-        & (data['classification'] == "TOTAL") 
-        & (data['name'] == department)]
-    filtered_data = filtered_data.copy()
-    filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%Y-%m-%d')
-    range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='both')]
-    ts_dict[department] = range_data.reset_index(drop=True)
-    return ts_dict[department]['incidence'].values
 
 
 
