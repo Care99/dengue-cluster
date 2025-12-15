@@ -17,35 +17,6 @@ years_folders = ["2019-2020","2020-2021","2021-2022","2022-2023"]
 
 input_base = "csv/ts_historico"
 
-matriz_ventana = [
-    "ABRIL-MAYO-JUNIO",
-    "DICIEMBRE-ENERO-FEBRERO",
-    "ENERO-FEBRERO-MARZO",
-    "FEBRERO-MARZO-ABRIL",
-    "JULIO-AGOSTO-SEPTIEMBRE",
-    "JUNIO-JULIO-AGOSTO",
-    "MARZO-ABRIL-MAYO",
-    "MAYO-JUNIO-JULIO",
-    "NOVIEMBRE-DICIEMBRE-ENERO",
-    "OCTUBRE-NOVIEMBRE-DICIEMBRE",
-    "AGOSTO-SEPTIEMBRE-OCTUBRE",
-    "SEPTIEMBRE-OCTUBRE-NOVIEMBRE"
-]
-
-dict_ventana = {
-    "JULIO": "ABRIL-MAYO-JUNIO",
-    "MARZO": "DICIEMBRE-ENERO-FEBRERO",
-    "ABRIL": "ENERO-FEBRERO-MARZO",
-    "MAYO": "FEBRERO-MARZO-ABRIL",
-    "OCTUBRE": "JULIO-AGOSTO-SEPTIEMBRE",
-    "SEPTIEMBRE": "JUNIO-JULIO-AGOSTO",
-    "JUNIO": "MARZO-ABRIL-MAYO",
-    "AGOSTO": "MAYO-JUNIO-JULIO",
-    "FEBRERO": "NOVIEMBRE-DICIEMBRE-ENERO",
-    "ENERO": "OCTUBRE-NOVIEMBRE-DICIEMBRE",
-    "NOVIEMBRE": "AGOSTO-SEPTIEMBRE-OCTUBRE",
-    "DICIEMBRE": "SEPTIEMBRE-OCTUBRE-NOVIEMBRE"
-}
 script_directory = os.getcwd()
 csv_path = os.path.join(script_directory,'csv')
 excel_name = 'casos.csv'
@@ -53,15 +24,6 @@ excel_file = os.path.join(csv_path,excel_name)
 unformatted_data = pd.read_csv(excel_file)
 data = unformatted_data.copy()
 data['date'] = pd.to_datetime(data['date'], format='%Y-%m-%d')
-def bhattacharyya(tseries1,tseries2):
-    value = 0.0
-    i = 0
-    for i in range(len(tseries1)):
-        value += math.sqrt(tseries1[i]*tseries2[i])
-        if value == 0:
-            value += 1e-12
-    value = - np.log(value)
-    return abs(value)
 
 def iniciar_ts():
     ts = {}
@@ -69,31 +31,6 @@ def iniciar_ts():
         ts[d]= []
     return ts
         
-
-def generar_cluster_ventana():
-    os.makedirs(input_base, exist_ok=True)
-    # Hacer un loop para cada ventana
-    for v in range(len(meses)-2):
-        for y in years:
-            ts= iniciar_ts()
-            cols = iniciar_ts()
-            for i in range(v,v+3):
-                year = y if i < 5 else y + 1
-                for d in range(len(departments)):
-                    path = f'{input_base}/{year}/{meses[i]}/{departments[d]}.csv'
-                    #print(f"procesando {path}")
-                    data = pd.read_csv(path, header=None).apply(pd.to_numeric, errors='coerce')
-                    fila = data.iloc[0].tolist()
-                    #print(f"fila es {fila}")
-                    ts[d].extend(data.iloc[0].tolist())
-                    cols[d].extend([f"{meses[i]}_{j+1}" for j in range(len(data.iloc[0]))])
-            window_path = f'csv/cdc/matriz_ventana/{meses[v]}-{meses[v+1]}-{meses[v+2]}/{y}-{y+1}'
-            os.makedirs(window_path,exist_ok=True)
-            for d in range(len(departments)):
-                pd_depa = pd.DataFrame([ts[d]], columns=cols[d])
-                pd_depa.to_csv(os.path.join(window_path,f'{departments[d]}.csv'), index=False)
-                #print(f'saved: {window_path}/{departments[d]}.csv')
-
 def generar_cluster_matriz_diferencia():
     for week_index in range(0,53):
         for year_index in range(0,4):
