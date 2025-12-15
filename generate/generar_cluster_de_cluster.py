@@ -3,7 +3,7 @@ import numpy as np
 import os
 import math
 from darts import TimeSeries
-from fastdtw import fastdtw as dtw
+import fastdtw
 from scipy.spatial.distance import euclidean
 from datetime import datetime, timedelta
 from utils.constants import departments
@@ -69,7 +69,7 @@ def generar_cluster_matriz_diferencia():
                     if i == j:
                         matrix[i, j] = 0  # diagonal = 0
                     else:
-                        matrix[i, j],path = dtw(time_series_i, time_series_j)
+                        matrix[i, j],path = fastdtw.fastdtw(time_series_i, time_series_j)
 
             # Save as CSV with headers
             output_path=f"csv/cdc/cluster_matriz/week_{week_index}"
@@ -100,7 +100,7 @@ def generar_cluster_de_cluster_matriz_diferencia():
                     if i == j:
                         matrix[i, j] = 0
                     else:
-                        matrix[i, j],path = dtw(ts_dict[names[i]], ts_dict[names[j]])
+                        matrix[i, j],path = fastdtw.fastdtw(ts_dict[names[i]], ts_dict[names[j]])
 
             # Save as CSV with headers
             df = pd.DataFrame(matrix, index=names, columns=names)
