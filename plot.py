@@ -7,32 +7,7 @@ import pandas as pd
 import numpy as np
 from neighbors import get_2022_2023_data
 import os
-departments = [
-  'ALTO_PARANA',
-  'AMAMBAY',
-  'ASUNCION',
-  'CAAGUAZU',
-  'CENTRAL',
-  'CENTRO_EST',
-  'CENTRO_NORTE',
-  'CENTRO_SUR',
-  'CHACO',
-  'CORDILLERA',
-  'METROPOLITANO',
-  'PARAGUARI',
-  'PARAGUAY',
-  'PTE_HAYES',
-  'SAN_PEDRO',
-  'CANINDEYU',
-  'CONCEPCION',
-  'ITAPUA',
-  'MISIONES',
-  'BOQUERON',
-  'GUAIRA',
-  'CAAZAPA',
-  'NEEMBUCU',
-  'ALTO_PARAGUAY'
-  ]
+from utils.constants import departments
 
 models = [
   'naive_drift',
