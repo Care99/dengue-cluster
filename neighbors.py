@@ -17,6 +17,7 @@ from darts.metrics import mae,rmse,smape
 from darts import TimeSeries
 import torch
 from utils.constants import departments
+from plot import plot_scatter,plot_histogram
 torch.set_float32_matmul_precision('medium')
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
@@ -43,20 +44,6 @@ months = [
 conjunto_funciones = [
    "bhattacharyya",
 ]
-months_original_time_series=[
-    ['OCTUBRE','2022'],
-    ['NOVIEMBRE','2022'],
-    ['DICIEMBRE','2022'],
-    ['ENERO','2023'],
-    ['FEBRERO','2023'],
-    ['MARZO','2023'],
-    ['ABRIL','2023'],
-    ['MAYO','2023'],
-    ['JUNIO','2023'],
-    ['JULIO','2023'],
-    ['AGOSTO','2023'],
-    ['SEPTIEMBRE','2023']
-  ]
 initial_year = 2019
 current_year = 2022
 # Apply log transformation (ensure all values > 0)
@@ -216,174 +203,6 @@ def save_time_series_as_csv(
   output_file = os.path.join(path, output_file_name)
   time_series.to_csv(output_file, header=False, index=False)
   print(f"Saved: {output_file}")
-def plot_scatter(
-    actual:TimeSeries,
-    predicted:TimeSeries,
-    input_department:str,
-    model:str,
-    classification:str,
-    weeks_to_forecast:int
-  )->None:
-  actual = actual.values().flatten()
-  predicted = predicted.values().flatten()
-  plt.figure(figsize=(10, 6))
-  # Calculate regression line for reference
-  z = np.polyfit(actual, predicted, 1)
-  p = np.poly1d(z)
-  x_line = np.linspace(min(actual), max(actual), 100)
-  y_line = p(x_line)
-  
-  # Create color gradient based on prediction error
-  errors = np.abs(predicted - actual)
-  normalized_errors = (errors - errors.min()) / (errors.max() - errors.min())
-  plt.scatter(
-    actual,
-    predicted,
-    c=normalized_errors,
-    cmap='viridis',
-    alpha=0.7,
-    s=50 + 100 * normalized_errors,  # Size varies with error
-  )
-  # Perfect prediction line (y = x)
-  min_val = actual.min()
-  max_val = actual.max()
-  plt.plot(
-    [min_val, max_val], 
-    [min_val, max_val], 
-    'r--', 
-    alpha=0.8, 
-    linewidth=2
-  )
-  # Regression line
-  plt.plot(
-    x_line, 
-    y_line, 
-    'orange', 
-    alpha=0.8, 
-    linewidth=2, 
-    label=f'Regression (slope={z[0]:.3f})'
-  )    
-  # Title and labels with better formatting
-  plt.title(
-      f'Scatter Plot: {input_department}\n'
-      f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} months',
-      fontsize=14, fontweight='bold', pad=20
-  )
-  plt.xlabel('Actual Values', fontsize=12, fontweight='bold')
-  plt.ylabel('Predicted Values', fontsize=12, fontweight='bold')
-  r2 = np.corrcoef(actual, predicted)[0, 1]**2
-  plt.text(0.05, 0.95, f'R² = {r2:.3f}', transform=plt.gca().transAxes,
-             fontsize=12, bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-  plt.legend()
-  path = os.path.join(csv_path,'forecast',classification,model,f'{weeks_to_forecast}_months')
-  os.makedirs(path,exist_ok=True)
-  output_file_name = f'{input_department}_scatter.svg'
-  output_file = os.path.join(path, output_file_name)
-  plt.savefig(output_file)
-  plt.close()
-  print(f"Saved: {output_file}")
-def plot_histogram(
-    actual: TimeSeries,
-    predicted: TimeSeries,
-    input_department: str,
-    model: str,
-    classification: str,
-    weeks_to_forecast: int
-) -> None:
-    # Extract data
-    actual_vals = actual.values().flatten()
-    predicted_vals = predicted.values().flatten()
-    
-    # Calculate IQR for actual values to determine reasonable bounds
-    actual_q1 = np.percentile(actual_vals, 25)
-    actual_q3 = np.percentile(actual_vals, 75)
-    actual_iqr = actual_q3 - actual_q1
-    
-    # Define bounds based on actual values (using 1.5*IQR rule or actual min/max)
-    lower_bound = max(predicted_vals.min(), actual_vals.min())
-    upper_bound = min(predicted_vals.max(), actual_q3 + 1.5 * actual_iqr)
-    
-    # Filter predicted values for visualization (but keep all for stats)
-    predicted_filtered = predicted_vals[(predicted_vals >= lower_bound) & 
-                                       (predicted_vals <= upper_bound)]
-    
-    # Create figure
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6), constrained_layout=True)
-    
-    # Use bins based on actual values range
-    bins = np.histogram_bin_edges(actual_vals, bins='auto')
-    
-    # --- Plot 1: Zoomed-in view (using actual value range) ---
-    ax1.hist(predicted_vals, bins=bins, alpha=0.6, label='Predicted',
-             color='#FF6B6B', edgecolor='black', linewidth=0.5,
-             range=(lower_bound, upper_bound))
-    ax1.hist(actual_vals, bins=bins, alpha=0.6, label='Actual',
-             color='#4ECDC4', edgecolor='black', linewidth=0.5)
-    
-    ax1.set_xlabel('Zoomed View (Actual Value Range)', fontsize=12)
-    ax1.set_ylabel('Frequency', fontsize=12)
-    ax1.legend(fontsize=11)
-    ax1.grid(True, alpha=0.3, linestyle='--')
-    
-    # Add outlier info
-    outlier_count = len(predicted_vals) - len(predicted_filtered)
-    outlier_pct = (outlier_count / len(predicted_vals)) * 100
-    info_text = f'Focus Range: [{lower_bound:.1f}, {upper_bound:.1f}]\n' \
-                f'Outliers excluded: {outlier_count} ({outlier_pct:.1f}%)'
-    ax1.text(0.08, 0.98, info_text, transform=ax1.transAxes,
-             fontsize=10, verticalalignment='bottom', horizontalalignment='right',
-             bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
-    
-    # --- Plot 2: Box plot for outlier visualization ---
-    data_to_plot = [actual_vals, predicted_vals]
-    box_colors = ['#4ECDC4', '#FF6B6B']
-    
-    bp = ax2.boxplot(data_to_plot, patch_artist=True, labels=['Actual', 'Predicted'],
-                     showfliers=True, whis=1.5)
-    
-    # Color the boxes
-    for patch, color in zip(bp['boxes'], box_colors):
-        patch.set_facecolor(color)
-        patch.set_alpha(0.6)
-    
-    # Color the medians
-    for median in bp['medians']:
-        median.set(color='black', linewidth=2)
-    
-    # Add individual points for actual values (in background)
-    for i, (data, color) in enumerate(zip(data_to_plot, box_colors), 1):
-        # Add jitter to x-coordinate
-        x = np.random.normal(i, 0.04, size=len(data))
-        ax2.scatter(x, data, alpha=0.3, color=color, s=20)
-    
-    ax2.set_ylabel('Box Plot with Outliers', fontsize=12)
-    ax2.grid(True, alpha=0.3, linestyle='--', axis='y')
-    
-    # Add statistics as text
-    actual_stats = f'Actual: μ={np.mean(actual_vals):.1f}, σ={np.std(actual_vals):.1f}'
-    pred_stats = f'Predicted: μ={np.mean(predicted_vals):.1f}, σ={np.std(predicted_vals):.1f}'
-    ax2.text(0.98, 0.98, f'{actual_stats}\n{pred_stats}', 
-             transform=ax2.transAxes, fontsize=10,
-             verticalalignment='bottom',
-             bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
-    
-    # Main title
-    fig.suptitle(
-        f'Distribution Analysis with Outlier Handling: {input_department}\n'
-        f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} months',
-        fontsize=16, fontweight='bold', y=1.02
-    )
-    
-    # Save
-    path = os.path.join(csv_path, 'forecast', classification, model, f'{weeks_to_forecast}_months')
-    os.makedirs(path, exist_ok=True)
-    output_file_name = f'{input_department}_hist.svg'
-    output_file = os.path.join(path, output_file_name)
-    plt.savefig(output_file, dpi=150, bbox_inches='tight')
-    plt.close()
-    
-    print(f"Saved: {output_file}")
-    print(f"Outlier info: {outlier_count} predicted values ({outlier_pct:.1f}%) excluded from histogram view")
 def save_error(
     input_department:str,
     original_time_series:TimeSeries,
