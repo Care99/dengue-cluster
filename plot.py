@@ -8,7 +8,7 @@ import numpy as np
 from neighbors import get_2022_2023_data
 import os
 from utils.constants import departments
-
+from darts import TimeSeries
 models = [
   'naive_drift',
   'auto_arima',
