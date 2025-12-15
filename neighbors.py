@@ -16,6 +16,7 @@ from models import naive_drift,auto_arima,linear_regression,lstm_forecast
 from darts.metrics import mae,rmse,smape
 from darts import TimeSeries
 import torch
+from utils.constants import departments
 torch.set_float32_matmul_precision('medium')
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
@@ -23,32 +24,6 @@ csv_path = os.path.join(script_directory,'csv')
 cluster_matriz_path = os.path.join(csv_path,'cluster_matriz')
 matriz_ventana_path = os.path.join(csv_path,'matriz_ventana')
 ts_historico_path = os.path.join(csv_path,'ts_historico')
-departments = [
-  'ALTO_PARANA',
-  'AMAMBAY',
-  'ASUNCION',
-  'CAAGUAZU',
-  'CENTRAL',
-  'CENTRO_EST',
-  'CENTRO_NORTE',
-  'CENTRO_SUR',
-  'CHACO',
-  'CORDILLERA',
-  'METROPOLITANO',
-  'PARAGUARI',
-  'PARAGUAY',
-  'PTE_HAYES',
-  'SAN_PEDRO',
-  'CANINDEYU',
-  'CONCEPCION',
-  'ITAPUA',
-  'MISIONES',
-  'BOQUERON',
-  'GUAIRA',
-  'CAAZAPA',
-  'NEEMBUCU',
-  'ALTO_PARAGUAY'
-  ]
 years = [2019,2020,2021,2022]
 months = [
   "ENERO",
@@ -63,20 +38,6 @@ months = [
   "OCTUBRE",
   "NOVIEMBRE",
   "DICIEMBRE"
-]
-month_window = [
-  "ENERO-FEBRERO-MARZO",
-  "FEBRERO-MARZO-ABRIL",
-  "MARZO-ABRIL-MAYO",
-  "ABRIL-MAYO-JUNIO",
-  "MAYO-JUNIO-JULIO",
-  "JUNIO-JULIO-AGOSTO",
-  "JULIO-AGOSTO-SEPTIEMBRE",
-  "AGOSTO-SEPTIEMBRE-OCTUBRE",
-  "SEPTIEMBRE-OCTUBRE-NOVIEMBRE",
-  "OCTUBRE-NOVIEMBRE-DICIEMBRE",
-  "NOVIEMBRE-DICIEMBRE-ENERO",
-  "DICIEMBRE-ENERO-FEBRERO"
 ]
 #departments = ['ALTO PARARANA']
 conjunto_funciones = [
