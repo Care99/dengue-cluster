@@ -1,6 +1,6 @@
-from generar_cluster import get_cluster
-from generar_cluster_jerarquico import get_cluster_jerarquico
-from generar_cluster_de_cluster import get_cluster_de_clusters
+from generate.generar_cluster import get_cluster
+from generate.generar_cluster_jerarquico import get_cluster_jerarquico
+from generate.generar_cluster_de_cluster import get_cluster_de_clusters
 import math
 import pandas as pd
 import os
