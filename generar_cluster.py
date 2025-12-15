@@ -5,6 +5,7 @@ import math
 from darts import TimeSeries
 from fastdtw import fastdtw as dtw
 from datetime import datetime, timedelta
+from utils.constants import departments
 # Ventana de meses de octubre a septiembre
 meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
             'MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO']
@@ -12,12 +13,6 @@ meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO'
 years = [2019,2020,2021,2022]
 start_date_index =["2019-07-13","2020-07-04","2021-07-10","2022-07-09"]
 years_folders = ["2019-2020","2020-2021","2021-2022","2022-2023"]
-
-departments = ['ALTO_PARANA','AMAMBAY','ASUNCION','CAAGUAZU','CENTRAL',
-              'CENTRO_EST','CENTRO_NORTE','CENTRO_SUR','CHACO','CORDILLERA',
-              'METROPOLITANO','PARAGUARI','PARAGUAY','PTE_HAYES','SAN_PEDRO',
-              'CANINDEYU','CONCEPCION','ITAPUA','MISIONES','BOQUERON','GUAIRA',
-              'CAAZAPA','NEEMBUCU','ALTO_PARAGUAY']
 
 input_base = "csv/ts_historico"
 
