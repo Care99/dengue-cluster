@@ -1,0 +1,24 @@
+from datetime import datetime, timedelta
+from utils.constants import start_date_index
+import os
+import pandas as pd
+script_directory = os.getcwd()
+csv_path = os.path.join(script_directory,'csv')
+excel_name = 'casos.csv'
+excel_file = os.path.join(csv_path,excel_name)
+unformatted_data = pd.read_csv(excel_file)
+data = unformatted_data.copy()
+data['date'] = pd.to_datetime(data['date'], format='%Y-%m-%d')
+def get_ts(year:str, week:str, department:str):
+    ts_dict = {}
+    start_date = datetime.strptime(start_date_index[int(year.split('-')[0])-2019],'%Y-%m-%d') + timedelta(weeks=int(week))
+    end_date = start_date + timedelta(weeks=11)
+    filtered_data = data[
+        (data['disease'] == "DENGUE") 
+        & (data['classification'] == "TOTAL") 
+        & (data['name'] == department)]
+    filtered_data = filtered_data.copy()
+    filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%Y-%m-%d')
+    range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='both')]
+    ts_dict[department] = range_data.reset_index(drop=True)
+    return ts_dict[department]['incidence'].values
