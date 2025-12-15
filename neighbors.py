@@ -1,42 +1,21 @@
-from dateutil.tz import tzutc
 from generar_cluster import get_cluster
 from generar_cluster_jerarquico import get_cluster_jerarquico
 from generar_cluster_de_cluster import get_cluster_de_clusters
 import math
 import pandas as pd
-from scipy.stats import boxcox
-from scipy.special import inv_boxcox
-from scipy.spatial.distance import euclidean
-from sklearn.preprocessing import MinMaxScaler
-#from tslearn.metrics import dtw
 import os
 from time import time_ns
 import matplotlib as mplt
-from classifiers import CART, RANDOM_FOREST, TAN
 mplt.use('SVG',force=True)
 from matplotlib import pyplot as plt
 import numpy as np
-from statsmodels.tsa.seasonal import MSTL
 from darts import concatenate
 from darts.dataprocessing.transformers import Scaler
 from darts.dataprocessing.transformers import InvertibleMapper
-#Forecasting models
-#Baseline Models 
-from darts.models import NaiveMean,NaiveSeasonal,NaiveDrift,NaiveMovingAverage
-#Statistical Models 
-from darts.models import AutoARIMA,ExponentialSmoothing,AutoTheta,Prophet
-#SKLearn-Like Models 
-from darts.models import LinearRegressionModel,RandomForestModel
-#PyTorch (Lightning)-based Models
-from darts.models import RNNModel,NLinearModel,TCNModel,NBEATSModel
-#Ensemble Models
-from darts.models import NaiveEnsembleModel,RegressionEnsembleModel
-
-from darts.metrics import accuracy,coefficient_of_variation,dtw_metric,mae,mape,precision,r2_score,rmse,smape
+from models import naive_drift,auto_arima,linear_regression,lstm_forecast
+from darts.metrics import mae,rmse,smape
 from darts import TimeSeries
-from darts.utils.timeseries_generation import datetime_attribute_timeseries
 import torch
-from datetime import datetime, timedelta
 torch.set_float32_matmul_precision('medium')
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
@@ -131,49 +110,6 @@ log_transformer = InvertibleMapper(
     fn= safe_log,
     inverse_fn= safe_exp
 )
-def naive_drift(time_series,forecasted_values):
-  data = time_series
-  model = NaiveDrift()
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series
-
-def auto_arima(time_series,forecasted_values):
-  data = time_series
-  #train, test = model_selection.train_test_split(data)
-  model = AutoARIMA(season_length=4)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series
-def linear_regression(time_series,forecasted_values):
-  data = time_series
-  model = LinearRegressionModel(lags=4)
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series
-def lstm_forecast(time_series,forecasted_values):
-  data = time_series
-  model = RNNModel(
-    model='LSTM',
-    input_chunk_length=12,
-    output_chunk_length=forecasted_values,
-    hidden_dim=25, 
-    n_rnn_layers=1, 
-    dropout=0.0, 
-    batch_size=52, 
-    n_epochs=100,
-    optimizer_kwargs={'lr':1e-3}, 
-    random_state=42, 
-    log_tensorboard=False, 
-    force_reset=True,
-    pl_trainer_kwargs={
-      "accelerator": "gpu",
-      "devices": [0]
-    },
-  )
-  model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series
 def forecast_using_regression_models():
   return 'forecast_using_regression_models'
 models = [
