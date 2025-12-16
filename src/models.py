@@ -8,7 +8,6 @@ from darts.models import AutoARIMA
 from darts.models import LinearRegressionModel
 #PyTorch (Lightning)-based Models
 from darts.models import RNNModel
-from matplotlib.pylab import Sequence
 import torch
 
 torch.set_float32_matmul_precision('medium')
@@ -26,13 +25,13 @@ def auto_arima(time_series,forecasted_values)->TimeSeries:
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series
-def linear_regression(time_series,forecasted_values)->(TimeSeries | Sequence[TimeSeries]):
+def linear_regression(time_series,forecasted_values)->TimeSeries:
   data = time_series
   model = LinearRegressionModel(lags=4)
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series
-def lstm_forecast(time_series,forecasted_values)->(TimeSeries | Sequence[TimeSeries]):
+def lstm_forecast(time_series,forecasted_values)->TimeSeries:
   data = time_series
   model = RNNModel(
     model='LSTM',
