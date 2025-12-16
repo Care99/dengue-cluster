@@ -1,24 +1,19 @@
 from generate.generar_cluster import get_cluster
 from generate.generar_cluster_jerarquico import get_cluster_jerarquico
 from generate.generar_cluster_de_cluster import get_cluster_de_clusters
+from models import naive_drift,auto_arima,linear_regression,lstm_forecast
+from plot import plot_scatter,plot_histogram
+from utils.constants import departments
 from utils.time_series import get_historical_data, get_2022_2023_data
-import math
-import pandas as pd
+
+from darts import concatenate, TimeSeries
+from darts.dataprocessing.transformers import Scaler, InvertibleMapper
+from darts.metrics import mae,rmse,smape
+import numpy as np
 import os
 from time import time_ns
-import matplotlib as mplt
-mplt.use('SVG',force=True)
-from matplotlib import pyplot as plt
-import numpy as np
-from darts import concatenate
-from darts.dataprocessing.transformers import Scaler
-from darts.dataprocessing.transformers import InvertibleMapper
-from models import naive_drift,auto_arima,linear_regression,lstm_forecast
-from darts.metrics import mae,rmse,smape
-from darts import TimeSeries
 import torch
-from utils.constants import departments
-from plot import plot_scatter,plot_histogram
+
 torch.set_float32_matmul_precision('medium')
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
