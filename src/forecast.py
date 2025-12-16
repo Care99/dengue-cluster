@@ -1,4 +1,3 @@
-from src.models import naive_drift,auto_arima,linear_regression,lstm_forecast
 from src.plot import plot_scatter,plot_histogram
 from src.utils.constants import departments,csv_path
 from src.utils.time_series import get_historical_data, get_2022_2023_data
