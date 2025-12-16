@@ -29,7 +29,7 @@ def iniciar_ts():
         ts[d]= []
     return ts
         
-def generar_cluster_matriz_diferencia():
+def generar_cluster_matriz_diferencia()->None:
     for week_index in range(0,53):
         for year_index in range(0,4):
             #Calculate how many seconds a week has
@@ -80,7 +80,7 @@ def generar_cluster_matriz_diferencia():
             #print(f"saved: {output}")
 
 
-def generar_cluster_de_cluster_matriz_diferencia():
+def generar_cluster_de_cluster_matriz_diferencia()->None:
         for week_index in range(0,53):
             folder_path = f"csv/cdc/cluster_matriz/week_{week_index}"
             ts_dict = {}
@@ -106,7 +106,7 @@ def generar_cluster_de_cluster_matriz_diferencia():
             #print(f"saved: {folder_path}/cluster_de_cluster.csv")
 
 
-def get_cluster_de_clusters(semana:str, departamento:str, k:int, n:int):
+def get_cluster_de_clusters(semana:str, departamento:str, k:int, n:int)->list[TimeSeries]:
     #obtener k anhos mas cercanos
     k_label = "2022-2023"
     k_file_path = f'csv/cdc/cluster_matriz/week_{semana}/cluster_de_cluster.csv'
@@ -133,7 +133,7 @@ def get_cluster_de_clusters(semana:str, departamento:str, k:int, n:int):
     knn_ts = []
     for dept in knn_labels:
         #print(dept)
-        ts=TimeSeries.from_values(get_ts(year=dept[0], week=semana, department=dept[1]))
+        ts=TimeSeries.from_values(np.array(get_ts(year=dept[0], week=semana, department=dept[1])))
         knn_ts.append(ts)
     #print(knn_ts)
     return knn_ts

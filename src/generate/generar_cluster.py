@@ -30,7 +30,7 @@ def iniciar_ts():
     return ts
 
 
-def generar_cluster_matriz_diferencia():
+def generar_cluster_matriz_diferencia()->None:
     for week_index in range(0,53):
         #print(f"\n Semana: {week_index}")
         ts_dict = {}   # cumulative dictionary
@@ -63,7 +63,7 @@ def generar_cluster_matriz_diferencia():
         #print(f"guardado: {output_path}")
 
 
-def get_cluster(semana:str, departamento:str, k:int, n:int):
+def get_cluster(semana:str, departamento:str, k:int, n:int)->list[TimeSeries]:
     label = departamento + "_2022-2023"
     knn = k*n
 
@@ -79,7 +79,7 @@ def get_cluster(semana:str, departamento:str, k:int, n:int):
         year = int(dept.split("-")[1])-1
         department = dept.split("-")[0][:-5]
         #print(f"Fetching TS for Year: {year}, Department: {department}")
-        ts=TimeSeries.from_values(get_ts(year=f'{year}-{year+1}', week=semana, department=department))
+        ts=TimeSeries.from_values(np.array(get_ts(year=f'{year}-{year+1}', week=semana, department=department)))
         knn_ts.append(ts)
     #print(knn_ts)
     return knn_ts

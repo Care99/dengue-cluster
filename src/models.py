@@ -11,27 +11,27 @@ from darts.models import RNNModel
 import torch
 
 torch.set_float32_matmul_precision('medium')
-def naive_drift(time_series,forecasted_values)->TimeSeries:
+def naive_drift(time_series:TimeSeries,forecasted_values:int)->TimeSeries:
   data = time_series
   model = NaiveDrift()
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series
 
-def auto_arima(time_series,forecasted_values)->TimeSeries:
+def auto_arima(time_series:TimeSeries,forecasted_values:int)->TimeSeries:
   data = time_series
   #train, test = model_selection.train_test_split(data)
   model = AutoARIMA(season_length=4)
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series
-def linear_regression(time_series,forecasted_values)->TimeSeries:
+def linear_regression(time_series:TimeSeries,forecasted_values:int)->TimeSeries:
   data = time_series
   model = LinearRegressionModel(lags=4)
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series
-def lstm_forecast(time_series,forecasted_values)->TimeSeries:
+def lstm_forecast(time_series:TimeSeries,forecasted_values:int)->TimeSeries:
   data = time_series
   model = RNNModel(
     model='LSTM',

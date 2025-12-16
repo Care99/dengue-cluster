@@ -25,7 +25,7 @@ excel_file = os.path.join(csv_path,excel_name)
 unformatted_data = pd.read_csv(excel_file)
 data = unformatted_data.copy()
 data['date'] = pd.to_datetime(data['date'], format='%Y-%m-%d')
-def generar_cluster_ventana():
+def generar_cluster_ventana()->None:
     os.makedirs(input_base, exist_ok=True)
     # Hacer un loop para cada ventana
     for week_index in range(0,53):
@@ -46,7 +46,7 @@ def generar_cluster_ventana():
         #print(f"Saved: {window_path}/{file_name}")
 
 
-def generar_cluster_jerarquico():
+def generar_cluster_jerarquico()->None:
     for week_index in range(0,53):
         hclust_dir = f"csv/cj/hclust/week_{week_index}"
         os.makedirs(hclust_dir, exist_ok=True)
@@ -80,7 +80,7 @@ def generar_cluster_jerarquico():
         df_t.to_csv(f"{hclust_dir}/labels.csv")
         #print(f"Saved labels to {hclust_dir}/labels.csv")
 
-def get_cluster_jerarquico(semana:str, departamento:str, k:int, n:int):
+def get_cluster_jerarquico(semana:str, departamento:str, k:int, n:int)->list[TimeSeries]:
     hclust_dir = "csv/cj/hclust"
     label = departamento + "_2022-2023"
     knn = k*n
@@ -102,7 +102,7 @@ def get_cluster_jerarquico(semana:str, departamento:str, k:int, n:int):
         year = int(label_i.split("-")[1])-1
         department = label_i.split("-")[0][:-5]
         #print(f"Fetching TS for Year: {year}, Department: {department}")
-        ts=TimeSeries.from_values(get_ts(year=f'{year}-{year+1}',week=semana, department=department))
+        ts=TimeSeries.from_values(np.array(get_ts(year=f'{year}-{year+1}',week=semana, department=department)))
         knn_ts.append(ts)
     #print(knn_ts)
     return knn_ts

@@ -11,7 +11,7 @@ from pyagrum.skbn import BNClassifier
 # 6. Models
 # CART
 # Classifies data by learning a series of decision rules from the features
-def CART(time_series:TimeSeries,forecast_values:int):
+def CART(time_series:TimeSeries,forecast_values:int)->TimeSeries:
     cart = DecisionTreeRegressor(max_depth=5, random_state=42)
     model = RegressionModel(model=cart,lags=12)
     model.fit(time_series)
@@ -19,7 +19,7 @@ def CART(time_series:TimeSeries,forecast_values:int):
 
 # Random Forest
 # Ensemble method built on top of decision trees
-def RANDOM_FOREST(time_series:TimeSeries,forecast_values:int):
+def RANDOM_FOREST(time_series:TimeSeries,forecast_values:int)->TimeSeries:
     rf = RandomForestRegressor(n_estimators=100, random_state=42)
     model = RegressionModel(model=rf,lags=12)
     model.fit(time_series)
