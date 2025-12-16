@@ -41,12 +41,6 @@ months = [
   "NOVIEMBRE",
   "DICIEMBRE"
 ]
-#departments = ['ALTO PARARANA']
-conjunto_funciones = [
-   "bhattacharyya",
-]
-initial_year = 2019
-current_year = 2022
 # Apply log transformation (ensure all values > 0)
 def safe_log(x):
     return np.log1p(x)  # log(1 + x) handles zeros
@@ -67,11 +61,6 @@ models = [
   linear_regression,
   lstm_forecast,
   ]
-
-def load_time_series(path):
-  df = pd.read_csv(path,header=None)
-  time_series = df.to_numpy(dtype=float).flatten().tolist()
-  return time_series
 
 def generate_forecast(
     input_department,
