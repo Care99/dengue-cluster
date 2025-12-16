@@ -9,6 +9,9 @@ from darts.models import LinearRegressionModel
 #PyTorch (Lightning)-based Models
 from darts.models import RNNModel
 from matplotlib.pylab import Sequence
+import torch
+
+torch.set_float32_matmul_precision('medium')
 def naive_drift(time_series,forecasted_values)->TimeSeries:
   data = time_series
   model = NaiveDrift()
