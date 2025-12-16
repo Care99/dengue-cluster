@@ -172,15 +172,15 @@ def plot_error():
                 print('Saved plot to: ',svg_path)
                 plt.close()
 def plot_scatter(
-    actual:TimeSeries,
-    predicted:TimeSeries,
+    actual_time_series:TimeSeries,
+    predicted_time_series:TimeSeries,
     input_department:str,
     model:str,
     classification:str,
     weeks_to_forecast:int
   )->None:
-  actual = actual.values().flatten()
-  predicted = predicted.values().flatten()
+  actual = actual_time_series.values().flatten()
+  predicted = predicted_time_series.values().flatten()
   plt.figure(figsize=(10, 6))
   # Calculate regression line for reference
   z = np.polyfit(actual, predicted, 1)
