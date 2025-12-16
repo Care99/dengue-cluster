@@ -12,30 +12,11 @@ from darts.metrics import mae,rmse,smape
 import numpy as np
 import os
 from time import time_ns
-import torch
 
-torch.set_float32_matmul_precision('medium')
 #from pmdarima.arima import auto_arima
 script_directory = os.getcwd()
 csv_path = os.path.join(script_directory,'csv')
-cluster_matriz_path = os.path.join(csv_path,'cluster_matriz')
-matriz_ventana_path = os.path.join(csv_path,'matriz_ventana')
-ts_historico_path = os.path.join(csv_path,'ts_historico')
-years = [2019,2020,2021,2022]
-months = [
-  "ENERO",
-  "FEBRERO",
-  "MARZO",
-  "ABRIL",
-  "MAYO",
-  "JUNIO",
-  "JULIO",
-  "AGOSTO",
-  "SEPTIEMBRE",
-  "OCTUBRE",
-  "NOVIEMBRE",
-  "DICIEMBRE"
-]
+
 # Apply log transformation (ensure all values > 0)
 def safe_log(x):
     return np.log1p(x)  # log(1 + x) handles zeros
