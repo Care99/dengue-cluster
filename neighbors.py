@@ -1,6 +1,7 @@
 from generate.generar_cluster import get_cluster
 from generate.generar_cluster_jerarquico import get_cluster_jerarquico
 from generate.generar_cluster_de_cluster import get_cluster_de_clusters
+from utils.time_series import get_historical_data, get_2022_2023_data
 import math
 import pandas as pd
 import os
@@ -71,53 +72,6 @@ def load_time_series(path):
   df = pd.read_csv(path,header=None)
   time_series = df.to_numpy(dtype=float).flatten().tolist()
   return time_series
-
-def get_historical_data(input_department):
-  historical_time_series = []
-  for year in range(initial_year,2023):
-    match year:
-      case 2019:
-        for month in ["OCTUBRE","NOVIEMBRE","DICIEMBRE"]:
-          filename = f'{input_department}.csv'
-          path = os.path.join(ts_historico_path,str(year),month,filename)
-          temp_ts = load_time_series(path)
-          for value in temp_ts:
-            historical_time_series.append(value)
-      case 2022:
-        for month in ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE"]:
-          filename = f'{input_department}.csv'
-          path = os.path.join(ts_historico_path,str(year),month,filename)
-          temp_ts = load_time_series(path)
-          for value in temp_ts:
-            historical_time_series.append(value)
-      case _:
-        for month in months:
-          filename = f'{input_department}.csv'
-          path = os.path.join(ts_historico_path,str(year),month,filename)
-          temp_ts = load_time_series(path)
-          for value in temp_ts:
-            historical_time_series.append(value)
-  return historical_time_series
-
-def get_2022_2023_data(input_department):
-  historical_time_series = []
-  for year in range(2022,2024):
-    match year:
-      case 2022:
-        for month in ["OCTUBRE","NOVIEMBRE","DICIEMBRE"]:
-          filename = f'{input_department}.csv'
-          path = os.path.join(ts_historico_path,str(year),month,filename)
-          temp_ts = load_time_series(path)
-          for value in temp_ts:
-            historical_time_series.append(value)
-      case 2023:
-        for month in ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE"]:
-          filename = f'{input_department}.csv'
-          path = os.path.join(ts_historico_path,str(year),month,filename)
-          temp_ts = load_time_series(path)
-          for value in temp_ts:
-            historical_time_series.append(value)
-  return historical_time_series
 
 def generate_forecast(
     input_department,

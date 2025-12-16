@@ -22,3 +22,30 @@ def get_ts(year:str, week:str, department:str):
     range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='both')]
     ts_dict[department] = range_data.reset_index(drop=True)
     return ts_dict[department]['incidence'].values
+def get_historical_data(department:str):
+    ts_dict = {}
+    start_date = datetime.strptime(start_date_index[0],'%Y-%m-%d')
+    end_date = datetime.strptime("2022-09-24",'%Y-%m-%d')
+    filtered_data = data[
+        (data['disease'] == "DENGUE") 
+        & (data['classification'] == "TOTAL") 
+        & (data['name'] == department)]
+    filtered_data = filtered_data.copy()
+    filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%Y-%m-%d')
+    range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='both')]
+    ts_dict[department] = range_data.reset_index(drop=True)
+    return ts_dict[department]['incidence'].values
+
+def get_2022_2023_data(department:str):
+    ts_dict = {}
+    start_date = datetime.strptime("2022-10-01",'%Y-%m-%d')
+    end_date = datetime.strptime("2023-09-30",'%Y-%m-%d')
+    filtered_data = data[
+        (data['disease'] == "DENGUE") 
+        & (data['classification'] == "TOTAL") 
+        & (data['name'] == department)]
+    filtered_data = filtered_data.copy()
+    filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%Y-%m-%d')
+    range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='both')]
+    ts_dict[department] = range_data.reset_index(drop=True)
+    return ts_dict[department]['incidence'].values
