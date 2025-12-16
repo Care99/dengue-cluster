@@ -24,3 +24,4 @@ departments = [
   'NEEMBUCU',
   'ALTO_PARAGUAY'
   ]
+start_date_index =["2019-07-13","2020-07-04","2021-07-10","2022-07-09"]
