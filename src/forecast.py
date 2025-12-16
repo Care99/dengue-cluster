@@ -24,12 +24,6 @@ log_transformer = InvertibleMapper(
 )
 def forecast_using_regression_models():
   return 'forecast_using_regression_models'
-models = [
-  naive_drift,
-  auto_arima,
-  linear_regression,
-  lstm_forecast,
-  ]
 
 def generate_forecast(
     input_department:str,
