@@ -1,10 +1,10 @@
-from generate.generar_cluster import get_cluster
-from generate.generar_cluster_jerarquico import get_cluster_jerarquico
-from generate.generar_cluster_de_cluster import get_cluster_de_clusters
-from models import naive_drift,auto_arima,linear_regression,lstm_forecast
-from plot import plot_scatter,plot_histogram
-from utils.constants import departments
-from utils.time_series import get_historical_data, get_2022_2023_data
+from src.generate.generar_cluster import get_cluster
+from src.generate.generar_cluster_jerarquico import get_cluster_jerarquico
+from src.generate.generar_cluster_de_cluster import get_cluster_de_clusters
+from src.models import naive_drift,auto_arima,linear_regression,lstm_forecast
+from src.plot import plot_scatter,plot_histogram
+from src.utils.constants import departments
+from src.utils.time_series import get_historical_data, get_2022_2023_data
 
 from darts import concatenate, TimeSeries
 from darts.dataprocessing.transformers import Scaler, InvertibleMapper

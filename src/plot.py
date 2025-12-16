@@ -5,7 +5,7 @@ mplt.use('SVG',force=True)
 from matplotlib import rcParams
 import pandas as pd
 import numpy as np
-from neighbors import get_2022_2023_data
+from src.utils.time_series import get_2022_2023_data
 import os
 from utils.constants import departments
 from darts import TimeSeries
