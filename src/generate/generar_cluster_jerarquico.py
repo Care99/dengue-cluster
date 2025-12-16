@@ -9,20 +9,17 @@ mplt.use('SVG',force=True)
 from scipy.spatial.distance import pdist, squareform
 from darts import TimeSeries
 from datetime import datetime, timedelta
-from src.utils.constants import departments
+from src.utils.constants import departments, csv_path
 from src.utils.time_series import get_ts
 # Ventana de meses de octubre a septiembre
 meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
             'MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO']
 
 years = [2019,2020,2021,2022]
-start_date_index =["2019-07-13","2020-07-04","2021-07-10","2022-07-09"]
 years_folders = ["2019-2020","2020-2021","2021-2022","2022-2023"]
 
 input_base = "csv/ts_historico"
 
-script_directory = os.getcwd()
-csv_path = os.path.join(script_directory,'csv')
 excel_name = 'casos.csv'
 excel_file = os.path.join(csv_path,excel_name)
 unformatted_data = pd.read_csv(excel_file)

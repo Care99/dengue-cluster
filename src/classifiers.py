@@ -7,9 +7,6 @@ from sklearn.ensemble import RandomForestRegressor
 from darts import TimeSeries
 # Optional: TAN classifier from pyAgrum
 from pyagrum.skbn import BNClassifier
-#data.csv path
-csv_path = "csv"
-data_csv = os.path.join(csv_path, "casos.csv")
 
 # 6. Models
 # CART

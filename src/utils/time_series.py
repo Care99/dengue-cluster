@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta
-from src.utils.constants import start_date_index
+from src.utils.constants import start_date_index, csv_path
 import os
 import pandas as pd
-script_directory = os.getcwd()
-csv_path = os.path.join(script_directory,'csv')
 excel_name = 'casos.csv'
 excel_file = os.path.join(csv_path,excel_name)
 unformatted_data = pd.read_csv(excel_file)

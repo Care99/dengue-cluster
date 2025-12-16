@@ -1,6 +1,6 @@
 from src.models import naive_drift,auto_arima,linear_regression,lstm_forecast
 from src.plot import plot_scatter,plot_histogram
-from src.utils.constants import departments
+from src.utils.constants import departments,csv_path
 from src.utils.time_series import get_historical_data, get_2022_2023_data
 
 from darts import concatenate, TimeSeries
@@ -9,10 +9,6 @@ from darts.metrics import mae,rmse,smape
 import numpy as np
 import os
 from time import time_ns
-
-#from pmdarima.arima import auto_arima
-script_directory = os.getcwd()
-csv_path = os.path.join(script_directory,'csv')
 
 # Apply log transformation (ensure all values > 0)
 def safe_log(x):

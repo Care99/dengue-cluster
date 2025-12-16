@@ -1,3 +1,4 @@
+import os
 departments = [
   'ALTO_PARANA',
   'AMAMBAY',
@@ -25,3 +26,5 @@ departments = [
   'ALTO_PARAGUAY'
   ]
 start_date_index =["2019-07-13","2020-07-04","2021-07-10","2022-07-09"]
+script_directory = os.getcwd()
+csv_path = os.path.join(script_directory,'csv')

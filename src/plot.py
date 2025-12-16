@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 from src.utils.time_series import get_2022_2023_data
 import os
-from src.utils.constants import departments
+from src.utils.constants import departments, csv_path
 from darts import TimeSeries
 models = [
   'naive_drift',
