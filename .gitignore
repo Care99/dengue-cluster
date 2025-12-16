@@ -8,3 +8,4 @@ venv/
 Graficas/
 csv/
 svg/
+__pycache__/
