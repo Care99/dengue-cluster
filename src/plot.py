@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 from src.utils.time_series import get_2022_2023_data
 import os
-from utils.constants import departments
+from src.utils.constants import departments
 from darts import TimeSeries
 models = [
   'naive_drift',
@@ -339,9 +339,3 @@ def plot_histogram(
     
     print(f"Saved: {output_file}")
     print(f"Outlier info: {outlier_count} predicted values ({outlier_pct:.1f}%) excluded from histogram view")
-for classification in classifications:
-    for model in models:
-        for department in departments:
-            for month_index in ['1','2','3','4']:
-                plot_dengue_forecasts(classification,model,department,month_index)
-plot_error()
