@@ -5,8 +5,8 @@ from src.utils.time_series import get_historical_data, get_2022_2023_data
 
 import datetime as dt
 from darts import concatenate, TimeSeries
-from darts.dataprocessing.transformers import Scaler
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 # Apply log transformation (ensure all values > 0)
 def safe_log(x:TimeSeries)->TimeSeries:
@@ -49,13 +49,13 @@ def generate_forecast(
           time_series = temp_ts + neighbor.values().flatten().tolist()
           scaled_time_series = TimeSeries.from_values(values=np.array(time_series))
           scaled_time_series = safe_log(scaled_time_series)
-          scaler = Scaler()
+          scaler = MinMaxScaler()
           if(model_name == 'lstm_forecast'):
-            scaled_time_series = scaler.fit_transform(scaled_time_series)
+            scaled_time_series = TimeSeries.from_values(values=scaler.fit_transform(scaled_time_series.to_dataframe().to_numpy()))
           start_time = dt.datetime.now()
           scaled_forecast: TimeSeries = model(scaled_time_series,weeks_to_forecast)
           if(model_name == 'lstm_forecast'):
-            fist_inverse_forecast: TimeSeries = scaler.inverse_transform(series=scaled_forecast)
+            fist_inverse_forecast: TimeSeries = TimeSeries.from_values(scaler.inverse_transform(scaled_forecast.to_dataframe().to_numpy()))
             forecast: TimeSeries = safe_exp(fist_inverse_forecast)
           else:
             forecast: TimeSeries = safe_exp(scaled_forecast)
