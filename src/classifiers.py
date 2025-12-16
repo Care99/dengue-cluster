@@ -1,7 +1,7 @@
 # 1. Import libraries
 import os
 import pandas as pd
-from darts.models import RegressionModel
+from darts.models import SKLearnModel
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from darts import TimeSeries
@@ -13,7 +13,7 @@ from pyagrum.skbn import BNClassifier
 # Classifies data by learning a series of decision rules from the features
 def CART(time_series:TimeSeries,forecast_values:int)->TimeSeries:
     cart = DecisionTreeRegressor(max_depth=5, random_state=42)
-    model = RegressionModel(model=cart,lags=12)
+    model = SKLearnModel(model=cart,lags=12)
     model.fit(time_series)
     return model.predict(forecast_values)
 
@@ -21,7 +21,7 @@ def CART(time_series:TimeSeries,forecast_values:int)->TimeSeries:
 # Ensemble method built on top of decision trees
 def RANDOM_FOREST(time_series:TimeSeries,forecast_values:int)->TimeSeries:
     rf = RandomForestRegressor(n_estimators=100, random_state=42)
-    model = RegressionModel(model=rf,lags=12)
+    model = SKLearnModel(model=rf,lags=12)
     model.fit(time_series)
     return model.predict(forecast_values)
 
