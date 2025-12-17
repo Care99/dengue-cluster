@@ -32,3 +32,19 @@ def get_2022_2023_data(department:str)->list[float]:
     start_date = datetime.strptime("2022-10-01",'%Y-%m-%d')
     end_date = datetime.strptime("2023-09-30",'%Y-%m-%d')
     return get_time_series_from_range(start_date,end_date,department)
+
+def get_historical_data_window(
+        department:str,
+        week_window:int
+    )->list[float]:
+    start_date = datetime.strptime("2019-10-05",'%Y-%m-%d') + timedelta(weeks=week_window)
+    end_date = datetime.strptime("2022-09-24",'%Y-%m-%d') + timedelta(weeks=week_window)
+    return get_time_series_from_range(start_date,end_date,department)
+
+def get_time_series_window(
+        department:str,
+        week_window:int
+    ):
+    start_date = datetime.strptime("2019-10-05",'%Y-%m-%d') + timedelta(weeks=week_window)
+    end_date = datetime.strptime("2022-07-09",'%Y-%m-%d') + timedelta(weeks=week_window)
+    return get_time_series_from_range(start_date,end_date,department)
