@@ -53,8 +53,8 @@ def generate_forecast(
             scaled_time_series = TimeSeries.from_values(values=scaler.fit_transform(scaled_time_series.to_dataframe().to_numpy()))
           scaled_forecast: TimeSeries = model(scaled_time_series,weeks_to_forecast)
           if(model_name == 'lstm_forecast'):
-            fist_inverse_forecast: TimeSeries = TimeSeries.from_values(scaler.inverse_transform(scaled_forecast.to_dataframe().to_numpy()))
-            forecast: TimeSeries = safe_exp(fist_inverse_forecast)
+            first_inverse_forecast: TimeSeries = TimeSeries.from_values(scaler.inverse_transform(scaled_forecast.to_dataframe().to_numpy()))
+            forecast: TimeSeries = safe_exp(first_inverse_forecast)
           else:
             forecast: TimeSeries = safe_exp(scaled_forecast)
           list_forecasted_time_series.append(forecast)
