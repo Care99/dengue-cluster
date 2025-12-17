@@ -27,7 +27,7 @@ def auto_arima(time_series:TimeSeries,forecasted_values:int)->TimeSeries:
   return generated_time_series
 def linear_regression(time_series:TimeSeries,forecasted_values:int)->TimeSeries:
   data = time_series
-  model = LinearRegressionModel(lags=4)
+  model = LinearRegressionModel(lags=12)
   model.fit(data)
   generated_time_series = model.predict(forecasted_values)
   return generated_time_series
