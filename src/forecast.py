@@ -5,9 +5,7 @@ from src.utils.time_series import get_historical_data, get_2022_2023_data
 
 import datetime as dt
 from darts import concatenate, TimeSeries
-from darts.models import AutoARIMA,LinearRegressionModel,NaiveDrift,RNNModel,SKLearnModel
 import numpy as np
-from pyagrum.skbn import BNClassifier
 from sklearn.preprocessing import MinMaxScaler
 
 # Apply log transformation (ensure all values > 0)
