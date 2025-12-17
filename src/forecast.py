@@ -5,6 +5,7 @@ from src.utils.time_series import get_historical_data, get_2022_2023_data
 
 import datetime as dt
 from darts import concatenate, TimeSeries
+from darts.models import AutoARIMA,LinearRegressionModel,NaiveDrift,RNNModel,SKLearnModel
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
@@ -21,15 +22,15 @@ def forecast_using_regression_models():
 def forecast(
     time_series:TimeSeries,
     forecast_values:int,
-    model,
-    classifier
+    model:(AutoARIMA|LinearRegressionModel|NaiveDrift|RNNModel),
+    classifier:SKLearnModel
   )->list[float]:
   model_name = model.__qualname__
   scaled_time_series:TimeSeries = safe_log(time_series)
   if(model_name==forecast_using_regression_models.__qualname__):
-    forecast_model = classifier()
+    forecast_model = classifier
   else:
-    forecast_model = model()
+    forecast_model = model
   scaler = MinMaxScaler()
   if(model_name == 'lstm_model'):
     scaled_time_series = TimeSeries.from_values(values=scaler.fit_transform(scaled_time_series.to_dataframe().to_numpy()))
@@ -45,8 +46,9 @@ def generate_forecast(
     number_years:int,
     number_neighbors:int,
     weeks_to_forecast:int,
-    classification,
-    model):
+    classification:(function|SKLearnModel),
+    model:(AutoARIMA|LinearRegressionModel|NaiveDrift|RNNModel)
+  ):
   #variables
   historical_time_series: list[float] = get_historical_data(input_department)
   original_time_series: list[float] = get_2022_2023_data(input_department)
