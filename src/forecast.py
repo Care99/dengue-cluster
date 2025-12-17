@@ -38,7 +38,6 @@ def generate_forecast(
       case 'get_historical_data':
         time_series = TimeSeries.from_values(values=np.array(historical_time_series))
         scaled_time_series = safe_log(time_series)
-        start_time = dt.datetime.now()
         scaled_forecast: TimeSeries = model(time_series,weeks_to_forecast)
         forecasted_values = safe_exp(scaled_forecast).values().flatten().tolist() 
       case 'get_cluster' | 'get_cluster_jerarquico' | 'get_cluster_de_clusters':
@@ -52,7 +51,6 @@ def generate_forecast(
           scaler = MinMaxScaler()
           if(model_name == 'lstm_forecast'):
             scaled_time_series = TimeSeries.from_values(values=scaler.fit_transform(scaled_time_series.to_dataframe().to_numpy()))
-          start_time = dt.datetime.now()
           scaled_forecast: TimeSeries = model(scaled_time_series,weeks_to_forecast)
           if(model_name == 'lstm_forecast'):
             fist_inverse_forecast: TimeSeries = TimeSeries.from_values(scaler.inverse_transform(scaled_forecast.to_dataframe().to_numpy()))
@@ -64,7 +62,6 @@ def generate_forecast(
       case 'CART' | 'RANDOM_FOREST' | 'TAN':
         time_series = TimeSeries.from_values(values=np.array(historical_time_series))
         scaled_time_series = safe_log(time_series)
-        start_time = dt.datetime.now()
         scaled_forecast: TimeSeries = classification(scaled_time_series,weeks_to_forecast)
         forecasted_values = safe_exp(scaled_forecast).values().flatten().tolist()
     projected_time_series.extend(forecasted_values)
