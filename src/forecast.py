@@ -77,19 +77,3 @@ def generate_forecast(
   plot_histogram(expected_time_series,observed_time_series,input_department,model_name,classification_name,weeks_to_forecast)
   save_error(input_department,expected_time_series,observed_time_series,model_name,classification_name,weeks_to_forecast)
   save_time(input_department,time,model_name,classification_name,weeks_to_forecast)
-#variables
-def project_time_series(number_years,
-      number_neighbors,
-      weeks_to_forecast,
-      classification,
-      model
-      ):
-  for input_department in departments:
-    generate_forecast(
-      input_department,
-      number_years,
-      number_neighbors,
-      weeks_to_forecast,
-      classification,
-      model
-      )
