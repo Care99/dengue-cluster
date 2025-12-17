@@ -64,7 +64,7 @@ def historical_data():
 
 def cluster():
   # Forecast with clusters
-  for classification in [get_historical_data,get_cluster,get_cluster_jerarquico,get_cluster_de_clusters]:
+  for classification in [get_cluster,get_cluster_jerarquico,get_cluster_de_clusters]:
     for model in models:
       start_time = dt.datetime.now()
       for weeks_to_forecast in [1,2,3,4]:
