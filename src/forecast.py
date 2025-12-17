@@ -37,7 +37,7 @@ def forecast(
   if(model_name == 'lstm_forecast'):
     scaled_time_series = TimeSeries.from_values(values=scaler.fit_transform(scaled_time_series.to_dataframe().to_numpy()))
   forecast_model.fit(scaled_time_series)
-  generated_scaled_time_series: TimeSeries = model.predict(forecast_values)
+  generated_scaled_time_series: TimeSeries = forecast_model.predict(forecast_values)
   if(model_name == 'lstm_forecast'):
     generated_scaled_time_series = TimeSeries.from_values(scaler.inverse_transform(generated_scaled_time_series.to_dataframe().to_numpy()))
   generated_time_series = safe_exp(generated_scaled_time_series)
