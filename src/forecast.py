@@ -37,33 +37,25 @@ def generate_forecast(
     match classification_name:
       case 'get_historical_data':
         time_series = TimeSeries.from_values(values=np.array(historical_time_series))
-        scaled_time_series = safe_log(time_series)
-        scaled_forecast: TimeSeries = model(time_series,weeks_to_forecast)
-        forecasted_values = safe_exp(scaled_forecast).values().flatten().tolist() 
+        forecasted_values = model(time_series,weeks_to_forecast)
       case 'get_cluster' | 'get_cluster_jerarquico' | 'get_cluster_de_clusters':
         temp_ts = historical_time_series[:-time_series_window]
         nearest_neighbors: list[TimeSeries] = classification(week_index,input_department,number_years,number_neighbors)
         list_forecasted_time_series: list[TimeSeries] = []
         for neighbor in nearest_neighbors:
-          time_series = temp_ts + neighbor.values().flatten().tolist()
-          scaled_time_series = TimeSeries.from_values(values=np.array(time_series))
-          scaled_time_series = safe_log(scaled_time_series)
+          np_time_series = temp_ts + neighbor.values().flatten().tolist()
+          time_series = TimeSeries.from_values(values=np.array(np_time_series))
           scaler = MinMaxScaler()
           if(model_name == 'lstm_forecast'):
-            scaled_time_series = TimeSeries.from_values(values=scaler.fit_transform(scaled_time_series.to_dataframe().to_numpy()))
-          scaled_forecast: TimeSeries = model(scaled_time_series,weeks_to_forecast)
+            time_series = TimeSeries.from_values(values=scaler.fit_transform(time_series.to_dataframe().to_numpy()))
+          forecast: TimeSeries = TimeSeries.from_values(np.array(model(time_series,weeks_to_forecast)))
           if(model_name == 'lstm_forecast'):
-            first_inverse_forecast: TimeSeries = TimeSeries.from_values(scaler.inverse_transform(scaled_forecast.to_dataframe().to_numpy()))
-            forecast: TimeSeries = safe_exp(first_inverse_forecast)
-          else:
-            forecast: TimeSeries = safe_exp(scaled_forecast)
+            forecast = TimeSeries.from_values(scaler.inverse_transform(forecast.to_dataframe().to_numpy()))
           list_forecasted_time_series.append(forecast)
         forecasted_values = concatenate(list_forecasted_time_series,axis=1).mean(axis=1).values().flatten().tolist()
       case 'CART' | 'RANDOM_FOREST' | 'TAN':
         time_series = TimeSeries.from_values(values=np.array(historical_time_series))
-        scaled_time_series = safe_log(time_series)
-        scaled_forecast: TimeSeries = classification(scaled_time_series,weeks_to_forecast)
-        forecasted_values = safe_exp(scaled_forecast).values().flatten().tolist()
+        forecasted_values = classification(time_series,weeks_to_forecast)
     projected_time_series.extend(forecasted_values)
     historical_time_series.extend(original_time_series[week_index:week_index+weeks_to_forecast])
     historical_time_series = historical_time_series[weeks_to_forecast:]

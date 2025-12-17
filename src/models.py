@@ -1,3 +1,4 @@
+from src.forecast import safe_log,safe_exp
 #Forecasting models
 #Baseline Models 
 from darts import TimeSeries
@@ -11,28 +12,35 @@ from darts.models import RNNModel
 import torch
 
 torch.set_float32_matmul_precision('medium')
-def naive_drift(time_series:TimeSeries,forecasted_values:int)->TimeSeries:
-  data = time_series
+def naive_drift(time_series:TimeSeries,forecasted_values:int)->list[float]:
+  scaled_time_series = safe_log(time_series)
+  data = scaled_time_series
   model = NaiveDrift()
   model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series
+  generated_scaled_time_series = model.predict(forecasted_values)
+  generated_time_series = safe_exp(generated_scaled_time_series)
+  return generated_time_series.values().flatten().tolist()
 
-def auto_arima(time_series:TimeSeries,forecasted_values:int)->TimeSeries:
-  data = time_series
+def auto_arima(time_series:TimeSeries,forecasted_values:int)->list[float]:
+  scaled_time_series = safe_log(time_series)
+  data = scaled_time_series
   #train, test = model_selection.train_test_split(data)
   model = AutoARIMA(season_length=4)
   model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series
-def linear_regression(time_series:TimeSeries,forecasted_values:int)->TimeSeries:
-  data = time_series
+  generated_scaled_time_series = model.predict(forecasted_values)
+  generated_time_series = safe_exp(generated_scaled_time_series)
+  return generated_time_series.values().flatten().tolist()
+def linear_regression(time_series:TimeSeries,forecasted_values:int)->list[float]:
+  scaled_time_series = safe_log(time_series)
+  data = scaled_time_series
   model = LinearRegressionModel(lags=12)
   model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series
-def lstm_forecast(time_series:TimeSeries,forecasted_values:int)->TimeSeries:
-  data = time_series
+  generated_scaled_time_series = model.predict(forecasted_values)
+  generated_time_series = safe_exp(generated_scaled_time_series)
+  return generated_time_series.values().flatten().tolist()
+def lstm_forecast(time_series:TimeSeries,forecasted_values:int)->list[float]:
+  scaled_time_series = safe_log(time_series)
+  data = scaled_time_series
   model = RNNModel(
     model='LSTM',
     input_chunk_length=12,
@@ -52,5 +60,6 @@ def lstm_forecast(time_series:TimeSeries,forecasted_values:int)->TimeSeries:
     },
   )
   model.fit(data)
-  generated_time_series = model.predict(forecasted_values)
-  return generated_time_series
+  generated_scaled_time_series = model.predict(forecasted_values)
+  generated_time_series = safe_exp(generated_scaled_time_series)
+  return generated_time_series.values().flatten().tolist()
