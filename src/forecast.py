@@ -1,6 +1,6 @@
 from src.output import save_error,save_time,save_time_series_as_csv
 from src.plot import plot_scatter,plot_histogram
-from src.utils.constants import departments
+from src.utils.constants import departments,time_series_window,time_series_2022_2023_length
 from src.utils.time_series import get_historical_data, get_2022_2023_data
 
 import datetime as dt
@@ -32,7 +32,7 @@ def generate_forecast(
   model_name = model.__qualname__
   classification_name = classification.__qualname__
   start_time = dt.datetime.now()
-  for week_index in range(0,53,weeks_to_forecast):
+  for week_index in range(0,time_series_2022_2023_length,weeks_to_forecast):
     forecasted_values: list[float] = []
     match classification_name:
       case 'get_historical_data':
@@ -41,7 +41,7 @@ def generate_forecast(
         scaled_forecast: TimeSeries = model(time_series,weeks_to_forecast)
         forecasted_values = safe_exp(scaled_forecast).values().flatten().tolist() 
       case 'get_cluster' | 'get_cluster_jerarquico' | 'get_cluster_de_clusters':
-        temp_ts = historical_time_series[:-12]
+        temp_ts = historical_time_series[:-time_series_window]
         nearest_neighbors: list[TimeSeries] = classification(week_index,input_department,number_years,number_neighbors)
         list_forecasted_time_series: list[TimeSeries] = []
         for neighbor in nearest_neighbors:
@@ -68,7 +68,7 @@ def generate_forecast(
     historical_time_series.extend(original_time_series[week_index:week_index+weeks_to_forecast])
     historical_time_series = historical_time_series[weeks_to_forecast:]
   expected_time_series = TimeSeries.from_values(values=np.array(original_time_series))
-  observed_time_series = TimeSeries.from_values(values=np.array(projected_time_series[:53]))
+  observed_time_series = TimeSeries.from_values(values=np.array(projected_time_series[:time_series_2022_2023_length]))
   end_time = dt.datetime.now()
   # calculate elapsed time in seconds
   time = end_time.timestamp() - start_time.timestamp()
