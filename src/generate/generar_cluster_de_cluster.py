@@ -106,7 +106,7 @@ def generar_cluster_de_cluster_matriz_diferencia()->None:
             #print(f"saved: {folder_path}/cluster_de_cluster.csv")
 
 
-def get_cluster_de_clusters(semana:str, departamento:str, k:int, n:int)->list[TimeSeries]:
+def get_cluster_de_clusters(semana:str, departamento:str, k:int, n:int)->list[list[float]]:
     #obtener k anhos mas cercanos
     k_label = "2022-2023"
     k_file_path = f'csv/cdc/cluster_matriz/week_{semana}/cluster_de_cluster.csv'
@@ -130,10 +130,10 @@ def get_cluster_de_clusters(semana:str, departamento:str, k:int, n:int)->list[Ti
             knn_labels.append([year, dep])
     #print(knn_labels)
 
-    knn_ts = []
+    knn_ts:list[list[float]] = []
     for dept in knn_labels:
         #print(dept)
-        ts=TimeSeries.from_values(np.array(get_ts(year=dept[0], week=semana, department=dept[1])))
+        ts=get_ts(year=dept[0], week=semana, department=dept[1])
         knn_ts.append(ts)
     #print(knn_ts)
     return knn_ts

@@ -80,7 +80,7 @@ def generar_cluster_jerarquico()->None:
         df_t.to_csv(f"{hclust_dir}/labels.csv")
         #print(f"Saved labels to {hclust_dir}/labels.csv")
 
-def get_cluster_jerarquico(semana:str, departamento:str, k:int, n:int)->list[TimeSeries]:
+def get_cluster_jerarquico(semana:str, departamento:str, k:int, n:int)->list[list[float]]:
     hclust_dir = "csv/cj/hclust"
     label = departamento + "_2022-2023"
     knn = k*n
@@ -95,14 +95,14 @@ def get_cluster_jerarquico(semana:str, departamento:str, k:int, n:int)->list[Tim
     distances = dist_matrix[idx]
 
     nearest_idx = distances.argsort()[0:knn]
-    knn_ts = []
+    knn_ts:list[list[float]] = []
     
     for i in range(len(nearest_idx)):
         label_i = labels[nearest_idx[i]]
         year = int(label_i.split("-")[1])-1
         department = label_i.split("-")[0][:-5]
         #print(f"Fetching TS for Year: {year}, Department: {department}")
-        ts=TimeSeries.from_values(np.array(get_ts(year=f'{year}-{year+1}',week=semana, department=department)))
+        ts=get_ts(year=f'{year}-{year+1}',week=semana, department=department)
         knn_ts.append(ts)
     #print(knn_ts)
     return knn_ts

@@ -10,43 +10,29 @@ from darts import TimeSeries
 # Optional: TAN classifier from pyAgrum
 from pyagrum.skbn import BNClassifier
 
+cart_regressor = DecisionTreeRegressor(max_depth=5, random_state=42)
+cart_model = SKLearnModel(model=cart_regressor,lags=12)
+
+rf_rgressor = RandomForestRegressor(n_estimators=100, random_state=42)
+rf_model = SKLearnModel(model=rf_rgressor,lags=12)
+
+tan_model = BNClassifier(learningMethod='TAN')
+
 # 6. Models
 # CART
 # Classifies data by learning a series of decision rules from the features
-def CART(time_series:TimeSeries,forecast_values:int)->list[float]:
-    scaled_time_series = safe_log(time_series)
-    data = scaled_time_series
-    cart = DecisionTreeRegressor(max_depth=5, random_state=42)
-    model = SKLearnModel(model=cart,lags=12)
-    model.fit(data)
-    generated_scaled_time_series = model.predict(forecast_values)
-    generated_time_series = safe_exp(generated_scaled_time_series)
-    return generated_time_series.values().flatten().tolist()
+def CART()->SKLearnModel:
+    return cart_model
 
 # Random Forest
 # Ensemble method built on top of decision trees
-def RANDOM_FOREST(time_series:TimeSeries,forecast_values:int)->list[float]:
-    scaled_time_series = safe_log(time_series)
-    data = scaled_time_series
-    rf = RandomForestRegressor(n_estimators=100, random_state=42)
-    model = SKLearnModel(model=rf,lags=12)
-    model.fit(data)
-    generated_scaled_time_series = model.predict(forecast_values)
-    generated_time_series = safe_exp(generated_scaled_time_series)
-    return generated_time_series.values().flatten().tolist()
-
+def RANDOM_FOREST()->SKLearnModel:
+    return rf_model
 
 # TAN (Tree Augmented Naive Bayes)
 # Builds a Bayesian Network from and uses it for classification tasks.
-def TAN(time_series:TimeSeries,forecast_values:int)->list[float]:
-    scaled_time_series = safe_log(time_series)
-    data = scaled_time_series
-    tan = BNClassifier(learningMethod='TAN')
-    tan.fit(data)
-    generated_scaled_time_series = tan.predict(forecast_values)
-    generated_time_series = safe_exp(generated_scaled_time_series)
-    return generated_time_series.values().flatten().tolist()
-
+def TAN(time_series:TimeSeries,forecast_values:int)->BNClassifier:
+    return tan_model
 
 def fill_na(time_series):
     series = pd.Series(time_series)
