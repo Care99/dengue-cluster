@@ -18,8 +18,6 @@ def safe_exp(x:TimeSeries)->TimeSeries:
 def forecast_using_regression_models():
   return 'forecast_using_regression_models'
 
-scaler = MinMaxScaler()
-
 def forecast(
     time_series:TimeSeries,
     forecast_values:int,
@@ -32,6 +30,7 @@ def forecast(
     forecast_model = classifier()
   else:
     forecast_model = model()
+  scaler = MinMaxScaler()
   if(model_name == 'lstm_forecast'):
     scaled_time_series = TimeSeries.from_values(values=scaler.fit_transform(scaled_time_series.to_dataframe().to_numpy()))
   forecast_model.fit(scaled_time_series)
