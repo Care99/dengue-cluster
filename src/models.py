@@ -34,15 +34,3 @@ class models:
           "devices": [0]
         },
       )
-
-  def naive_drift(self)->NaiveDrift:
-    return self.naive_drift_model
-
-  def auto_arima(self)->AutoARIMA:
-    return self.auto_arima_model
-
-  def linear_regression(self)->LinearRegressionModel:
-    return self.linear_regression_model
-
-  def lstm_forecast(self)->RNNModel:
-    return self.lstm_model

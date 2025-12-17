@@ -10,19 +10,19 @@ import os
 from src.utils.constants import departments, csv_path
 from darts import TimeSeries
 models = [
-  'naive_drift',
-  'auto_arima',
-  'linear_regression',
-  'lstm_forecast',
+  'naive_drift_model',
+  'auto_arima_model',
+  'linear_regression_model',
+  'lstm_model',
   ]
 
 classifications = [
-    'CART',
+    'cart_model',
     'get_cluster',
     'get_cluster_de_clusters',
     'get_cluster_jerarquico',
     'get_historical_data',
-    'RANDOM_FOREST'
+    'rf_model'
 ]
 base_folder = os.getcwd()
 forecast_folder = os.path.join(base_folder, 'csv', 'forecast')
@@ -32,7 +32,7 @@ def plot_dengue_forecasts(classification:str,model:str,input_department:str,mont
     """
     original_ts = get_2022_2023_data(input_department)
     filename = f'{input_department}.csv'
-    if(classification=='CART'or classification=='RANDOM_FOREST'):
+    if(classification=='cart_model'or classification=='rf_model'):
         model = 'forecast_using_regression_models'
     path = os.path.join(forecast_folder,classification,model,f'{month_index}_months',filename)
     predicted_ts = pd.read_csv(path,header=None)[0].tolist()
@@ -116,7 +116,7 @@ def plot_error():
                     for department in departments:
                         filename = f'{department}_{error_type}.txt'
                         model_name=model
-                        if(classification=='CART'or classification=='RANDOM_FOREST'):
+                        if(classification=='cart_model'or classification=='rf_model'):
                             model_name='forecast_using_regression_models'                            
                         path = os.path.join(forecast_folder,classification,model_name,f'{forecast}_months',filename)
                         #Read txt file

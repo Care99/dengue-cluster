@@ -9,14 +9,14 @@ from src.utils.time_series import get_historical_data
 md = models()
 clsf = classifiers()
 models = [
-  md.naive_drift,
-  md.auto_arima,
-  md.linear_regression,
-  md.lstm_forecast,
+  md.naive_drift_model,
+  md.auto_arima_model,
+  md.linear_regression_model,
+  md.lstm_model,
   ]
 number_years = 2
 number_neighbors = 2
-for classification in [clsf.CART,clsf.RANDOM_FOREST]:
+for classification in [clsf.cart_model,clsf.rf_model]:
     for weeks_to_forecast in [1,2,3,4]:
       for input_department in departments:
         generate_forecast(

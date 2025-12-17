@@ -18,19 +18,3 @@ class classifiers():
         self.rf_model = SKLearnModel(model=self.rf_rgressor,lags=12)
 
         self.tan_model = BNClassifier(learningMethod='TAN')
-
-    # 6. Models
-    # CART
-    # Classifies data by learning a series of decision rules from the features
-    def CART(self)->SKLearnModel:
-        return self.cart_model
-
-    # Random Forest
-    # Ensemble method built on top of decision trees
-    def RANDOM_FOREST(self)->SKLearnModel:
-        return self.rf_model
-
-    # TAN (Tree Augmented Naive Bayes)
-    # Builds a Bayesian Network from and uses it for classification tasks.
-    def TAN(self)->BNClassifier:
-        return self.tan_model
