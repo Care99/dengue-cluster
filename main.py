@@ -89,6 +89,6 @@ def cluster():
       time = end_time.timestamp() - start_time.timestamp()
       save_time(time,model.__qualname__,'historical_data')
 
-#state_of_art()
-#historical_data()
-#cluster()
+state_of_art()
+historical_data()
+cluster()
