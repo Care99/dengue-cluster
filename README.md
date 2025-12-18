@@ -20,3 +20,15 @@ After processing the data, each classification then creates a forecast for the t
 - LSTM
 
 Both CART and Random Forest are capable of forecasting data on their own, so they are excluded for the forecasting models mentioned above.
+
+## How to use the project
+
+First, make sure all the dependencies are installed with the following command:
+```bash
+pip install -r requirements.txt
+```
+After that, you can run the benchmark with:
+```bash
+python main.py
+```
+The output of the time series forecast will appear on the `csv/forecast` folder, sorted by data classification and forecast model.
