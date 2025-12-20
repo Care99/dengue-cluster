@@ -6,8 +6,8 @@ from darts import TimeSeries
 import fastdtw
 from scipy.spatial.distance import euclidean
 from datetime import datetime, timedelta
-from src.utils.constants import departments, start_date_index, csv_path
-from src.utils.time_series import get_ts
+from ..utils.constants import departments, start_date_index, csv_path
+from ..utils.time_series import get_ts
 # Ventana de meses de octubre a septiembre
 meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
             'MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO']
@@ -142,5 +142,5 @@ def get_cluster_de_clusters(semana:str, departamento:str, k:int, n:int)->list[li
 
 #generar_cluster_ventana()
 #generar_cluster_matriz_diferencia()
-#generar_cluster_de_cluster_matriz_diferencia()
+#enerar_cluster_de_cluster_matriz_diferencia()
 #get_cluster_de_clusters(semana='0',departamento="CENTRO_SUR", k=2, n=4) #K = YEAR, N= locations
