@@ -9,12 +9,7 @@ from sklearn.ensemble import RandomForestRegressor
 from darts import TimeSeries
 # Optional: TAN classifier from pyAgrum
 from pyagrum.skbn import BNClassifier
-class classifiers():
-    def __init__(self):
-        self.cart_regressor = DecisionTreeRegressor(max_depth=5, random_state=42)
-        self.cart_model = SKLearnModel(model=self.cart_regressor,lags=12)
-
-        self.rf_rgressor = RandomForestRegressor(n_estimators=100, random_state=42)
-        self.rf_model = SKLearnModel(model=self.rf_rgressor,lags=12)
-
-        self.tan_model = BNClassifier(learningMethod='TAN')
+def cart_model()->SKLearnModel:
+    return SKLearnModel(model=DecisionTreeRegressor(max_depth=5, random_state=42),lags=12)
+def rf_model():
+    return SKLearnModel(model=RandomForestRegressor(n_estimators=100, random_state=42),lags=12)

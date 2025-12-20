@@ -22,15 +22,16 @@ def forecast_using_regression_models():
 def forecast(
     time_series:TimeSeries,
     forecast_values:int,
-    model:(AutoARIMA|LinearRegressionModel|NaiveDrift|RNNModel|SKLearnModel),
+    model,
   )->list[float]:
   scaled_time_series:TimeSeries = safe_log(time_series)
   scaler = MinMaxScaler()
-  if(isinstance(model,RNNModel)):
+  forecast_model = model()
+  if(model.__qualname__=="lstm_model"):
     scaled_time_series = TimeSeries.from_values(values=scaler.fit_transform(scaled_time_series.to_dataframe().to_numpy()))
-  model.fit(scaled_time_series)
-  generated_scaled_time_series: TimeSeries = model.predict(forecast_values)
-  if(isinstance(model,RNNModel)):
+  forecast_model.fit(scaled_time_series)
+  generated_scaled_time_series: TimeSeries = forecast_model.predict(forecast_values)
+  if(model.__qualname__=="lstm_model"):
     generated_scaled_time_series = TimeSeries.from_values(scaler.inverse_transform(generated_scaled_time_series.to_dataframe().to_numpy()))
   generated_time_series = safe_exp(generated_scaled_time_series)
   return generated_time_series.values().flatten().tolist()
@@ -38,7 +39,7 @@ def forecast(
 def generate_state_of_art_forecast(
     input_department:str,
     weeks_to_forecast:int,
-    classification:SKLearnModel,
+    classification,
     week_index:int
   ):
   #variables
@@ -49,7 +50,7 @@ def generate_state_of_art_forecast(
 def generate_historical_data_forecast(
     input_department:str,
     weeks_to_forecast:int,
-    model:(AutoARIMA|LinearRegressionModel|NaiveDrift|RNNModel),
+    model,
     week_index:int
   ):
   #variables
@@ -63,7 +64,7 @@ def generate_cluster_forecast(
     number_neighbors:int,
     weeks_to_forecast:int,
     classification,
-    model:(AutoARIMA|LinearRegressionModel|NaiveDrift|RNNModel),
+    model,
     week_index:int
   ):
   #variables

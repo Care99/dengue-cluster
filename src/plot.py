@@ -10,19 +10,19 @@ import os
 from src.utils.constants import departments, csv_path
 from darts import TimeSeries
 models = [
-  'naive_drift_model',
-  'auto_arima_model',
-  'linear_regression_model',
-  'lstm_model',
+  'NAIVE_MODEL',
+  'AUTO_ARIMA',
+  'LINEAR_REGRESSION',
+  'LSTM',
   ]
 
 classifications = [
-    'cart_model',
+    'CART',
     'get_cluster',
     'get_cluster_de_clusters',
     'get_cluster_jerarquico',
     'get_historical_data',
-    'rf_model'
+    'RANDOM_FOREST'
 ]
 base_folder = os.getcwd()
 forecast_folder = os.path.join(base_folder, 'csv', 'forecast')
