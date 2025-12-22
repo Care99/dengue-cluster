@@ -21,7 +21,7 @@ classifications = [
     'get_cluster',
     'get_cluster_de_clusters',
     'get_cluster_jerarquico',
-    'get_historical_data',
+    'HISTORICAL_DATA',
     'RANDOM_FOREST'
 ]
 base_folder = os.getcwd()
