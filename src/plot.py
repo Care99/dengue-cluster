@@ -32,7 +32,7 @@ def plot_dengue_forecasts(classification:str,model:str,input_department:str,mont
     """
     original_ts = get_2022_2023_data(input_department)
     filename = f'{input_department}.csv'
-    if(classification=='cart_model'or classification=='rf_model'):
+    if(classification=='CART'or classification=='RANDOM_FOREST'):
         model = 'state_of_art'
     path = os.path.join(forecast_folder,classification,model,f'{month_index}_months',filename)
     predicted_ts = pd.read_csv(path,header=None)[0].tolist()
@@ -116,7 +116,7 @@ def plot_error():
                     for department in departments:
                         filename = f'{department}_{error_type}.txt'
                         model_name=model
-                        if(classification=='cart_model'or classification=='rf_model'):
+                        if(classification=='CART'or classification=='RANDOM_FOREST'):
                             model_name='state_of_art'                            
                         path = os.path.join(forecast_folder,classification,model_name,f'{forecast}_months',filename)
                         #Read txt file
@@ -339,3 +339,5 @@ def plot_histogram(
     
     print(f"Saved: {output_file}")
     print(f"Outlier info: {outlier_count} predicted values ({outlier_pct:.1f}%) excluded from histogram view")
+
+def plot_anova():
