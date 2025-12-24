@@ -9,10 +9,7 @@ data = unformatted_data.copy()
 data['date'] = pd.to_datetime(data['date'], format='%Y-%m-%d')
 def get_time_series_from_range(start_date:datetime,end_date:datetime,department:str)->list[float]:
     ts_dict = {}
-    filtered_data = data[
-        (data['disease'] == "DENGUE") 
-        & (data['classification'] == "TOTAL") 
-        & (data['name'] == department)]
+    filtered_data = data[data['name'] == department]
     filtered_data = filtered_data.copy()
     filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%Y-%m-%d')
     range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='both')]

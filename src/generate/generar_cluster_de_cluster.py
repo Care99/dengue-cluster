@@ -44,10 +44,7 @@ def generar_cluster_matriz_diferencia()->None:
             #Return a dictionary of time series for each 'name'
             ts_dict = {}
             for department in departments:
-                filtered_data = data[
-                    (data['disease'] == "DENGUE") 
-                    & (data['classification'] == "TOTAL") 
-                    & (data['name'] == department)]
+                filtered_data = data[data['name'] == department]
                 filtered_data = filtered_data.copy()
                 filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%Y-%m-%d')
                 range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='both')]
