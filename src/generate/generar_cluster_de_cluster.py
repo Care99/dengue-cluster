@@ -6,8 +6,8 @@ from darts import TimeSeries
 import fastdtw
 from scipy.spatial.distance import euclidean
 from datetime import datetime, timedelta
-from ..utils.constants import departments, start_date_index, csv_path
-from ..utils.time_series import get_ts
+from src.utils.constants import departments, start_date_index, csv_path
+from src.utils.time_series import get_ts
 # Ventana de meses de octubre a septiembre
 meses = ['JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE','ENERO','FEBRERO',
             'MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO']
