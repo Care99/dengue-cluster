@@ -63,7 +63,7 @@ def generar_cluster_matriz_diferencia()->None:
         #print(f"guardado: {output_path}")
 
 
-def get_cluster(semana:str, departamento:str, k:int, n:int)->list[TimeSeries]:
+def get_cluster(semana:str, departamento:str, k:int, n:int)->list[list[float]]:
     label = departamento + "_2022-2023"
     knn = k*n
 
@@ -74,12 +74,12 @@ def get_cluster(semana:str, departamento:str, k:int, n:int)->list[TimeSeries]:
     nearest_idx = distances.nsmallest(knn).index.tolist()
     #print(nearest_idx)
    
-    knn_ts = []
+    knn_ts:list[list[float]] = []
     for dept in nearest_idx:
         year = int(dept.split("-")[1])-1
         department = dept.split("-")[0][:-5]
         #print(f"Fetching TS for Year: {year}, Department: {department}")
-        ts=TimeSeries.from_values(np.array(get_ts(year=f'{year}-{year+1}', week=semana, department=department)))
+        ts=get_ts(year=f'{year}-{year+1}', week=semana, department=department)
         knn_ts.append(ts)
     #print(knn_ts)
     return knn_ts

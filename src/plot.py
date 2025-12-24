@@ -3,6 +3,12 @@ import matplotlib.pyplot as plt
 import matplotlib as mplt
 mplt.use('SVG',force=True)
 from matplotlib import rcParams
+mplt.rcParams['font.family'] = 'serif'
+mplt.rcParams['font.serif'] = 'Times New Roman'
+mplt.rcParams['font.weight'] = 'normal'  # Correct spelling
+mplt.rcParams['axes.labelweight'] = 'normal'
+mplt.rcParams['axes.titleweight'] = 'normal'
+mplt.rcParams['font.size'] = 14
 import pandas as pd
 import numpy as np
 from src.utils.time_series import get_2022_2023_data
@@ -10,10 +16,10 @@ import os
 from src.utils.constants import departments, csv_path
 from darts import TimeSeries
 models = [
-  'naive_drift',
-  'auto_arima',
-  'linear_regression',
-  'lstm_forecast',
+  'NAIVE_MODEL',
+  'AUTO_ARIMA',
+  'LINEAR_REGRESSION',
+  'LSTM',
   ]
 
 classifications = [
@@ -21,85 +27,92 @@ classifications = [
     'get_cluster',
     'get_cluster_de_clusters',
     'get_cluster_jerarquico',
-    'get_historical_data',
+    'HISTORICAL_DATA',
     'RANDOM_FOREST'
 ]
 base_folder = os.getcwd()
 forecast_folder = os.path.join(base_folder, 'csv', 'forecast')
-def plot_dengue_forecasts(classification:str,model:str,input_department:str,month_index:str):
-    """
-    Plots four dengue forecast time series from different clustering methods.
-    """
-    original_ts = get_2022_2023_data(input_department)
-    filename = f'{input_department}.csv'
-    if(classification=='CART'or classification=='RANDOM_FOREST'):
-        model = 'forecast_using_regression_models'
-    path = os.path.join(forecast_folder,classification,model,f'{month_index}_months',filename)
-    predicted_ts = pd.read_csv(path,header=None)[0].tolist()
+def plot_dengue_forecasts():
+    for forecast in [1,2,3,4]:
+            for model in models:        
+                classification_values = []
+                for classification in classifications:
+                    department_values = []
+                    for department in departments:
+                        """
+                        Plots four dengue forecast time series from different clustering methods.
+                        """
+                        original_ts = get_2022_2023_data(department)
+                        filename = f'{department}.csv'
+                        model_name = model
+                        if(classification=='CART'or classification=='RANDOM_FOREST'):
+                            model_name = 'state_of_art'
+                        path = os.path.join(forecast_folder,classification,model_name,f'{forecast}_months',filename)
+                        predicted_ts = pd.read_csv(path,header=None)[0].tolist()
 
-    original_min = np.min(original_ts)
-    original_max = np.max(original_ts)
-    original_range = original_max - original_min
-    
-    # Add 20% margin to the range
-    margin = original_range * 0.2
-    y_min = max(0, original_min - margin)  # Don't go below 0 for dengue cases
-    y_max = original_max + margin
-    
-    # Time series arrays
-    time_series = [original_ts, predicted_ts]
-    labels = ['Original TS', 'Predicted TS']
-    # Colors for each series
-    colors = ['#FF0000','#0000FF']
-    
-    # Line styles for better differentiation
-    line_styles = ['--','-']
-    
-    x_values = range(1,54) # Assuming all series have the same length for x-axis
-    
-    # Plot each time series
-    for i, (ts, label, color, line_style) in enumerate(zip(time_series, labels, colors, line_styles)):
-        # Ensure ts is a numpy array for consistency
-        ts_array = np.array(ts)
-        
-        # Create x-axis values for this specific series
-        if len(x_values) != len(ts_array):
-            x_for_ts = range(len(ts_array))
-        else:
-            x_for_ts = x_values[:len(ts_array)]
-        
-        # Plot with styling
-        plt.plot(x_for_ts, ts_array, 
-                color=color, 
-                linestyle=line_style,
-                linewidth=2,
-                markerfacecolor=color,
-                markeredgecolor='white',
-                markeredgewidth=1,
-                label=label,
-                alpha=0.8)
-    
-    # Customize plot
-    plt.title(f'Predictions for {input_department} using {model}', fontsize=16, fontweight='bold', pad=20)
-    plt.xlabel('Time Period', fontsize=12)
-    plt.ylabel('Value', fontsize=12)
-    plt.ylim(y_min, y_max)
-    # Add legend
-    plt.legend(loc='best', fontsize=10, framealpha=0.9, shadow=True)
-    
-    # Add grid
-    plt.grid(True, alpha=0.3, linestyle='--')
-    
-    # Tight layout
-    plt.tight_layout()
-    
-    svg_folder = os.path.join(base_folder, 'svg', 'forecast', classification, model, f'{month_index}_months')
-    os.makedirs(svg_folder, exist_ok=True)
-    filename = f'{input_department}_graphs.svg'
-    svg_path = os.path.join(svg_folder, filename)
-    plt.savefig(svg_path, format='svg')
-    print('Saved plot to: ',svg_path)
-    plt.close()
+                        original_min = np.min(original_ts)
+                        original_max = np.max(original_ts)
+                        original_range = original_max - original_min
+                        
+                        # Add 20% margin to the range
+                        margin = original_range * 0.2
+                        y_min = max(0, original_min - margin)  # Don't go below 0 for dengue cases
+                        y_max = original_max + margin
+                        
+                        # Time series arrays
+                        time_series = [original_ts, predicted_ts]
+                        labels = ['Original TS', 'Predicted TS']
+                        # Colors for each series
+                        colors = ['#FF0000','#0000FF']
+                        
+                        # Line styles for better differentiation
+                        line_styles = ['--','-']
+                        
+                        x_values = range(1,54) # Assuming all series have the same length for x-axis
+                        
+                        # Plot each time series
+                        for i, (ts, label, color, line_style) in enumerate(zip(time_series, labels, colors, line_styles)):
+                            # Ensure ts is a numpy array for consistency
+                            ts_array = np.array(ts)
+                            
+                            # Create x-axis values for this specific series
+                            if len(x_values) != len(ts_array):
+                                x_for_ts = range(len(ts_array))
+                            else:
+                                x_for_ts = x_values[:len(ts_array)]
+                            
+                            # Plot with styling
+                            plt.plot(x_for_ts, ts_array, 
+                                    color=color, 
+                                    linestyle=line_style,
+                                    linewidth=2,
+                                    markerfacecolor=color,
+                                    markeredgecolor='white',
+                                    markeredgewidth=1,
+                                    label=label,
+                                    alpha=0.8)
+                        
+                        # Customize plot
+                        plt.title(f'Predictions for {department} using {model_name}', fontsize=14, pad=20)
+                        plt.xlabel('Time Period', fontsize=14)
+                        plt.ylabel('Value', fontsize=14)
+                        plt.ylim(y_min, y_max)
+                        # Add legend
+                        plt.legend(loc='best', fontsize=14, framealpha=0.9, shadow=True)
+                        
+                        # Add grid
+                        plt.grid(True, alpha=0.3, linestyle='--')
+                        
+                        # Tight layout
+                        plt.tight_layout()
+                        
+                        svg_folder = os.path.join(base_folder, 'svg', 'forecast', classification, model_name, f'{forecast}_months')
+                        os.makedirs(svg_folder, exist_ok=True)
+                        filename = f'{department}_graphs.svg'
+                        svg_path = os.path.join(svg_folder, filename)
+                        plt.savefig(svg_path, format='svg')
+                        print('Saved plot to: ',svg_path)
+                        plt.close()
 
 def plot_error():
     base_folder = os.getcwd()
@@ -117,7 +130,7 @@ def plot_error():
                         filename = f'{department}_{error_type}.txt'
                         model_name=model
                         if(classification=='CART'or classification=='RANDOM_FOREST'):
-                            model_name='forecast_using_regression_models'                            
+                            model_name='state_of_art'                            
                         path = os.path.join(forecast_folder,classification,model_name,f'{forecast}_months',filename)
                         #Read txt file
                         with open(path, 'r') as file:
@@ -157,11 +170,11 @@ def plot_error():
                     )
                 plt.ylim(0, max_y*1.1)
                 #Customize plot
-                plt.title(f'Error Analysis for {model} - {error_type} - {forecast} months', fontsize=16, fontweight='bold', pad=20)
-                plt.xlabel('Departments', fontsize=12)
-                plt.ylabel('Error Value', fontsize=12)
+                plt.title(f'Error Analysis for {model} - {error_type} - {forecast} months', fontsize=14, pad=20)
+                plt.xlabel('Departments', fontsize=14)
+                plt.ylabel('Error Value', fontsize=14)
                 plt.xticks(rotation=90)
-                plt.legend(loc='best', fontsize=10, framealpha=0.9, shadow=True)
+                plt.legend(loc='best', fontsize=14, framealpha=0.9, shadow=True)
                 plt.grid(True, alpha=0.3, linestyle='--')
                 plt.tight_layout()
                 svg_folder = os.path.join(base_folder, 'svg', 'error_analysis')
@@ -172,15 +185,15 @@ def plot_error():
                 print('Saved plot to: ',svg_path)
                 plt.close()
 def plot_scatter(
-    actual:TimeSeries,
-    predicted:TimeSeries,
+    actual_time_series:TimeSeries,
+    predicted_time_series:TimeSeries,
     input_department:str,
     model:str,
     classification:str,
     weeks_to_forecast:int
   )->None:
-  actual = actual.values().flatten()
-  predicted = predicted.values().flatten()
+  actual = actual_time_series.values().flatten()
+  predicted = predicted_time_series.values().flatten()
   plt.figure(figsize=(10, 6))
   # Calculate regression line for reference
   z = np.polyfit(actual, predicted, 1)
@@ -222,13 +235,13 @@ def plot_scatter(
   plt.title(
       f'Scatter Plot: {input_department}\n'
       f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} months',
-      fontsize=14, fontweight='bold', pad=20
+      fontsize=14, pad=20
   )
-  plt.xlabel('Actual Values', fontsize=12, fontweight='bold')
-  plt.ylabel('Predicted Values', fontsize=12, fontweight='bold')
+  plt.xlabel('Actual Values', fontsize=14)
+  plt.ylabel('Predicted Values', fontsize=14)
   r2 = np.corrcoef(actual, predicted)[0, 1]**2
   plt.text(0.05, 0.95, f'R² = {r2:.3f}', transform=plt.gca().transAxes,
-             fontsize=12, bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+             fontsize=14, bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
   plt.legend()
   path = os.path.join(csv_path,'forecast',classification,model,f'{weeks_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
@@ -275,9 +288,9 @@ def plot_histogram(
     ax1.hist(actual_vals, bins=bins, alpha=0.6, label='Actual',
              color='#4ECDC4', edgecolor='black', linewidth=0.5)
     
-    ax1.set_xlabel('Zoomed View (Actual Value Range)', fontsize=12)
-    ax1.set_ylabel('Frequency', fontsize=12)
-    ax1.legend(fontsize=11)
+    ax1.set_xlabel('Zoomed View (Actual Value Range)', fontsize=14)
+    ax1.set_ylabel('Frequency', fontsize=14)
+    ax1.legend(fontsize=14)
     ax1.grid(True, alpha=0.3, linestyle='--')
     
     # Add outlier info
@@ -286,7 +299,7 @@ def plot_histogram(
     info_text = f'Focus Range: [{lower_bound:.1f}, {upper_bound:.1f}]\n' \
                 f'Outliers excluded: {outlier_count} ({outlier_pct:.1f}%)'
     ax1.text(0.08, 0.98, info_text, transform=ax1.transAxes,
-             fontsize=10, verticalalignment='bottom', horizontalalignment='right',
+             fontsize=14, verticalalignment='bottom', horizontalalignment='right',
              bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
     
     # --- Plot 2: Box plot for outlier visualization ---
@@ -311,14 +324,14 @@ def plot_histogram(
         x = np.random.normal(i, 0.04, size=len(data))
         ax2.scatter(x, data, alpha=0.3, color=color, s=20)
     
-    ax2.set_ylabel('Box Plot with Outliers', fontsize=12)
+    ax2.set_ylabel('Box Plot with Outliers', fontsize=14)
     ax2.grid(True, alpha=0.3, linestyle='--', axis='y')
     
     # Add statistics as text
     actual_stats = f'Actual: μ={np.mean(actual_vals):.1f}, σ={np.std(actual_vals):.1f}'
     pred_stats = f'Predicted: μ={np.mean(predicted_vals):.1f}, σ={np.std(predicted_vals):.1f}'
     ax2.text(0.98, 0.98, f'{actual_stats}\n{pred_stats}', 
-             transform=ax2.transAxes, fontsize=10,
+             transform=ax2.transAxes, fontsize=14,
              verticalalignment='bottom',
              bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
     
@@ -326,7 +339,7 @@ def plot_histogram(
     fig.suptitle(
         f'Distribution Analysis with Outlier Handling: {input_department}\n'
         f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} months',
-        fontsize=16, fontweight='bold', y=1.02
+        fontsize=14, fontweight='bold', y=1.02
     )
     
     # Save
@@ -339,3 +352,4 @@ def plot_histogram(
     
     print(f"Saved: {output_file}")
     print(f"Outlier info: {outlier_count} predicted values ({outlier_pct:.1f}%) excluded from histogram view")
+plot_dengue_forecasts()

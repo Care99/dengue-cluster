@@ -5,14 +5,12 @@ from darts.metrics import mae,rmse,smape
 import numpy as np
 import os
 def save_time(
-    department:str,
     time:float,
     model:str,
     classification:str,
-    weeks_to_forecast:int
     )->None:
-  output_file_name = f'{department}_execution_time.txt'
-  path = os.path.join(csv_path,'forecast',classification,model,f'{weeks_to_forecast}_months')
+  output_file_name = f'execution_time.txt'
+  path = os.path.join(csv_path,'forecast',classification,model)
   os.makedirs(path,exist_ok=True)
   output_file = os.path.join(path, output_file_name)
   with open(output_file, 'w') as f:
