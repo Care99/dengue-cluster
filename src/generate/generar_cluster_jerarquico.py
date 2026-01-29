@@ -24,7 +24,7 @@ excel_name = 'casos.csv'
 excel_file = os.path.join(csv_path,excel_name)
 unformatted_data = pd.read_csv(excel_file)
 data = unformatted_data.copy()
-data['date'] = pd.to_datetime(data['date'], format='%Y-%m-%d')
+data['date'] = pd.to_datetime(data['date'], format='%m/%d/%Y')
 def generar_cluster_ventana()->None:
     os.makedirs(input_base, exist_ok=True)
     # Hacer un loop para cada ventana
