@@ -1,8 +1,13 @@
 from src.classifiers import cart_model,rf_model
 from src.forecast import generate_state_of_art_forecast,generate_historical_data_forecast,generate_cluster_forecast,save_to_disk
 from src.generate.generar_cluster import get_cluster
+from src.generate.generar_cluster import generar_cluster_matriz_diferencia as cluster_generar_matriz_diferencia
 from src.generate.generar_cluster_jerarquico import get_cluster_jerarquico
+from src.generate.generar_cluster_jerarquico import generar_cluster_jerarquico as cluster_jerarquico_generar_cluster_jerarquico
+from src.generate.generar_cluster_jerarquico import generar_cluster_ventana as cluster_jerarquico_generar_cluster_ventana
 from src.generate.generar_cluster_de_cluster import get_cluster_de_clusters
+from src.generate.generar_cluster_de_cluster import generar_cluster_matriz_diferencia as cluster_de_cluster_generar_matriz_diferencia_cluster
+from src.generate.generar_cluster_de_cluster import generar_cluster_de_cluster_matriz_diferencia as cluster_de_cluster_generar_matriz_diferencia_cluster_de_clusters
 from src.models import naive_drift_model,auto_arima_model,linear_regression_model,lstm_model
 from src.output import save_time
 from src.utils.constants import departments,time_series_2022_2023_length
@@ -27,7 +32,7 @@ def state_of_art():
   ]
   for classification in classifications:
     start_time = dt.datetime.now()
-    for weeks_to_forecast in [1,2,3,4]:
+    for weeks_to_forecast in [53]:
       for input_department in departments:
         print(f'========================={input_department}=================================')
         original_time_series: list[float] = get_2022_2023_data(input_department)
@@ -47,7 +52,7 @@ def historical_data():
   # Foreacst Historical Data
   for model in models:
     start_time = dt.datetime.now()
-    for weeks_to_forecast in [1,2,3,4]:
+    for weeks_to_forecast in [53]:
       for input_department in departments:
         print(f'========================={input_department}=================================')
         original_time_series: list[float] = get_2022_2023_data(input_department)
@@ -67,7 +72,7 @@ def cluster():
   for classification in [get_cluster,get_cluster_jerarquico,get_cluster_de_clusters]:
     for model in models:
       start_time = dt.datetime.now()
-      for weeks_to_forecast in [1,2,3,4]:
+      for weeks_to_forecast in [53]:
         for input_department in departments:
           print(f'========================={input_department}=================================')
           original_time_series: list[float] = get_2022_2023_data(input_department)
@@ -89,7 +94,11 @@ def cluster():
       end_time = dt.datetime.now()
       time = end_time.timestamp() - start_time.timestamp()
       save_time(time,model[1],'historical_data')
-
+cluster_generar_matriz_diferencia()
+cluster_jerarquico_generar_cluster_ventana()
+cluster_jerarquico_generar_cluster_jerarquico()
+cluster_de_cluster_generar_matriz_diferencia_cluster()
+cluster_de_cluster_generar_matriz_diferencia_cluster_de_clusters()
 state_of_art()
 historical_data()
 cluster()
