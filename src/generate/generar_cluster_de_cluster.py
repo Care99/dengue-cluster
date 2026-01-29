@@ -21,7 +21,7 @@ excel_name = 'casos.csv'
 excel_file = os.path.join(csv_path,excel_name)
 unformatted_data = pd.read_csv(excel_file)
 data = unformatted_data.copy()
-data['date'] = pd.to_datetime(data['date'], format='%Y-%m-%d')
+data['date'] = pd.to_datetime(data['date'], format='%m/%d/%Y')
 
 def iniciar_ts():
     ts = {}
@@ -33,11 +33,11 @@ def generar_cluster_matriz_diferencia()->None:
     for week_index in range(0,53):
         for year_index in range(0,4):
             #Calculate how many seconds a week has
-            start_date = datetime.strptime(start_date_index[year_index],'%Y-%m-%d') + timedelta(weeks=week_index)
+            start_date = datetime.strptime(start_date_index[year_index],'%m/%d/%Y') + timedelta(weeks=week_index)
             end_date = start_date + timedelta(weeks=11)
             #unformatted_data = pd.read_csv(excel_file)
             #data = unformatted_data.copy()
-            #data['date'] = pd.to_datetime(data['date'], format='%Y-%m-%d')
+            #data['date'] = pd.to_datetime(data['date'], format='%m/%d/%Y')
             #Load array of time series for each department from pd.DataFrame data
             #Filter 'disease' == "DENGUE" and 'classification' == "TOTAL"
             #Filter 'date' between start_date and end_date
@@ -46,7 +46,7 @@ def generar_cluster_matriz_diferencia()->None:
             for department in departments:
                 filtered_data = data[data['name'] == department]
                 filtered_data = filtered_data.copy()
-                filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%Y-%m-%d')
+                filtered_data['date'] = pd.to_datetime(filtered_data['date'], format='%m/%d/%Y')
                 range_data = filtered_data[filtered_data['date'].between(start_date, end_date, inclusive='both')]
                 ts_dict[department] = range_data.reset_index(drop=True)
             
