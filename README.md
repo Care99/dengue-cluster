@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/768157574.svg)](https://doi.org/10.5281/zenodo.18423610)
 # Clustering of clusters
 This is a data classification for time series where it can return the k-nearest neighbors given two o more components (time, geography, humidity,etc).
 ## How does it work?
