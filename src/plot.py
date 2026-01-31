@@ -93,7 +93,6 @@ def plot_dengue_forecasts():
                                     alpha=0.8)
                         
                         # Customize plot
-                        #plt.title(f'Predictions for {department} using {model_name}', fontsize=14, pad=20)
                         plt.xlabel('Time Period', fontsize=14)
                         plt.ylabel('Value', fontsize=14)
                         plt.ylim(y_min, y_max)
@@ -171,7 +170,6 @@ def plot_error():
                     )
                 plt.ylim(0, max_y*1.1)
                 #Customize plot
-                plt.title(f'Error Analysis for {model} - {error_type} - {forecast} weeks', fontsize=14, pad=20)
                 plt.xlabel('Departments', fontsize=14)
                 plt.ylabel('Error Value', fontsize=14)
                 plt.xticks(rotation=90)
@@ -266,11 +264,6 @@ def plot_scatter(
     label=f'Regression (slope={z[0]:.3f})'
   )    
   # Title and labels with better formatting
-  #plt.title(
-  #    f'Scatter Plot: {input_department}\n'
-  #    f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} week',
-  #    fontsize=14, pad=20
-  #)
   plt.xlabel('Expected Values', fontsize=14)
   plt.ylabel('Observed Values', fontsize=14)
   r2 = np.corrcoef(actual, predicted)[0, 1]**2
@@ -310,11 +303,6 @@ def plot_errorbar(
     plt.plot(actual_time_series, 'r-', label='Actual Values', alpha=0.8)
     plt.xlabel('Time Period', fontsize=14)
     plt.ylabel('Values', fontsize=14)
-    plt.title(
-        f'Error Bar Plot: {input_department}\n'
-        f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} week',
-        fontsize=14, pad=20
-    )
     plt.legend()
     # Save
     path = os.path.join(csv_path, 'forecast', classification, model, f'{weeks_to_forecast}_months')
