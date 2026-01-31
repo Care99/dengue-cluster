@@ -33,7 +33,7 @@ classifications = [
 base_folder = os.getcwd()
 forecast_folder = os.path.join(base_folder, 'csv', 'forecast')
 def plot_dengue_forecasts():
-    for forecast in [1,2,3,4]:
+    for forecast in [1,2,3,4,53]:
             for model in models:        
                 classification_values = []
                 for classification in classifications:
@@ -93,7 +93,7 @@ def plot_dengue_forecasts():
                                     alpha=0.8)
                         
                         # Customize plot
-                        plt.title(f'Predictions for {department} using {model_name}', fontsize=14, pad=20)
+                        #plt.title(f'Predictions for {department} using {model_name}', fontsize=14, pad=20)
                         plt.xlabel('Time Period', fontsize=14)
                         plt.ylabel('Value', fontsize=14)
                         plt.ylim(y_min, y_max)
@@ -121,7 +121,7 @@ def plot_error():
     Plots four dengue forecast time series from different clustering methods.
     """
     for error_type in ['mae','rmse','smape']:
-        for forecast in [1,2,3,4]:
+        for forecast in [1,2,3,4,53]:
             for model in models:        
                 classification_values = []
                 for classification in classifications:
@@ -146,6 +146,7 @@ def plot_error():
                     #apply argsorted
                     classification_values[i] = classification_values[i][argsorted]
                     max_y = max(max_y, np.max(classification_values[i]))
+                
                 if(error_type=='smape'):
                     max_y = min(max_y, 200)
                 else:
@@ -170,7 +171,7 @@ def plot_error():
                     )
                 plt.ylim(0, max_y*1.1)
                 #Customize plot
-                plt.title(f'Error Analysis for {model} - {error_type} - {forecast} months', fontsize=14, pad=20)
+                plt.title(f'Error Analysis for {model} - {error_type} - {forecast} weeks', fontsize=14, pad=20)
                 plt.xlabel('Departments', fontsize=14)
                 plt.ylabel('Error Value', fontsize=14)
                 plt.xticks(rotation=90)
@@ -183,7 +184,40 @@ def plot_error():
                 svg_path = os.path.join(svg_folder, filename)
                 plt.savefig(svg_path, format='svg')
                 print('Saved plot to: ',svg_path)
+                dataframe=pd.DataFrame(data=classification_values,columns=np.array(departments)[argsorted])
+                filename = f'{model}_{error_type}_{forecast}_months_graphs.csv'
+                svg_path = os.path.join(svg_folder, filename)
+                dataframe.to_csv(svg_path)
+                print('Saved csv to: ',svg_path)
                 plt.close()
+def plot_paraguay_error():
+    base_folder = os.getcwd()
+    classifications_values = []
+    classification_values = []
+    error_types = []
+    error_type='mae'
+    for classification in classifications:
+        classification_values = []
+        for department in departments:
+            forecast=1
+            filename = f'{department}_{error_type}.txt'
+            if(classification=='CART'or classification=='RANDOM_FOREST'):
+                model_name='state_of_art'                            
+            else:
+                model_name='AUTO_ARIMA'
+            path = os.path.join(forecast_folder,classification,model_name,f'{forecast}_months',filename)
+            #Read txt file
+            with open(path, 'r') as file:
+                error_value = float(file.read().strip())
+            classification_values.append(error_value)
+        classifications_values.append(classification_values)
+    print(classifications_values)
+    dataframe=pd.DataFrame(data=classifications_values,columns=departments)
+    filename = f'mae_benchmark.csv'
+    svg_folder = os.path.join(base_folder, 'svg', 'error_analysis')
+    svg_path = os.path.join(svg_folder, filename)
+    dataframe.to_csv(svg_path)
+    print('Saved csv to: ',svg_path)
 def plot_scatter(
     actual_time_series:TimeSeries,
     predicted_time_series:TimeSeries,
@@ -194,7 +228,7 @@ def plot_scatter(
   )->None:
   actual = actual_time_series.values().flatten()
   predicted = predicted_time_series.values().flatten()
-  plt.figure(figsize=(10, 6))
+  #plt.figure(figsize=(10, 6))
   # Calculate regression line for reference
   z = np.polyfit(actual, predicted, 1)
   p = np.poly1d(z)
@@ -210,7 +244,7 @@ def plot_scatter(
     c=normalized_errors,
     cmap='viridis',
     alpha=0.7,
-    s=50 + 100 * normalized_errors,  # Size varies with error
+    s=100 * normalized_errors,  # Size varies with error
   )
   # Perfect prediction line (y = x)
   min_val = actual.min()
@@ -232,13 +266,13 @@ def plot_scatter(
     label=f'Regression (slope={z[0]:.3f})'
   )    
   # Title and labels with better formatting
-  plt.title(
-      f'Scatter Plot: {input_department}\n'
-      f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} months',
-      fontsize=14, pad=20
-  )
-  plt.xlabel('Actual Values', fontsize=14)
-  plt.ylabel('Predicted Values', fontsize=14)
+  #plt.title(
+  #    f'Scatter Plot: {input_department}\n'
+  #    f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} week',
+  #    fontsize=14, pad=20
+  #)
+  plt.xlabel('Expected Values', fontsize=14)
+  plt.ylabel('Observed Values', fontsize=14)
   r2 = np.corrcoef(actual, predicted)[0, 1]**2
   plt.text(0.05, 0.95, f'R² = {r2:.3f}', transform=plt.gca().transAxes,
              fontsize=14, bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
@@ -250,7 +284,7 @@ def plot_scatter(
   plt.savefig(output_file)
   plt.close()
   print(f"Saved: {output_file}")
-def plot_histogram(
+def plot_errorbar(
     actual: TimeSeries,
     predicted: TimeSeries,
     input_department: str,
@@ -258,98 +292,64 @@ def plot_histogram(
     classification: str,
     weeks_to_forecast: int
 ) -> None:
-    # Extract data
-    actual_vals = actual.values().flatten()
-    predicted_vals = predicted.values().flatten()
-    
-    # Calculate IQR for actual values to determine reasonable bounds
-    actual_q1 = np.percentile(actual_vals, 25)
-    actual_q3 = np.percentile(actual_vals, 75)
-    actual_iqr = actual_q3 - actual_q1
-    
-    # Define bounds based on actual values (using 1.5*IQR rule or actual min/max)
-    lower_bound = max(predicted_vals.min(), actual_vals.min())
-    upper_bound = min(predicted_vals.max(), actual_q3 + 1.5 * actual_iqr)
-    
-    # Filter predicted values for visualization (but keep all for stats)
-    predicted_filtered = predicted_vals[(predicted_vals >= lower_bound) & 
-                                       (predicted_vals <= upper_bound)]
-    
-    # Create figure
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6), constrained_layout=True)
-    
-    # Use bins based on actual values range
-    bins = np.histogram_bin_edges(actual_vals, bins='auto')
-    
-    # --- Plot 1: Zoomed-in view (using actual value range) ---
-    ax1.hist(predicted_vals, bins=bins, alpha=0.6, label='Predicted',
-             color='#FF6B6B', edgecolor='black', linewidth=0.5,
-             range=(lower_bound, upper_bound))
-    ax1.hist(actual_vals, bins=bins, alpha=0.6, label='Actual',
-             color='#4ECDC4', edgecolor='black', linewidth=0.5)
-    
-    ax1.set_xlabel('Zoomed View (Actual Value Range)', fontsize=14)
-    ax1.set_ylabel('Frequency', fontsize=14)
-    ax1.legend(fontsize=14)
-    ax1.grid(True, alpha=0.3, linestyle='--')
-    
-    # Add outlier info
-    outlier_count = len(predicted_vals) - len(predicted_filtered)
-    outlier_pct = (outlier_count / len(predicted_vals)) * 100
-    info_text = f'Focus Range: [{lower_bound:.1f}, {upper_bound:.1f}]\n' \
-                f'Outliers excluded: {outlier_count} ({outlier_pct:.1f}%)'
-    ax1.text(0.08, 0.98, info_text, transform=ax1.transAxes,
-             fontsize=14, verticalalignment='bottom', horizontalalignment='right',
-             bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
-    
-    # --- Plot 2: Box plot for outlier visualization ---
-    data_to_plot = [actual_vals, predicted_vals]
-    box_colors = ['#4ECDC4', '#FF6B6B']
-    
-    bp = ax2.boxplot(data_to_plot, patch_artist=True, labels=['Actual', 'Predicted'],
-                     showfliers=True, whis=1.5)
-    
-    # Color the boxes
-    for patch, color in zip(bp['boxes'], box_colors):
-        patch.set_facecolor(color)
-        patch.set_alpha(0.6)
-    
-    # Color the medians
-    for median in bp['medians']:
-        median.set(color='black', linewidth=2)
-    
-    # Add individual points for actual values (in background)
-    for i, (data, color) in enumerate(zip(data_to_plot, box_colors), 1):
-        # Add jitter to x-coordinate
-        x = np.random.normal(i, 0.04, size=len(data))
-        ax2.scatter(x, data, alpha=0.3, color=color, s=20)
-    
-    ax2.set_ylabel('Box Plot with Outliers', fontsize=14)
-    ax2.grid(True, alpha=0.3, linestyle='--', axis='y')
-    
-    # Add statistics as text
-    actual_stats = f'Actual: μ={np.mean(actual_vals):.1f}, σ={np.std(actual_vals):.1f}'
-    pred_stats = f'Predicted: μ={np.mean(predicted_vals):.1f}, σ={np.std(predicted_vals):.1f}'
-    ax2.text(0.98, 0.98, f'{actual_stats}\n{pred_stats}', 
-             transform=ax2.transAxes, fontsize=14,
-             verticalalignment='bottom',
-             bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
-    
-    # Main title
-    fig.suptitle(
-        f'Distribution Analysis with Outlier Handling: {input_department}\n'
-        f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} months',
-        fontsize=14, fontweight='bold', y=1.02
+    actual_time_series = actual.values().flatten()
+    predicted_time_series = predicted.values().flatten()
+    # Matplotlib function that graphs an error bar for two numpy arrays: actual_time_series and predicted_time_series
+    errors = np.abs(predicted_time_series - actual_time_series)
+    plt.figure(figsize=(10, 6))
+    plt.errorbar(
+        range(len(actual_time_series)),
+        predicted_time_series,
+        yerr=errors,
+        fmt='o',
+        ecolor='lightgray',
+        elinewidth=3,
+        capsize=0,
+        alpha=0.7
     )
-    
+    plt.plot(actual_time_series, 'r-', label='Actual Values', alpha=0.8)
+    plt.xlabel('Time Period', fontsize=14)
+    plt.ylabel('Values', fontsize=14)
+    plt.title(
+        f'Error Bar Plot: {input_department}\n'
+        f'Model: {model} | Classification: {classification} | Horizon: {weeks_to_forecast} week',
+        fontsize=14, pad=20
+    )
+    plt.legend()
     # Save
     path = os.path.join(csv_path, 'forecast', classification, model, f'{weeks_to_forecast}_months')
     os.makedirs(path, exist_ok=True)
-    output_file_name = f'{input_department}_hist.svg'
+    output_file_name = f'{input_department}_errorbar.svg'
     output_file = os.path.join(path, output_file_name)
     plt.savefig(output_file, dpi=150, bbox_inches='tight')
     plt.close()
-    
     print(f"Saved: {output_file}")
-    print(f"Outlier info: {outlier_count} predicted values ({outlier_pct:.1f}%) excluded from histogram view")
-plot_dengue_forecasts()
+actual_time_series = TimeSeries.from_values(np.array(get_2022_2023_data('PARAGUAY')))
+predicted_time_series = TimeSeries.from_values(np.array(pd.read_csv(os.path.join(forecast_folder,'get_cluster_de_clusters','AUTO_ARIMA','1_months','PARAGUAY.csv'),header=None)[0].tolist()))
+print(actual_time_series.values().flatten())
+print(len(actual_time_series))
+print(predicted_time_series.values().flatten())
+print(len(predicted_time_series))
+input_department='PARAGUAY'
+model='AUTO_ARIMA'
+classification='get_cluster_de_clusters'
+weeks_to_forecast=1
+plot_scatter(
+    actual_time_series,
+    predicted_time_series,
+    input_department,
+    model,
+    classification,
+    weeks_to_forecast
+  )
+plot_errorbar(
+    actual=actual_time_series,
+    predicted=predicted_time_series,
+    input_department=input_department,
+    model=model,
+    classification=classification,
+    weeks_to_forecast=1
+)
+#plot_paraguay_error()
+#plot_dengue_forecasts()
+#plot_error()
