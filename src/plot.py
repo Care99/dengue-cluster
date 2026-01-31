@@ -93,11 +93,11 @@ def plot_dengue_forecasts():
                                     alpha=0.8)
                         
                         # Customize plot
-                        plt.xlabel('Time Period', fontsize=14)
-                        plt.ylabel('Value', fontsize=14)
+                        plt.xlabel('Time Period', fontsize=16)
+                        plt.ylabel('Value', fontsize=16)
                         plt.ylim(y_min, y_max)
                         # Add legend
-                        plt.legend(loc='best', fontsize=14, framealpha=0.9, shadow=True)
+                        plt.legend(loc='best', fontsize=16, framealpha=0.9, shadow=True)
                         
                         # Add grid
                         plt.grid(True, alpha=0.3, linestyle='--')
@@ -170,10 +170,10 @@ def plot_error():
                     )
                 plt.ylim(0, max_y*1.1)
                 #Customize plot
-                plt.xlabel('Departments', fontsize=14)
-                plt.ylabel('Error Value', fontsize=14)
+                plt.xlabel('Departments', fontsize=16)
+                plt.ylabel('Error Value', fontsize=16)
                 plt.xticks(rotation=90)
-                plt.legend(loc='best', fontsize=14, framealpha=0.9, shadow=True)
+                plt.legend(loc='best', fontsize=16, framealpha=0.9, shadow=True)
                 plt.grid(True, alpha=0.3, linestyle='--')
                 plt.tight_layout()
                 svg_folder = os.path.join(base_folder, 'svg', 'error_analysis')
@@ -264,11 +264,11 @@ def plot_scatter(
     label=f'Regression (slope={z[0]:.3f})'
   )    
   # Title and labels with better formatting
-  plt.xlabel('Expected Values', fontsize=14)
-  plt.ylabel('Observed Values', fontsize=14)
+  plt.xlabel('Expected Values', fontsize=16)
+  plt.ylabel('Observed Values', fontsize=16)
   r2 = np.corrcoef(actual, predicted)[0, 1]**2
   plt.text(0.05, 0.95, f'R² = {r2:.3f}', transform=plt.gca().transAxes,
-             fontsize=14, bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+             fontsize=16, bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
   plt.legend()
   path = os.path.join(csv_path,'forecast',classification,model,f'{weeks_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
@@ -301,8 +301,8 @@ def plot_errorbar(
         alpha=0.7
     )
     plt.plot(actual_time_series, 'r-', label='Actual Values', alpha=0.8)
-    plt.xlabel('Time Period', fontsize=14)
-    plt.ylabel('Values', fontsize=14)
+    plt.xlabel('Time Period', fontsize=16)
+    plt.ylabel('Values', fontsize=16)
     plt.legend()
     # Save
     path = os.path.join(csv_path, 'forecast', classification, model, f'{weeks_to_forecast}_months')
