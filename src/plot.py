@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 import matplotlib as mplt
 mplt.use('SVG',force=True)
 from matplotlib import rcParams
-mplt.rcParams['font.family'] = 'serif'
-mplt.rcParams['font.serif'] = 'Times New Roman'
+#mplt.rcParams['font.family'] = 'serif'
+#mplt.rcParams['font.serif'] = 'Times New Roman'
 mplt.rcParams['font.weight'] = 'normal'  # Correct spelling
 mplt.rcParams['axes.labelweight'] = 'normal'
 mplt.rcParams['axes.titleweight'] = 'normal'
-mplt.rcParams['font.size'] = 14
+mplt.rcParams['font.size'] = 8
 import pandas as pd
 import numpy as np
 from src.utils.time_series import get_2022_2023_data
@@ -93,11 +93,11 @@ def plot_dengue_forecasts():
                                     alpha=0.8)
                         
                         # Customize plot
-                        plt.xlabel('Time Period', fontsize=16)
-                        plt.ylabel('Value', fontsize=16)
+                        plt.xlabel('Time Period', fontsize=8)
+                        plt.ylabel('Value', fontsize=8)
                         plt.ylim(y_min, y_max)
                         # Add legend
-                        plt.legend(loc='best', fontsize=16, framealpha=0.9, shadow=True)
+                        plt.legend(loc='best', fontsize=8, framealpha=0.9, shadow=True)
                         
                         # Add grid
                         plt.grid(True, alpha=0.3, linestyle='--')
@@ -170,10 +170,10 @@ def plot_error():
                     )
                 plt.ylim(0, max_y*1.1)
                 #Customize plot
-                plt.xlabel('Departments', fontsize=16)
-                plt.ylabel('Error Value', fontsize=16)
+                plt.xlabel('Departments', fontsize=8)
+                plt.ylabel('Error Value', fontsize=8)
                 plt.xticks(rotation=90)
-                plt.legend(loc='best', fontsize=16, framealpha=0.9, shadow=True)
+                plt.legend(loc='best', fontsize=8, framealpha=0.9, shadow=True)
                 plt.grid(True, alpha=0.3, linestyle='--')
                 plt.tight_layout()
                 svg_folder = os.path.join(base_folder, 'svg', 'error_analysis')
@@ -236,6 +236,7 @@ def plot_scatter(
   # Create color gradient based on prediction error
   errors = np.abs(predicted - actual)
   normalized_errors = (errors - errors.min()) / (errors.max() - errors.min())
+  plt.figure(figsize=(3.15, 3.15))
   plt.scatter(
     actual,
     predicted,
@@ -264,11 +265,11 @@ def plot_scatter(
     label=f'Regression (slope={z[0]:.3f})'
   )    
   # Title and labels with better formatting
-  plt.xlabel('Expected Values', fontsize=16)
-  plt.ylabel('Observed Values', fontsize=16)
+  plt.xlabel('Expected Values', fontsize=8)
+  plt.ylabel('Observed Values', fontsize=8)
   r2 = np.corrcoef(actual, predicted)[0, 1]**2
   plt.text(0.05, 0.95, f'R² = {r2:.3f}', transform=plt.gca().transAxes,
-             fontsize=16, bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+             fontsize=8, bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
   plt.legend()
   path = os.path.join(csv_path,'forecast',classification,model,f'{weeks_to_forecast}_months')
   os.makedirs(path,exist_ok=True)
@@ -289,7 +290,7 @@ def plot_errorbar(
     predicted_time_series = predicted.values().flatten()
     # Matplotlib function that graphs an error bar for two numpy arrays: actual_time_series and predicted_time_series
     errors = np.abs(predicted_time_series - actual_time_series)
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(3.15, 3.15))
     plt.errorbar(
         range(len(actual_time_series)),
         predicted_time_series,
@@ -301,8 +302,8 @@ def plot_errorbar(
         alpha=0.7
     )
     plt.plot(actual_time_series, 'r-', label='Actual Values', alpha=0.8)
-    plt.xlabel('Time Period', fontsize=16)
-    plt.ylabel('Values', fontsize=16)
+    plt.xlabel('Time Period', fontsize=8)
+    plt.ylabel('Values', fontsize=8)
     plt.legend()
     # Save
     path = os.path.join(csv_path, 'forecast', classification, model, f'{weeks_to_forecast}_months')
