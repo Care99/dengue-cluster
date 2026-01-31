@@ -82,6 +82,7 @@ def plot_dengue_forecasts():
                                 x_for_ts = x_values[:len(ts_array)]
                             
                             # Plot with styling
+                            plt.figure(figsize=(3.15, 3.15))
                             plt.plot(x_for_ts, ts_array, 
                                     color=color, 
                                     linestyle=line_style,
@@ -158,6 +159,7 @@ def plot_error():
                     x=np.array(departments)[argsorted]
                     y=classification_values[i]
                     #Use plt.plot with argsorted
+                    plt.figure(figsize=(3.15, 3.15))
                     plt.plot(
                         x, 
                         y,
