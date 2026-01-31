@@ -69,7 +69,7 @@ def plot_dengue_forecasts():
                         line_styles = ['--','-']
                         
                         x_values = range(1,54) # Assuming all series have the same length for x-axis
-                        
+                        plt.figure(figsize=(3.15, 3.15))
                         # Plot each time series
                         for i, (ts, label, color, line_style) in enumerate(zip(time_series, labels, colors, line_styles)):
                             # Ensure ts is a numpy array for consistency
@@ -82,7 +82,6 @@ def plot_dengue_forecasts():
                                 x_for_ts = x_values[:len(ts_array)]
                             
                             # Plot with styling
-                            plt.figure(figsize=(3.15, 3.15))
                             plt.plot(x_for_ts, ts_array, 
                                     color=color, 
                                     linestyle=line_style,
@@ -155,11 +154,11 @@ def plot_error():
                 #Choose hex color for six classifications
                 colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b']
                 #plt.bar for each array in classification_values
+                plt.figure(figsize=(3.15, 3.15))
                 for i,(label,color) in enumerate(zip(classifications,colors)):
                     x=np.array(departments)[argsorted]
                     y=classification_values[i]
                     #Use plt.plot with argsorted
-                    plt.figure(figsize=(3.15, 3.15))
                     plt.plot(
                         x, 
                         y,
@@ -315,32 +314,29 @@ def plot_errorbar(
     plt.savefig(output_file, dpi=150, bbox_inches='tight')
     plt.close()
     print(f"Saved: {output_file}")
-actual_time_series = TimeSeries.from_values(np.array(get_2022_2023_data('PARAGUAY')))
-predicted_time_series = TimeSeries.from_values(np.array(pd.read_csv(os.path.join(forecast_folder,'get_cluster_de_clusters','AUTO_ARIMA','1_months','PARAGUAY.csv'),header=None)[0].tolist()))
-print(actual_time_series.values().flatten())
-print(len(actual_time_series))
-print(predicted_time_series.values().flatten())
-print(len(predicted_time_series))
-input_department='PARAGUAY'
-model='AUTO_ARIMA'
-classification='get_cluster_de_clusters'
-weeks_to_forecast=1
-plot_scatter(
-    actual_time_series,
-    predicted_time_series,
-    input_department,
-    model,
-    classification,
-    weeks_to_forecast
-  )
-plot_errorbar(
-    actual=actual_time_series,
-    predicted=predicted_time_series,
-    input_department=input_department,
-    model=model,
-    classification=classification,
-    weeks_to_forecast=1
-)
+for weeks_to_forecast in [1,53]:
+    for department in departments:
+        actual_time_series = TimeSeries.from_values(np.array(get_2022_2023_data(department)))
+        predicted_time_series = TimeSeries.from_values(np.array(pd.read_csv(os.path.join(forecast_folder,'get_cluster_de_clusters','AUTO_ARIMA',f'{weeks_to_forecast}_months',f'{department}.csv'),header=None)[0].tolist()))
+        input_department=department
+        model='AUTO_ARIMA'
+        classification='get_cluster_de_clusters'
+        plot_scatter(
+            actual_time_series,
+            predicted_time_series,
+            input_department,
+            model,
+            classification,
+            weeks_to_forecast
+        )
+        plot_errorbar(
+            actual=actual_time_series,
+            predicted=predicted_time_series,
+            input_department=input_department,
+            model=model,
+            classification=classification,
+            weeks_to_forecast=weeks_to_forecast
+        )
 #plot_paraguay_error()
-#plot_dengue_forecasts()
+plot_dengue_forecasts()
 #plot_error()
