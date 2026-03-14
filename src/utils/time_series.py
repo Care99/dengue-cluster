@@ -16,8 +16,8 @@ def get_time_series_from_range(start_date:datetime,end_date:datetime,department:
     ts_dict[department] = range_data.reset_index(drop=True)
     return ts_dict[department]['incidence'].values.flatten().tolist()
 def get_ts(year:str, week:str, department:str)->list[float]:
-    start_date = datetime.strptime(start_date_index[int(year.split('-')[0])-2019],'%m/%d/%Y') + timedelta(weeks=int(week))
-    end_date = start_date + timedelta(weeks=11)
+    start_date = datetime.strptime(start_date_index[int(year.split('-')[0])-2019],'%m/%d/%Y')
+    end_date = start_date + timedelta(weeks=52)
     return get_time_series_from_range(start_date,end_date,department)
 
 def get_historical_data(department:str)->list[float]:
