@@ -33,7 +33,7 @@ classifications = [
 base_folder = os.getcwd()
 forecast_folder = os.path.join(base_folder, 'csv', 'forecast')
 def plot_dengue_forecasts():
-    for forecast in [1,2,3,4,53]:
+    for forecast in [41]:
             for model in models:        
                 classification_values = []
                 for classification in classifications:
@@ -71,6 +71,7 @@ def plot_dengue_forecasts():
                         x_values = range(1,54) # Assuming all series have the same length for x-axis
                         
                         # Plot each time series
+                        plt.figure(figsize=(3.15, 3.15))
                         for i, (ts, label, color, line_style) in enumerate(zip(time_series, labels, colors, line_styles)):
                             # Ensure ts is a numpy array for consistency
                             ts_array = np.array(ts)
@@ -82,7 +83,6 @@ def plot_dengue_forecasts():
                                 x_for_ts = x_values[:len(ts_array)]
                             
                             # Plot with styling
-                            plt.figure(figsize=(3.15, 3.15))
                             plt.plot(x_for_ts, ts_array, 
                                     color=color, 
                                     linestyle=line_style,
@@ -121,7 +121,7 @@ def plot_error():
     Plots four dengue forecast time series from different clustering methods.
     """
     for error_type in ['mae','rmse','smape']:
-        for forecast in [1,2,3,4,53]:
+        for forecast in [41]:
             for model in models:        
                 classification_values = []
                 for classification in classifications:
@@ -154,12 +154,12 @@ def plot_error():
                 plt.figure(figsize=(12, 6))
                 #Choose hex color for six classifications
                 colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b']
+                plt.figure(figsize=(3.15, 3.15))
                 #plt.bar for each array in classification_values
                 for i,(label,color) in enumerate(zip(classifications,colors)):
                     x=np.array(departments)[argsorted]
                     y=classification_values[i]
                     #Use plt.plot with argsorted
-                    plt.figure(figsize=(3.15, 3.15))
                     plt.plot(
                         x, 
                         y,
@@ -315,32 +315,57 @@ def plot_errorbar(
     plt.savefig(output_file, dpi=150, bbox_inches='tight')
     plt.close()
     print(f"Saved: {output_file}")
-actual_time_series = TimeSeries.from_values(np.array(get_2022_2023_data('PARAGUAY')))
-predicted_time_series = TimeSeries.from_values(np.array(pd.read_csv(os.path.join(forecast_folder,'get_cluster_de_clusters','AUTO_ARIMA','1_months','PARAGUAY.csv'),header=None)[0].tolist()))
-print(actual_time_series.values().flatten())
-print(len(actual_time_series))
-print(predicted_time_series.values().flatten())
-print(len(predicted_time_series))
-input_department='PARAGUAY'
-model='AUTO_ARIMA'
-classification='get_cluster_de_clusters'
-weeks_to_forecast=1
-plot_scatter(
-    actual_time_series,
-    predicted_time_series,
-    input_department,
-    model,
-    classification,
-    weeks_to_forecast
-  )
-plot_errorbar(
-    actual=actual_time_series,
-    predicted=predicted_time_series,
-    input_department=input_department,
-    model=model,
-    classification=classification,
-    weeks_to_forecast=1
-)
+#actual_time_series = TimeSeries.from_values(np.array(get_2022_2023_data('PARAGUAY')))
+#predicted_time_series = TimeSeries.from_values(np.array(pd.read_csv(os.path.join(forecast_folder,'get_cluster_de_clusters','AUTO_ARIMA','1_months','PARAGUAY.csv'),header=None)[0].tolist()))
+#print(actual_time_series.values().flatten())
+#print(len(actual_time_series))
+#print(predicted_time_series.values().flatten())
+#print(len(predicted_time_series))
+#input_department='PARAGUAY'
+#model='AUTO_ARIMA'
+#classification='get_cluster_de_clusters'
+#weeks_to_forecast=1
+#plot_scatter(
+#    actual_time_series,
+#    predicted_time_series,
+#    input_department,
+#    model,
+#    classification,
+#    weeks_to_forecast
+#  )
+#plot_errorbar(
+#    actual=actual_time_series,
+#    predicted=predicted_time_series,
+#    input_department=input_department,
+#    model=model,
+#    classification=classification,
+#    weeks_to_forecast=1
+#)
 #plot_paraguay_error()
 #plot_dengue_forecasts()
 #plot_error()
+def csv_to_latex_table() -> None:
+    for error in ['mae','rmse','smape']:
+        for weeks_to_forecast in [1,41]:
+            svg_folder = os.path.join(base_folder, 'svg', 'error_analysis', f'AUTO_ARIMA_{error}_{weeks_to_forecast}_months_graphs.csv')
+            df = pd.read_csv(svg_folder)
+            #Argsort by second row (get_cluster_de_clusters)
+            argsorted = np.argsort(df.iloc[2].values)
+            #Reverse argsorted
+            argsorted = argsorted[::-1]
+            #Apply argsorted to dataframe
+            df = df.iloc[:, argsorted]
+            #Transpose dataframe
+            df = df.set_index(df.columns[0]).T
+            #Round to two decimals
+            df = df.round(2)
+            #Keep only two decimals
+            df = df.applymap(lambda x: f'{x:.2f}')
+            #Convert to latex table
+            latex_table = df.to_latex(index=True, header=True)
+            #print to console
+            print(f'Latex table for {error} and {weeks_to_forecast} weeks to forecast:')
+            print(latex_table)
+#csv_to_latex_table()
+for department in departments:
+    print(f'Nombre de departamento: {department}. Valor de departamento: {get_2022_2023_data(department)}')
