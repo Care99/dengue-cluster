@@ -343,7 +343,7 @@ def plot_errorbar(
 #    weeks_to_forecast=1
 #)
 #plot_paraguay_error()
-plot_dengue_forecasts()
+#plot_dengue_forecasts()
 #plot_error()
 def csv_to_latex_table() -> None:
     for error in ['mae','rmse','smape']:
@@ -368,5 +368,5 @@ def csv_to_latex_table() -> None:
             print(f'Latex table for {error} and {weeks_to_forecast} weeks to forecast:')
             print(latex_table)
 #csv_to_latex_table()
-for department in departments:
-    print(f'Nombre de departamento: {department}. Valor de departamento: {get_2022_2023_data(department)}')
+#for department in departments:
+#print(f'Nombre de departamento: {department}. Valor de departamento: {get_2022_2023_data(department)}')
