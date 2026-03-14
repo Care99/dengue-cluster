@@ -69,7 +69,7 @@ def plot_dengue_forecasts():
                         line_styles = ['--','-']
                         
                         x_values = range(1,54) # Assuming all series have the same length for x-axis
-                        
+                        plt.figure(figsize=(3.15, 3.15))
                         # Plot each time series
                         plt.figure(figsize=(3.15, 3.15))
                         for i, (ts, label, color, line_style) in enumerate(zip(time_series, labels, colors, line_styles)):
@@ -156,6 +156,7 @@ def plot_error():
                 colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b']
                 plt.figure(figsize=(3.15, 3.15))
                 #plt.bar for each array in classification_values
+                plt.figure(figsize=(3.15, 3.15))
                 for i,(label,color) in enumerate(zip(classifications,colors)):
                     x=np.array(departments)[argsorted]
                     y=classification_values[i]
@@ -342,7 +343,7 @@ def plot_errorbar(
 #    weeks_to_forecast=1
 #)
 #plot_paraguay_error()
-#plot_dengue_forecasts()
+plot_dengue_forecasts()
 #plot_error()
 def csv_to_latex_table() -> None:
     for error in ['mae','rmse','smape']:
