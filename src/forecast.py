@@ -1,5 +1,5 @@
 from src.output import save_error,save_time,save_time_series_as_csv
-from src.plot import plot_scatter,plot_histogram
+from src.plot import plot_scatter,plot_errorbar
 from src.utils.constants import departments,time_series_window,time_series_2022_2023_length
 from src.utils.time_series import get_historical_data, get_2022_2023_data, get_historical_data_window, get_time_series_window
 
@@ -68,12 +68,13 @@ def generate_cluster_forecast(
     week_index:int
   ):
   #variables
-  historical_time_series: list[float] = get_time_series_window(input_department,week_index)
+  historical_time_series: list[float] = get_2022_2023_data(input_department)
   nearest_neighbors: list[list[float]] = classification(week_index,input_department,number_years,number_neighbors)
-  for i in range(len(nearest_neighbors)):
-    nearest_neighbors[i] = historical_time_series + nearest_neighbors[i]
-  list_forecasted_time_series: list[TimeSeries] = [TimeSeries.from_values(np.array(forecast(TimeSeries.from_values(neighbor),weeks_to_forecast,model)))for neighbor in nearest_neighbors]
-  return concatenate(list_forecasted_time_series,axis=1).mean(axis=1).values().flatten().tolist()
+  time_series = []
+  for i in range(len(nearest_neighbors)-1,-1,-1):
+    time_series.extend(nearest_neighbors[i])
+  time_series.extend(historical_time_series[:12])
+  return forecast(TimeSeries.from_values(time_series),weeks_to_forecast,model)
 
 def save_to_disk(
     input_department:str,
@@ -85,5 +86,13 @@ def save_to_disk(
   ):
   save_time_series_as_csv(input_department,observed_time_series,model_name,classification_name,weeks_to_forecast)
   plot_scatter(expected_time_series,observed_time_series,input_department,model_name,classification_name,weeks_to_forecast)
-  plot_histogram(expected_time_series,observed_time_series,input_department,model_name,classification_name,weeks_to_forecast)
+  #plot_histogram(expected_time_series,observed_time_series,input_department,model_name,classification_name,weeks_to_forecast)
   save_error(input_department,expected_time_series,observed_time_series,model_name,classification_name,weeks_to_forecast)
+  plot_errorbar(
+    actual=expected_time_series,
+    predicted=observed_time_series,
+    input_department=input_department,
+    model=model_name,
+    classification=classification_name,
+    weeks_to_forecast=weeks_to_forecast
+)
